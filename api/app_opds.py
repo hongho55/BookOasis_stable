@@ -15,6 +15,7 @@ app_opds.py – 타치요미(Tachiyomi/Mihon) 등 비표준 OPDS 클라이언트
   - /app-opds/recently-read : 최근 읽은 도서
 """
 import hashlib
+import json
 import os
 import re
 import time
@@ -49,6 +50,26 @@ from utils.i18n import _t
 
 app_opds_bp = Blueprint('media_app_opds', __name__)
 
+_PROGRESS_REVISION_FIELDS = (
+    'pages_read',
+    'last_read_at',
+    'last_epub_cfi',
+    'last_epub_href',
+    'last_epub_spine_index',
+    'last_epub_percent',
+    'last_epub_fingerprint',
+    'last_epub_updated_at',
+)
+
+
+def _progress_revision(state):
+    canonical = {
+        key: None if state.get(key) is None else str(state.get(key))
+        for key in _PROGRESS_REVISION_FIELDS
+    }
+    encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()
+    return 'v1:' + hashlib.sha256(encoded).hexdigest()
+
 
 import threading
 
@@ -57,6 +78,7 @@ import threading
 # { sha256(username:password): (expires_at: float, user: dict) }
 _auth_cache: dict = {}
 _auth_lock = threading.Lock()
+_progress_write_lock = threading.Lock()
 _CACHE_TTL = 300  # 5분 (초 단위)
 
 
@@ -378,16 +400,22 @@ def app_opds_progress_state_compat():
     auth_error = _require_app_opds_auth(db_type)
     if auth_error:
         return auth_error
+    current_user = _get_authenticated_user_cached(
+        is_adult=default_db_type == 'adult' or db_type == 'adult'
+    )
+    if not current_user:
+        return _unauthorized()
 
     book_id = request.args.get('book_id')
     if not book_id:
         return jsonify({'success': False, 'error': _t('api.err_book_id_required')}), 400
 
     try:
-        result = viewer_get_progress_state(db_type, book_id, user_id=1)
+        result = viewer_get_progress_state(db_type, book_id, user_id=current_user['id'])
         if result['status'] != 'ok':
             return jsonify({'success': False, 'error': 'book not found'}), 404
-        return jsonify({'success': True, 'state': result['state']})
+        state = result['state']
+        return jsonify({'success': True, 'state': state, 'revision': _progress_revision(state)})
     except Exception as e:
         print(f"[App-OPDS Progress State API Error] {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -402,18 +430,60 @@ def app_opds_progress_compat():
     auth_error = _require_app_opds_auth(db_type)
     if auth_error:
         return auth_error
+    current_user = _get_authenticated_user_cached(
+        is_adult=default_db_type == 'adult' or db_type == 'adult'
+    )
+    if not current_user:
+        return _unauthorized()
 
     try:
         book_id = data.get('book_id')
         page_idx = data.get('page_idx')
         total_pages = data.get('total_pages')
         epub_session = data.get('epub_session') or None
+        base_revision = data.get('base_revision')
 
         if book_id is None or page_idx is None:
             return jsonify({'success': False, 'error': _t('api.err_book_id_page_idx_required')}), 400
 
-        viewer_save_progress(db_type, book_id, page_idx, total_pages, epub_session=epub_session, user_id=1)
-        return jsonify({'success': True})
+        # Production runs one threaded Gunicorn worker. Keep compare + immediate
+        # persistence in one critical section so two clients cannot both win
+        # with the same base revision.
+        with _progress_write_lock:
+            current = viewer_get_progress_state(db_type, book_id, user_id=current_user['id'])
+            if current['status'] != 'ok':
+                return jsonify({'success': False, 'error': 'book not found'}), 404
+            current_state = current['state']
+            current_revision = _progress_revision(current_state)
+            if base_revision is not None and base_revision != current_revision:
+                return jsonify({
+                    'success': False,
+                    'error': 'progress_conflict',
+                    'state': current_state,
+                    'revision': current_revision,
+                }), 409
+
+            persisted = viewer_save_progress(
+                db_type,
+                book_id,
+                page_idx,
+                total_pages,
+                epub_session=epub_session,
+                user_id=current_user['id'],
+                flush_immediately=True,
+            )
+            if not persisted:
+                return jsonify({'success': False, 'error': 'progress_write_busy'}), 503
+
+            updated = viewer_get_progress_state(db_type, book_id, user_id=current_user['id'])
+            if updated['status'] != 'ok':
+                return jsonify({'success': False, 'error': 'book not found'}), 404
+            updated_state = updated['state']
+        return jsonify({
+            'success': True,
+            'state': updated_state,
+            'revision': _progress_revision(updated_state),
+        })
     except Exception as e:
         print(f"[App-OPDS Progress API Error] {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

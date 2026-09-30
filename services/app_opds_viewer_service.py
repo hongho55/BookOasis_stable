@@ -77,16 +77,25 @@ def get_progress_state(db_type: str, book_id, user_id: int = 1):
     return {'status': 'ok', 'state': state}
 
 
-def save_progress(db_type: str, book_id, page_idx, total_pages, epub_session=None, user_id: int = 1):
+def save_progress(
+    db_type: str,
+    book_id,
+    page_idx,
+    total_pages,
+    epub_session=None,
+    user_id: int = 1,
+    flush_immediately: bool = False,
+):
     if total_pages is None:
         total_pages = 1
-    StreamService.record_progress(
+    return StreamService.record_progress(
         db_type,
         book_id,
         page_idx,
         total_pages,
         user_id=user_id,
         epub_session=epub_session,
+        flush_immediately=flush_immediately,
     )
 
 
