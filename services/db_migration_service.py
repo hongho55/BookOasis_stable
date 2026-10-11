@@ -331,6 +331,7 @@ _SCHEMA_SQL = """
         total_tracks INTEGER DEFAULT 1,
         file_type TEXT DEFAULT 'multi',
         is_favorite INTEGER DEFAULT 0,
+        metadata_locked INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         is_deleted INTEGER DEFAULT 0,
@@ -1474,6 +1475,8 @@ def _ensure_mariadb_columns():
         ('media_audiobook', 'audiobooks', 'folder_name', 'VARCHAR(500)'),
         ('media_audiobook', 'audiobooks', 'file_type', 'VARCHAR(50)'),
         ('media_audiobook', 'audiobooks', 'deleted_at', 'DATETIME DEFAULT NULL'),
+        # 상세 화면 수동 수정(저자/표지 등)을 재스캔이 덮지 않게 잠근다 (도서 books.metadata_locked와 같은 뜻)
+        ('media_audiobook', 'audiobooks', 'metadata_locked', 'INT DEFAULT 0'),
         ('media_audiobook', 'audiobook_tracks', 'track_code', 'VARCHAR(100)'),
         ('media_audiobook', 'audiobook_tracks', 'filename', 'VARCHAR(500)'),
         ('media_audiobook', 'audiobook_tracks', 'file_mtime', 'DOUBLE DEFAULT 0.0'),

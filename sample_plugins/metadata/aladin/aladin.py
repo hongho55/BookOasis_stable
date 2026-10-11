@@ -169,17 +169,32 @@ class AladinMetadataProvider(BaseMetadataProvider):
             publisher = item_data.get('publisher', '')
             link = item_data.get('link', '')
 
-            from repositories.metadata_repository import MetadataRepository
-            db_type = 'general'
-            try:
-                if hasattr(gateway, 'db_type') and gateway.db_type:
-                    db_type = gateway.db_type
-            except Exception:
-                pass
-            MetadataRepository.update_plugin_book_metadata(
-                db_type, book_id, author, isbn, publisher, description, link, cover_filename
-            )
+            # 코어에 플러그인용 저장 함수는 없다(게이트웨이 원칙) - 게이트웨이로 직접 반영한다.
+            # 알라딘이 비워 보낸 항목은 기존 값을 지우지 않고, 코어 수동 수정처럼 잠가 다음 스캔이 덮어쓰지 않게 한다.
+            cover_value = cover_filename or ''
+            gateway.execute("""
+                UPDATE books
+                SET author = COALESCE(NULLIF(?, ''), author),
+                    isbn = COALESCE(NULLIF(?, ''), isbn),
+                    publisher = COALESCE(NULLIF(?, ''), publisher),
+                    summary = COALESCE(NULLIF(?, ''), summary),
+                    link = COALESCE(NULLIF(?, ''), link),
+                    cover_image = COALESCE(NULLIF(?, ''), cover_image),
+                    cover_updated_at = CASE WHEN ? = '' THEN cover_updated_at ELSE CURRENT_TIMESTAMP END,
+                    metadata_locked = 1
+                WHERE id = ?
+            """, (author, isbn, publisher, description, link, cover_value, cover_value, book_id))
+
+            if cover_filename:
+                try:
+                    from utils.cover_helper import invalidate_series_cover_cache
+                    invalidate_series_cover_cache(db_type=db_type, lib_id=library_id, series_name=book.get('series_name'))
+                except Exception:
+                    pass
 
             return True, f'"{title}" 메타데이터가 도서 정보에 성공적으로 반영되었습니다.'
         except Exception as e:
+            import traceback
+            print(f"[AladinMetadataProvider] 메타데이터 적용 실패 (db_type={db_type}, book_id={book_id}): {e}")
+            print(f"[AladinMetadataProvider] 예외 트레이스백: {traceback.format_exc()}")
             return False, f'DB 업데이트 오류: {str(e)}'

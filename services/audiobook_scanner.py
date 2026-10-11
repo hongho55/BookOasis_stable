@@ -760,6 +760,17 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
     }
 
 
+def _touch_if_poster_replaced(repo, row_id, poster, category, library_id):
+    """같은 경로의 표지 파일을 덮어쓴 경우(cover.jpg 교체) 경로가 같아 DB는 '변경 없음'이다.
+    캐시가 그 원본보다 오래됐으면 updated_at을 올려 목록·상세 표지 주소(?t=)를 바꾼다(영상 스캐너도 사용)."""
+    try:
+        from utils.cover_helper import poster_cache_outdated
+        if row_id and poster_cache_outdated(poster, category, library_id):
+            repo.touch_updated_at(row_id)
+    except Exception as e:
+        print(f"[CoverRefresh] poster change check failed ({poster}): {e}")
+
+
 CODE_NESTED_AUDIO = 'audiobook_nested_audio'
 CODE_SAVE_FAILED = 'audiobook_save_failed'
 
@@ -853,6 +864,10 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
             kept = os.path.normpath(str(existing.get('poster') or ''))
             if existing.get('poster') and kept.startswith(normalized_folder_path + os.sep):
                 meta['poster'] = kept
+        if existing and int(existing.get('metadata_locked') or 0):
+            # 상세 화면에서 수동 수정(잠금)한 책: 저자/출판사/소개/식별자/표지는 재스캔이 덮지 않는다 (트랙은 계속 갱신)
+            for key in ('author', 'publisher', 'description', 'web_id', 'poster'):
+                meta[key] = existing.get(key) or ''
         duration_cache_hits = int(result.get('duration_cache_hits', 0) or 0)
         metadata_duration_hits = int(result.get('metadata_duration_hits', 0) or 0)
         metadata_duration_fallbacks = int(result.get('metadata_duration_fallbacks', 0) or 0)
@@ -868,6 +883,7 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
         if music:
             track_updates += AudiobookRepository.update_track_tags(audiobook_id, tracks)
         _report_nested_audio(audiobook_id, library_id, normalized_folder_path, meta['title'], result.get('nested_audio'))
+        _touch_if_poster_replaced(AudiobookRepository, audiobook_id, meta.get('poster'), 'audio', library_id)
         from services.problem_service import ProblemService
         from services.scan_problem_service import _path_target_id
         ProblemService.resolve(CODE_SAVE_FAILED, 'book', _path_target_id(normalized_folder_path), db_type='audiobook')

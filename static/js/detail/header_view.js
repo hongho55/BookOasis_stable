@@ -416,7 +416,7 @@ export function renderDetailHeader(meta, books, safeSeriesName, actualLibraryId,
     </div>
   ` : '';
   const unlockBtnHtml = isLocked ? `
-    <button class="ridi-link-btn btn-unlock-metadata" data-role="detail-unlock-metadata" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" data-book-id="${firstBookId || ''}" style="background: #16a34a; border-color: #22c55e; font-size: 0.75rem; padding: 0.2rem 0.6rem; display: inline-flex; align-items: center; gap: 0.2rem; margin-left: 0.3rem;" title="메타데이터 잠금을 해제하고 자동 스캔 갱신을 허용합니다">
+    <button class="ridi-link-btn btn-unlock-metadata" data-role="detail-unlock-metadata" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" data-book-id="${isAudiobookContext ? (meta.id || '') : (firstBookId || '')}" style="background: #16a34a; border-color: #22c55e; font-size: 0.75rem; padding: 0.2rem 0.6rem; display: inline-flex; align-items: center; gap: 0.2rem; margin-left: 0.3rem;" title="메타데이터 잠금을 해제하고 자동 스캔 갱신을 허용합니다">
       <i class="fa-solid fa-lock-open"></i> 잠금해제
     </button>
   ` : '';
@@ -589,7 +589,7 @@ export function renderDetailHeader(meta, books, safeSeriesName, actualLibraryId,
           </div>
         </div>
         <div class="edit-meta-buttons-row">
-          <button class="ridi-link-btn" data-role="detail-save-meta" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" style="background: #22c55e; border-color: #4ade80;">${i18n.t('detail.btn_save')}</button>
+          <button class="ridi-link-btn" data-role="detail-save-meta" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" data-audiobook-id="${isAudiobookContext ? (meta.id || '') : ''}" style="background: #22c55e; border-color: #4ade80;">${i18n.t('detail.btn_save')}</button>
           <button class="ridi-link-btn" data-role="detail-cancel-meta" style="background: #64748b; border-color: #94a3b8;">${i18n.t('detail.btn_cancel')}</button>
         </div>
       </div>

@@ -147,37 +147,39 @@ class AudiobookRepository:
             conn.close()
 
     @staticmethod
-    def update_media_detail(series_name, author, web_id, publisher, summary, cover_image_url=None):
+    def update_media_detail(series_name, author, web_id, publisher, summary, poster=None, audiobook_id=None):
+        """상세 화면 수동 수정. audiobook_id가 있으면 그 책 하나만(없으면 예전처럼 제목/폴더명이 같은 책들),
+        poster가 있으면 표지도 바꾸고, 다음 재스캔이 덮어쓰지 않게 metadata_locked=1로 잠근다."""
         conn = database.get_connection('audiobook')
         cursor = conn.cursor()
         try:
-            if cover_image_url:
-                cursor.execute(
-                    """
-                    UPDATE audiobooks
-                    SET author = %s,
-                        web_id = %s,
-                        publisher = %s,
-                        description = %s,
-                        cover_image = %s,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE title = %s OR folder_name = %s
-                    """,
-                    (author, web_id, publisher, summary, cover_image_url, series_name, series_name)
-                )
+            sets = "author = %s, web_id = %s, publisher = %s, description = %s, metadata_locked = 1, updated_at = CURRENT_TIMESTAMP"
+            params = [author, web_id, publisher, summary]
+            if poster:
+                sets += ", poster = %s"
+                params.append(poster)
+            if audiobook_id:
+                where = "id = %s"
+                params.append(int(audiobook_id))
             else:
-                cursor.execute(
-                    """
-                    UPDATE audiobooks
-                    SET author = %s,
-                        web_id = %s,
-                        publisher = %s,
-                        description = %s,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE title = %s OR folder_name = %s
-                    """,
-                    (author, web_id, publisher, summary, series_name, series_name)
-                )
+                where = "title = %s OR folder_name = %s"
+                params.extend([series_name, series_name])
+            cursor.execute(f"UPDATE audiobooks SET {sets} WHERE {where}", tuple(params))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    @staticmethod
+    def unlock_metadata(audiobook_id):
+        """수동 수정 잠금 해제 - 다음 재스캔부터 metadata.json/폴더 정보로 다시 채운다."""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE audiobooks SET metadata_locked = 0 WHERE id = %s AND COALESCE(metadata_locked, 0) = 1", (int(audiobook_id),))
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
@@ -293,7 +295,8 @@ class AudiobookRepository:
                 """
                 SELECT id, library_id, title, web_id, author, publisher, code, poster,
                        premiered, ratings, author_intro, description,
-                       folder_name, total_duration, total_tracks, file_type
+                       folder_name, total_duration, total_tracks, file_type,
+                       COALESCE(metadata_locked, 0) AS metadata_locked
                 FROM audiobooks
                 WHERE folder_path = %s
                 """,
@@ -518,7 +521,7 @@ class AudiobookRepository:
                     )
                 if poster:
                     cursor.execute(
-                        "UPDATE audiobooks SET poster = %s WHERE id = %s AND COALESCE(poster, '') = ''",
+                        "UPDATE audiobooks SET poster = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s AND COALESCE(poster, '') = ''",
                         (poster, int(audiobook_id))
                     )
                 conn.commit()
@@ -600,6 +603,21 @@ class AudiobookRepository:
         return updated
 
     @staticmethod
+    def touch_updated_at(row_id):
+        """표지 원본(같은 경로)이 바뀐 것을 스캐너가 알아챘을 때 updated_at만 올려 화면 표지 주소(?t=)를 바꾼다."""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE audiobooks SET updated_at = CURRENT_TIMESTAMP WHERE id = %s", (int(row_id),))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_by_folder_path(folder_path):
         with database.connection('audiobook') as conn:
             cursor = conn.cursor()
@@ -607,7 +625,8 @@ class AudiobookRepository:
                 """
                 SELECT id, library_id, title, web_id, author, publisher, code, poster,
                        premiered, ratings, author_intro, description,
-                       folder_name, total_duration, total_tracks, file_type
+                       folder_name, total_duration, total_tracks, file_type,
+                       COALESCE(metadata_locked, 0) AS metadata_locked
                 FROM audiobooks
                 WHERE folder_path = %s
                 """,

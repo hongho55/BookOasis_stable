@@ -372,6 +372,8 @@ def scan_and_save_video_folder(folder_path, library_id=None):
 
         scan_result = VideoRepository.save_video_scan(normalized_folder_path, library_id, meta, episodes)
         video_id = scan_result['video_id']
+        from services.audiobook_scanner import _touch_if_poster_replaced
+        _touch_if_poster_replaced(VideoRepository, video_id, meta.get('poster'), 'video', library_id)
 
         elapsed_ms = int((time.perf_counter() - started_at) * 1000)
         print(

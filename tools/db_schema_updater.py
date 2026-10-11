@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS audiobooks (
     total_tracks INT DEFAULT 1,
     file_type VARCHAR(50) DEFAULT 'multi',
     is_favorite INT DEFAULT 0,
+    metadata_locked INT DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_deleted INT DEFAULT 0,

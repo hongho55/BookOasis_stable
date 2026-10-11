@@ -85,7 +85,7 @@ export function handleCoverDrop(event) {
   }
 }
 
-export async function saveManualMetadata(seriesName) {
+export async function saveManualMetadata(seriesName, _libraryId = '', audiobookId = '') {
   const seriesAlias = document.getElementById('edit-series-alias-input') ? document.getElementById('edit-series-alias-input').value.trim() : '';
   const author = document.getElementById('edit-author-input').value.trim();
   const isbn = document.getElementById('edit-isbn-input').value.trim();
@@ -111,6 +111,8 @@ export async function saveManualMetadata(seriesName) {
   formData.append('genre', genre);
   formData.append('tags', tags);
   formData.append('books_lv', booksLv);
+  // 오디오북은 제목이 같은 다른 책까지 바뀌지 않게 그 책 하나만 수정한다
+  if (audiobookId) formData.append('audiobook_id', audiobookId);
   if (coverFile) {
     formData.append('cover_image', coverFile);
   }

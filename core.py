@@ -467,6 +467,10 @@ if not IS_WORKER:
 
         return ('', 204)
 
+    # 쓰기 API 실패를 logs/media_server.log에 한 줄로 남긴다 (신고가 와도 원인을 찾을 수 있게)
+    from utils.request_failure_log import log_failed_write_request
+    app.after_request(log_failed_write_request)
+
     @app.after_request
     def add_fingerprint_headers(response):
         response.headers['X-Powered-By'] = ENGINE_NAME

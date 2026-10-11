@@ -3,6 +3,52 @@ import os
 import hashlib
 
 
+def _poster_cache_paths(poster_source, category, library_id):
+    from services.cover_storage_service import get_covers_dir
+    covers_dir = get_covers_dir()
+    cache_dir = os.path.join(covers_dir, category, str(library_id)) if library_id is not None else os.path.join(covers_dir, category)
+    source_hash = hashlib.md5(str(poster_source).encode('utf-8')).hexdigest()
+    base = os.path.join(cache_dir, source_hash)
+    return cache_dir, f"{base}.webp", f"{base}.none", f"{base}.sig"
+
+
+def _source_signature(path):
+    """로컬 포스터 파일의 수정시각:크기. 원격 마운트에서도 목록 정보라 다운로드가 없다. 못 읽으면 None."""
+    try:
+        st = os.stat(path)
+        return f"{int(st.st_mtime)}:{st.st_size}"
+    except OSError:
+        return None
+
+
+def _read_text(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def _write_text(path, text):
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(text or '')
+    except OSError:
+        pass
+
+
+def poster_cache_outdated(poster_source, category, library_id=None):
+    """캐시된 WebP가 있는데 원본(같은 경로)이 그 뒤 바뀌었으면 True. 스캐너가 updated_at을 올려
+    화면 표지 주소(?t=)를 바꾸는 데 쓴다. URL 포스터·캐시 없음·서명 없음·원본 못 읽음은 False."""
+    if not poster_source or str(poster_source).startswith(('http://', 'https://')):
+        return False
+    _dir, cache_path, _marker, sig_path = _poster_cache_paths(poster_source, category, library_id)
+    if not os.path.exists(cache_path):
+        return False
+    saved, current = _read_text(sig_path), _source_signature(poster_source)
+    return bool(saved and current and saved != current)
+
+
 def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, timeout=5):
     """오디오북/영상 강좌 포스터(로컬 경로 또는 원격 URL)를 covers/{category}/{library_id}/ 아래
     WebP로 변환해 로컬 캐시하고, 캐시 파일의 절대 경로를 반환한다. 도서 표지가
@@ -12,27 +58,34 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
     도서 표지(tools/scanner/cover.py)와 달리 이쪽은 스캔 시점이 아니라 최초 요청
     시점에 지연 생성(lazy)된다 — 대량 스캔 중 네트워크 호출이 끼어들어 스캔 자체가
     느려지는 것을 피하고, 실제로 화면에 노출된 것만 캐싱하기 위함. 캐시 키(파일명)는
-    도서 표지와 동일하게 숫자 id가 아니라 포스터 소스 문자열(경로/URL)의 MD5 해시라서,
-    재스캔으로 포스터 소스가 바뀌면 새 해시로 자연스럽게 재캐싱된다(별도 무효화 로직 불필요).
+    포스터 소스 문자열(경로/URL)의 MD5 해시라서 소스가 바뀌면 새 해시로 재캐싱된다.
+    같은 경로의 파일을 덮어쓴 경우(cover.jpg 교체)는 옆의 .sig(원본 수정시각:크기)가 달라져
+    다시 만든다. 원본을 못 읽으면(마운트 끊김) 있는 캐시를 그대로 쓴다. .sig가 없던 예전 캐시는
+    다시 만들지 않고 현재 서명만 기록한다(업그레이드 직후 원격 원본을 한꺼번에 다시 읽지 않게).
     실패 시 None을 반환하며, 호출부는 기존 폴백(SVG 플레이스홀더)을 그대로 사용하면 된다.
     """
     if not poster_source:
         return None
 
     from tools.scanner.cover import save_as_thumbnail_webp
-    from services.cover_storage_service import get_covers_dir
-    covers_dir = get_covers_dir()
-    cache_dir = os.path.join(covers_dir, category, str(library_id)) if library_id is not None else os.path.join(covers_dir, category)
+    cache_dir, cache_path, none_marker, sig_path = _poster_cache_paths(poster_source, category, library_id)
     os.makedirs(cache_dir, exist_ok=True)
 
-    source_hash = hashlib.md5(str(poster_source).encode('utf-8')).hexdigest()
-    cache_path = os.path.join(cache_dir, f"{source_hash}.webp")
+    is_remote = str(poster_source).startswith(('http://', 'https://'))
+    signature = None if is_remote else _source_signature(poster_source)
 
     if os.path.exists(cache_path) and os.path.getsize(cache_path) > 0:
-        return cache_path
+        if is_remote or signature is None:
+            return cache_path
+        saved = _read_text(sig_path)
+        if not saved:
+            _write_text(sig_path, signature)
+            return cache_path
+        if saved == signature:
+            return cache_path
+        # 같은 경로의 원본이 바뀌었다 → 아래에서 다시 만든다
 
     img_data = None
-    is_remote = str(poster_source).startswith(('http://', 'https://'))
     if is_remote:
         try:
             import requests
@@ -45,33 +98,23 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
         except Exception:
             return None
     else:
-        if not os.path.exists(poster_source):
+        if signature is None:
             return None
         from services.audiobook_scanner import AUDIO_EXTENSIONS, read_embedded_cover, read_metadata_json_cover
-        if str(poster_source).lower().endswith('.json'):
-            # 오디오북 metadata.json의 내장 표지(image_blobs). 없으면 .none 표시로 반복 파싱을 막는다.
-            none_marker = os.path.join(cache_dir, f"{source_hash}.none")
+        lower = str(poster_source).lower()
+        if lower.endswith('.json') or lower.endswith(AUDIO_EXTENSIONS):
+            # metadata.json 내장 표지 / 음악 곡 파일의 내장 아트. 없으면 .none(원본 서명)을 남겨 그리드를 열 때마다
+            # 원격 파일을 다시 여는 일을 막는다. 원본이 바뀌면(서명이 다르면) 한 번 다시 본다.
             if os.path.exists(none_marker):
-                return None
-            img_data = read_metadata_json_cover(poster_source)
+                marked = _read_text(none_marker)
+                if not marked:
+                    _write_text(none_marker, signature)  # 예전 빈 표시: 다시 읽지 않고 서명만 기록
+                    return None
+                if marked == signature:
+                    return None
+            img_data = read_metadata_json_cover(poster_source) if lower.endswith('.json') else read_embedded_cover(poster_source)
             if not img_data:
-                try:
-                    open(none_marker, 'wb').close()
-                except Exception:
-                    pass
-                return None
-        elif str(poster_source).lower().endswith(AUDIO_EXTENSIONS):
-            # 음악 앨범의 포스터 소스가 곡 파일이면 내장 아트만 꺼낸다(파일 전체를 읽지 않음).
-            # 아트가 없으면 .none 표시를 남겨, 그리드를 열 때마다 원격 곡 파일을 다시 여는 일을 막는다.
-            none_marker = os.path.join(cache_dir, f"{source_hash}.none")
-            if os.path.exists(none_marker):
-                return None
-            img_data = read_embedded_cover(poster_source)
-            if not img_data:
-                try:
-                    open(none_marker, 'wb').close()
-                except Exception:
-                    pass
+                _write_text(none_marker, signature)
                 return None
         else:
             try:
@@ -88,6 +131,13 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
         from PIL import Image
         with Image.open(io.BytesIO(img_data)) as img:
             save_as_thumbnail_webp(img, cache_path)
+        if signature:
+            _write_text(sig_path, signature)
+        if os.path.exists(none_marker):
+            try:
+                os.remove(none_marker)
+            except OSError:
+                pass
         return cache_path
     except Exception as e:
         print(f"[Cover-Cache] Poster WebP conversion failed ({poster_source}): {e}")

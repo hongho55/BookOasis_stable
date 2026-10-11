@@ -77,7 +77,7 @@ export function bindDetailInteractions() {
       return window.markSeriesUnread?.(event, target.getAttribute('data-series-name') || '', target.getAttribute('data-library-id') || '');
     }
     if (role === 'detail-save-meta') {
-      return window.saveManualMetadata?.(target.getAttribute('data-series-name') || '', target.getAttribute('data-library-id') || '');
+      return window.saveManualMetadata?.(target.getAttribute('data-series-name') || '', target.getAttribute('data-library-id') || '', target.getAttribute('data-audiobook-id') || '');
     }
     if (role === 'detail-volume-filter') {
       return window.toggleDetailUnreadFilter?.();
