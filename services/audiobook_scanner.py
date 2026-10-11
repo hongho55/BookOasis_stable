@@ -847,6 +847,9 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
                     'artist': r.get('artist')
                 }
 
+        if existing and existing_track_cache:
+            _keep_renamed_track_ids(AudiobookRepository, existing['id'], normalized_folder_path, existing_track_cache)
+
         parse_started_at = time.perf_counter()
         result = parse_audiobook_folder(
             folder_path,
@@ -864,6 +867,9 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
             kept = os.path.normpath(str(existing.get('poster') or ''))
             if existing.get('poster') and kept.startswith(normalized_folder_path + os.sep):
                 meta['poster'] = kept
+        if existing and int(existing.get('is_deleted') or 0):
+            AudiobookRepository.set_deleted(existing['id'], False)
+            print(f"[AudiobookScanner][RESTORED] audiobook_id={existing['id']} folder_path={normalized_folder_path}")
         if existing and int(existing.get('metadata_locked') or 0):
             # 상세 화면에서 수동 수정(잠금)한 책: 저자/출판사/소개/식별자/표지는 재스캔이 덮지 않는다 (트랙은 계속 갱신)
             for key in ('author', 'publisher', 'description', 'web_id', 'poster'):
@@ -1005,6 +1011,130 @@ def _dispatch_audiobook_new_items_events(library_id, new_items):
     threading.Thread(target=_worker, daemon=True).start()
 
 
+def _keep_renamed_track_ids(repo, audiobook_id, folder_path, track_cache):
+    """폴더 안에서 파일 이름만 바뀐 트랙을 찾아 경로를 고친다(트랙 id = 이어 듣기 위치 유지).
+    사라진 트랙과 새 파일의 크기+수정시각(초)이 서로 하나씩만 맞을 때만 같은 파일로 본다. 이름 변경은
+    로컬·GDrive 모두 수정시각을 유지한다. track_cache(경로 → 크기/시각/길이)도 새 경로로 옮겨 길이를 다시 재지 않는다."""
+    rows = [r for r in repo.get_audiobook_tracks(audiobook_id) if r.get('file_path')]
+    known = {os.path.normpath(str(r['file_path'])) for r in rows}
+    gone = [r for r in rows if not os.path.exists(r['file_path'])]
+    if not gone:
+        return 0
+    def key(size, mtime):
+        return (int(size or 0), int(float(mtime or 0)))
+    fresh = {}
+    for root, _, files in os.walk(folder_path):
+        for name in files:
+            if not name.lower().endswith(AUDIO_EXTENSIONS):
+                continue
+            path = os.path.normpath(os.path.join(root, name))
+            if path in known:
+                continue
+            try:
+                st = os.stat(path)
+            except OSError:
+                continue
+            fresh.setdefault(key(st.st_size, st.st_mtime), []).append(path)
+    gone_keys = {}
+    for r in gone:
+        gone_keys.setdefault(key(r.get('file_size'), r.get('file_mtime')), []).append(r)
+    pairs = []
+    for k, olds in gone_keys.items():
+        news = fresh.get(k) or []
+        if k[0] > 0 and k[1] > 0 and len(olds) == 1 and len(news) == 1:
+            pairs.append((olds[0], news[0]))
+    if not pairs:
+        return 0
+    repo.update_track_paths([(old['id'], new_path) for old, new_path in pairs])
+    for old, new_path in pairs:
+        old_path = os.path.normpath(str(old['file_path']))
+        if old_path in track_cache:
+            track_cache[new_path] = track_cache.pop(old_path)
+        print(f"[AudiobookScanner][TRACK_RENAMED] audiobook_id={audiobook_id} track_id={old['id']} from={old_path} to={new_path}")
+    return len(pairs)
+
+
+def _audio_signature(folder_path):
+    """폴더 안 오디오 파일의 {(상대 경로, 크기): 전체 경로}. 목록 정보만 써서 원격에서도 다운로드가 없다."""
+    sig = {}
+    base = os.path.normpath(folder_path)
+    for root, _, files in os.walk(base):
+        for name in files:
+            if not name.lower().endswith(AUDIO_EXTENSIONS):
+                continue
+            full = os.path.normpath(os.path.join(root, name))
+            try:
+                sig[(os.path.relpath(full, base), int(os.path.getsize(full)))] = full
+            except OSError:
+                continue
+    return sig
+
+
+class _MovedAudiobookFinder:
+    """폴더 이름 변경/이동 인식: 새로 발견한 폴더의 트랙 구성(상대 경로+크기)이 '폴더가 사라진 기존 책'과
+    같으면(기존 트랙이 모두 있으면) 그 책을 옮긴 것으로 본다. 새 폴더라는 실제 증거가 있을 때만 옮기므로
+    마운트가 끊겨도 잘못 옮기지 않는다. 짝이 없는 사라진 책은 스캔 끝에 숨김(소프트 삭제) 후보가 된다."""
+
+    def __init__(self, library_path, rows):
+        root = os.path.normpath(library_path)
+        self.rows = [r for r in rows if not r.get('is_deleted') and
+                     (os.path.normpath(r['folder_path']) == root or os.path.normpath(r['folder_path']).startswith(root + os.sep))]
+        self._missing = None
+        self.moved_ids = set()
+
+    def missing(self):
+        if self._missing is None:
+            self._missing = [r for r in self.rows if not os.path.isdir(r['folder_path'])]
+        return self._missing
+
+    def find(self, new_folder):
+        from repositories.audiobook_repository import AudiobookRepository
+        candidates = [r for r in self.missing() if r['id'] not in self.moved_ids]
+        if not candidates:
+            return None
+        new_sig = _audio_signature(new_folder)
+        matches = []
+        for r in candidates:
+            old_folder = os.path.normpath(r['folder_path'])
+            tracks = AudiobookRepository.get_audiobook_tracks(r['id'])
+            old_sig = {(os.path.relpath(os.path.normpath(t['file_path']), old_folder), int(t.get('file_size') or 0)): t['id']
+                       for t in tracks if t.get('file_path')}
+            if old_sig and set(old_sig) <= set(new_sig):
+                matches.append((r, [(tid, new_sig[key]) for key, tid in old_sig.items()]))
+        if len(matches) != 1:
+            return None  # 없거나 애매하면 옮기지 않는다
+        return matches[0]
+
+    def unmatched_missing(self):
+        return [r for r in self.missing() if r['id'] not in self.moved_ids]
+
+
+def _hide_unmatched_missing(finder, library_path, library_id):
+    """폴더가 사라졌고 옮겨진 곳도 없는 책을 숨긴다. 카테고리 폴더에 접근할 수 없거나(마운트 끊김)
+    한 번에 많이 사라지면(도서와 같은 대량 삭제 기준) 보류하고 로그만 남긴다."""
+    from repositories.audiobook_repository import AudiobookRepository
+    missing = finder.unmatched_missing()
+    if not missing:
+        return 0
+    try:
+        reachable = os.path.isdir(library_path) and any(True for _ in os.scandir(library_path))
+    except OSError:
+        reachable = False
+    if not reachable:
+        print(f"[AudiobookScanner][MISSING_HELD] library_id={library_id} reason=library_unreachable missing={len(missing)} library_path={library_path}")
+        return 0
+    from services.scan_problem_service import is_mass_missing
+    if is_mass_missing('audiobook', library_id, len(missing), len(finder.rows)):
+        print(f"[AudiobookScanner][MISSING_HELD] library_id={library_id} reason=mass_missing missing={len(missing)} total={len(finder.rows)} library_path={library_path}")
+        return 0
+    hidden = 0
+    for r in missing:
+        if AudiobookRepository.set_deleted(r['id'], True):
+            hidden += 1
+            print(f"[AudiobookScanner][MISSING_HIDDEN] audiobook_id={r['id']} folder_path={r['folder_path']}")
+    return hidden
+
+
 def scan_audiobook_library(library_path, library_id=None, force=False):
     """
     상위 오디오북 라이브러리 디렉토리를 순회하며 모든 오디오북 폴더를 스캔합니다.
@@ -1023,8 +1153,15 @@ def scan_audiobook_library(library_path, library_id=None, force=False):
 
     from repositories.audiobook_repository import AudiobookRepository
     from services.category_service import CategoryService
-    raw_paths = AudiobookRepository.get_folder_paths(library_id)
-    existing_folder_paths = {os.path.normpath(str(p)) for p in raw_paths if p}
+    folder_rows = AudiobookRepository.get_folder_rows(library_id)
+    # 숨겨진(폴더가 사라졌던) 책은 '등록됨'으로 보지 않는다 - 폴더가 다시 나타나면 처리되며 복원된다
+    existing_folder_paths = {os.path.normpath(str(r['folder_path'])) for r in folder_rows if not r.get('is_deleted')}
+    moved_finder = _MovedAudiobookFinder(library_path, folder_rows)
+    moved = 0
+    changed = 0
+    # 일반 스캔도 등록된 폴더의 파일 목록(상대 경로+크기)만 DB 트랙과 비교해, 달라진 폴더(파일 이름 변경·
+    # 회차 추가/삭제)만 다시 처리한다. 목록 정보만 보므로 원격에서도 다운로드가 없다.
+    track_signatures = AudiobookRepository.get_track_signatures(library_id) if skip_existing else {}
     music = CategoryService.is_music_library(library_id)
 
     print(
@@ -1046,7 +1183,10 @@ def scan_audiobook_library(library_path, library_id=None, force=False):
         is_multi_disc_album = music and not has_audio_files and any(is_disc_dir(d) for d in dirs)
 
         if has_audio_json or has_audio_files or is_multi_disc_album:
-            if skip_existing and os.path.normpath(root) in existing_folder_paths:
+            if skip_existing and os.path.normpath(root) in existing_folder_paths and                     set(_audio_signature(root)) != track_signatures.get(os.path.normpath(root), set()):
+                changed += 1
+                print(f"[AudiobookScanner][CHANGED] library_id={library_id} reason=file_list_changed folder_path={os.path.normpath(root)}")
+            elif skip_existing and os.path.normpath(root) in existing_folder_paths:
                 skipped += 1
                 print(
                     "[AudiobookScanner][SKIP_EXISTING] "
@@ -1057,6 +1197,15 @@ def scan_audiobook_library(library_path, library_id=None, force=False):
                 dirs.clear()
                 continue
             was_new_folder = os.path.normpath(root) not in existing_folder_paths
+            if was_new_folder:
+                match = moved_finder.find(root)
+                if match:
+                    row, track_paths = match
+                    AudiobookRepository.relocate_audiobook(row['id'], os.path.normpath(root), os.path.basename(os.path.normpath(root)), track_paths)
+                    moved_finder.moved_ids.add(row['id'])
+                    moved += 1
+                    was_new_folder = False  # 새 책이 아니라 옮겨진 책 (신간 이벤트 없음)
+                    print(f"[AudiobookScanner][MOVED] audiobook_id={row['id']} from={row['folder_path']} to={os.path.normpath(root)}")
             aid = scan_and_save_audiobook_folder(root, library_id=library_id, music=music)
             if aid:
                 count += 1
@@ -1073,6 +1222,8 @@ def scan_audiobook_library(library_path, library_id=None, force=False):
             else:
                 errors += 1
 
+    hidden = _hide_unmatched_missing(moved_finder, library_path, library_id)
+
     _dispatch_audiobook_new_items_events(library_id, new_items)
 
     library_elapsed_sec = time.perf_counter() - library_started_at
@@ -1084,6 +1235,9 @@ def scan_audiobook_library(library_path, library_id=None, force=False):
         f"processed={count} "
         f"skipped={skipped} "
         f"errors={errors} "
+        f"moved={moved} "
+        f"changed={changed} "
+        f"hidden={hidden} "
         f"force={force} "
         f"elapsed_sec={library_elapsed_sec:.3f} "
         f"elapsed_ms={library_elapsed_ms} "

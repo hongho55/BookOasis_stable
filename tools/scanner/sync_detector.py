@@ -58,7 +58,64 @@ def detect_and_handle_book_movement(cursor, db_books, found_file_paths, db_meta_
                 new_paths.remove(np)
                 del_basename_map.pop(basename)
 
+    if deleted_paths and new_paths:
+        _match_renamed_files(cursor, ph, norm_db_books, deleted_paths, new_paths, db_books, db_meta_full, db_offsets_cached)
+
     return deleted_paths | deleted_imgdir_paths
+
+
+def _match_renamed_files(cursor, ph, norm_db_books, deleted_paths, new_paths, db_books, db_meta_full, db_offsets_cached):
+    """파일 이름이 바뀐 경우(basename이 달라 위에서 못 찾음): 사라진 도서와 새 파일의 크기+수정시각(초)이
+    서로 하나씩만 맞으면 같은 파일로 보고 경로를 고친다(id·읽기 기록 유지). 이름 변경은 로컬·GDrive 모두
+    수정시각을 유지한다. 제목이 예전 파일 이름에서 온 것이면(잠기지 않았을 때) 새 파일 이름으로 바꾼다."""
+    ids = [norm_db_books[p] for p in deleted_paths]
+    rows = {}
+    for i in range(0, len(ids), 500):
+        chunk = ids[i:i + 500]
+        cursor.execute(f"SELECT id, title, file_size, file_mtime, COALESCE(metadata_locked, 0) AS metadata_locked FROM books WHERE id IN ({', '.join([ph] * len(chunk))})", chunk)
+        for r in cursor.fetchall():
+            rows[r['id'] if isinstance(r, dict) or hasattr(r, 'keys') else r[0]] = dict(r) if hasattr(r, 'keys') else {
+                'id': r[0], 'title': r[1], 'file_size': r[2], 'file_mtime': r[3], 'metadata_locked': r[4]}
+
+    def key(size, mtime):
+        return (int(size or 0), int(float(mtime or 0)))
+
+    gone = {}
+    for dp in deleted_paths:
+        row = rows.get(norm_db_books[dp])
+        if row:
+            gone.setdefault(key(row['file_size'], row['file_mtime']), []).append(dp)
+    fresh = {}
+    for np in new_paths:
+        try:
+            st = os.stat(np)
+        except OSError:
+            continue
+        fresh.setdefault(key(st.st_size, st.st_mtime), []).append(np)
+
+    for k, olds in gone.items():
+        news = fresh.get(k) or []
+        if k[0] <= 0 or k[1] <= 0 or len(olds) != 1 or len(news) != 1:
+            continue  # 없거나 애매하면 기존처럼 휴지통 + 새 도서
+        old_path, np = olds[0], news[0]
+        book_id = norm_db_books[old_path]
+        row = rows[book_id]
+        old_stem = os.path.splitext(os.path.basename(old_path))[0]
+        if not row['metadata_locked'] and (row['title'] or '') == old_stem:
+            cursor.execute(f"UPDATE books SET file_path = {ph}, title = {ph} WHERE id = {ph}",
+                           (np, os.path.splitext(os.path.basename(np))[0], book_id))
+        else:
+            cursor.execute(f"UPDATE books SET file_path = {ph} WHERE id = {ph}", (np, book_id))
+        print(f"[Scanner-Move] 🚚 Book rename detected by size+mtime: '{old_path}' -> '{np}' (Existing ID {book_id} and reading history maintained)")
+        db_books[np] = book_id
+        if old_path in db_meta_full:
+            db_meta_full.add(np)
+            db_meta_full.remove(old_path)
+        if old_path in db_offsets_cached:
+            db_offsets_cached.add(np)
+            db_offsets_cached.remove(old_path)
+        deleted_paths.remove(old_path)
+        new_paths.remove(np)
 
 def handle_deleted_books(cursor, db_books, deleted_paths, target_paths, found_file_paths):
     """Transaction-safely soft delete books no longer found, and restore previously soft deleted books if found again"""

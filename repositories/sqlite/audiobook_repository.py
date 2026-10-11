@@ -308,7 +308,7 @@ class AudiobookRepository:
                 SELECT id, library_id, title, web_id, author, publisher, code, poster,
                        premiered, ratings, author_intro, description,
                        folder_name, total_duration, total_tracks, file_type,
-                       COALESCE(metadata_locked, 0) AS metadata_locked
+                       COALESCE(metadata_locked, 0) AS metadata_locked, COALESCE(is_deleted, 0) AS is_deleted
                 FROM audiobooks
                 WHERE folder_path = ?
                 """,
@@ -615,6 +615,89 @@ class AudiobookRepository:
         return updated
 
     @staticmethod
+    def get_folder_rows(library_id):
+        """스캐너용: 카테고리의 오디오북 폴더 목록과 삭제(숨김) 여부."""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id, folder_path, COALESCE(is_deleted, 0) AS is_deleted FROM audiobooks WHERE library_id = ?", (library_id,))
+            return [dict(r) for r in cursor.fetchall() if r and r['folder_path']]
+        finally:
+            conn.close()
+
+    @staticmethod
+    def relocate_audiobook(audiobook_id, folder_path, folder_name, track_paths):
+        """폴더 이름 변경/이동: 책과 트랙의 경로만 바꿔 id(이어 듣기 기록)를 유지한다. track_paths = [(track_id, new_path)]"""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE audiobooks SET folder_path = ?, folder_name = ?, is_deleted = 0, deleted_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                           (folder_path, folder_name, int(audiobook_id)))
+            for track_id, new_path in track_paths:
+                cursor.execute("UPDATE audiobook_tracks SET file_path = ? WHERE id = ?", (new_path, int(track_id)))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    @staticmethod
+    def set_deleted(audiobook_id, deleted):
+        """폴더가 사라진 책 숨기기(소프트 삭제) / 다시 나타나면 복원."""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            if deleted:
+                cursor.execute("UPDATE audiobooks SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND COALESCE(is_deleted, 0) = 0", (int(audiobook_id),))
+            else:
+                cursor.execute("UPDATE audiobooks SET is_deleted = 0, deleted_at = NULL WHERE id = ? AND COALESCE(is_deleted, 0) = 1", (int(audiobook_id),))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_track_signatures(library_id):
+        """스캐너용: 카테고리의 (숨기지 않은) 책마다 트랙 {(책 폴더 기준 상대 경로, 크기)} - 폴더 안 변경 감지에 쓴다."""
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT a.folder_path, t.file_path, COALESCE(t.file_size, 0) AS file_size FROM audiobook_tracks t "
+                "JOIN audiobooks a ON a.id = t.audiobook_id WHERE a.library_id = ? AND COALESCE(a.is_deleted, 0) = 0",
+                (library_id,))
+            sigs = {}
+            for r in cursor.fetchall():
+                folder = os.path.normpath(str(r['folder_path']))
+                rel = os.path.relpath(os.path.normpath(str(r['file_path'])), folder)
+                sigs.setdefault(folder, set()).add((rel, int(r['file_size'] or 0)))
+            return sigs
+        finally:
+            conn.close()
+
+    @staticmethod
+    def update_track_paths(track_paths):
+        """파일 이름 변경: 트랙 경로만 바꿔 id(이어 듣기 위치)를 유지한다. track_paths = [(track_id, new_path)]"""
+        if not track_paths:
+            return 0
+        conn = database.get_connection('audiobook')
+        cursor = conn.cursor()
+        try:
+            for track_id, new_path in track_paths:
+                cursor.execute("UPDATE audiobook_tracks SET file_path = ? WHERE id = ?", (new_path, int(track_id)))
+            conn.commit()
+            return len(track_paths)
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+
+    @staticmethod
     def touch_updated_at(row_id):
         """표지 원본(같은 경로)이 바뀐 것을 스캐너가 알아챘을 때 updated_at만 올려 화면 표지 주소(?t=)를 바꾼다."""
         conn = database.get_connection('audiobook')
@@ -639,7 +722,7 @@ class AudiobookRepository:
                 SELECT id, library_id, title, web_id, author, publisher, code, poster,
                        premiered, ratings, author_intro, description,
                        folder_name, total_duration, total_tracks, file_type,
-                       COALESCE(metadata_locked, 0) AS metadata_locked
+                       COALESCE(metadata_locked, 0) AS metadata_locked, COALESCE(is_deleted, 0) AS is_deleted
                 FROM audiobooks
                 WHERE folder_path = ?
                 """,
