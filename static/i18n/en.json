@@ -1077,6 +1077,8 @@
       "cover_missing": {"title": "Cover extraction failed", "detail": "A cover could not be created."},
       "remote_unavailable": {"title": "Remote drive disconnected", "detail": "The category folder cannot be reached. Check the mount. No books are deleted until it comes back."},
       "file_corrupt": {"title": "File corrupted", "detail": "The file is damaged and cannot be opened."},
+      "audiobook_nested_audio": {"title": "Subfolder audio merged into one book", "detail": "This folder has audio files of its own, so the subfolders below were not registered separately and were merged into this one book. To list each subfolder as its own book, move this folder's audio files into a subfolder or elsewhere, then delete the category and add it again. If this layout is intended (e.g. a bonus folder), press [Got it]."},
+      "audiobook_save_failed": {"title": "Audiobook could not be registered", "detail": "This folder could not be saved as an audiobook. Usually the same audio files are already registered under another book (for example right after reorganizing subfolders) - delete the category and add it again."},
       "metadata_invalid": {"title": "Invalid book info", "detail": "Some of the book information is invalid."},
       "system_task_failed": {"title": "Background task failing", "detail": "An automatic background task keeps failing."},
       "user_report": {"title": "User report", "detail": "A user hit an error opening a book and reported it. Check it with Diagnose, then close it with Resolved."},

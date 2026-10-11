@@ -184,6 +184,8 @@ export function problemLineText(line) {
 export function itemRescanAction(item) {
   if (!item) return null;
   if (['file_missing', 'mass_missing'].includes(item.code)) return item.scan_path != null ? 'rescan_path' : null;
+  // 하위 폴더 합쳐짐: 재스캔으로는 풀리지 않는다(등록된 폴더는 다시 나누지 않음) - 카드 문구의 안내를 따른다
+  if (item.code === 'audiobook_nested_audio') return null;
   if (item.book_id) return 'rescan_book';
   return item.scan_path != null ? 'rescan_path' : null;
 }

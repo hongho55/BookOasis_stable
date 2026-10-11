@@ -497,12 +497,9 @@ def stream_audiobook_track(aid, tid):
 
     from services.music_enrich_service import needs_enrich, schedule_track_enrich
     if needs_enrich(row):
-        # 원격 음악은 스캔 때 곡 파일을 열지 않아 길이/태그가 비어 있다. 지금 재생되며 캐시되는 이 파일에서
-        # 잠시 뒤 채운다(공유 드라이브 추가 요청 없음). 음악 카테고리만.
-        album = AudiobookRepository.get_audiobook_by_id(aid)
-        from services.category_service import CategoryService
-        if album and CategoryService.is_music_library(album.get('library_id')):
-            schedule_track_enrich(aid, row)
+        # 원격 카테고리는 스캔 때 파일을 열지 않아 길이(음악은 태그도)가 비어 있다. 지금 재생되며 캐시되는
+        # 이 파일에서 잠시 뒤 채운다(공유 드라이브 추가 요청 없음).
+        schedule_track_enrich(aid, row)
 
     return _send_audio_range_response(row['file_path'])
 

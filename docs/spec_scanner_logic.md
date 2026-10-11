@@ -282,22 +282,23 @@ graph TD
 
 ### ㉑ 폴더 단위 탐색과 스킵 정책
 * **감지 단위**: `os.walk`로 순회하며 폴더 내에 `audio.json` 파일이 있거나 지원 오디오 확장자(`AUDIO_EXTENSIONS = .mp3, .m4b, .m4a, .flac, .aac, .wav, .ogg, .opus, .wma`) 파일이 하나라도 있으면 그 폴더 자체를 "오디오북 한 권"으로 판정합니다.
-* **중첩 방지**: 오디오북으로 판정된 폴더에서는 `dirs.clear()`를 호출해 하위 폴더로의 재귀 탐색을 차단합니다 — 오디오북 폴더 안에 또 다른 오디오북이 중첩될 수 없다는 전제입니다.
+* **중첩 방지**: 오디오북으로 판정된 폴더에서는 `dirs.clear()`를 호출해 하위 폴더로의 재귀 탐색을 차단합니다 — 오디오북 폴더 안에 또 다른 오디오북이 중첩될 수 없다는 전제입니다. 트랙은 하위 폴더까지 모으므로, 폴더 자체와 하위 폴더 모두에 음원이 있으면 하위 폴더가 그 책에 합쳐집니다(예: 카테고리 폴더에 음원 1개 → 카테고리 전체가 책 1권). 자동으로 나누지 않고 알림센터 카드 `audiobook_nested_audio`로 알립니다(카테고리 폴더 자체가 책이거나 하위 metadata.json/audio.json이 무시되면 조치 필요, 그 밖엔 알림). 안내: 음원을 옮긴 뒤 카테고리를 삭제·재등록 — 이미 합쳐진 책의 트랙이 파일 경로 UNIQUE를 쥐고 있어 하위 폴더를 따로 저장하면 중복으로 실패하기 때문입니다(이 저장 실패도 `audiobook_save_failed` 카드로 표시).
 * **스킵 정책**: `force=True`가 아닌 한, `AudiobookRepository.get_folder_paths()`로 조회한 **이미 등록된 폴더 경로 전체 목록**과 정확히 일치하면 내부를 열어보지 않고 통째로 스킵합니다. 일반 스캐너의 파일별 mtime/size 비교([⑮](#-mtime-기반의-2단계-초고속-스킵ultra-fast-skip-알고리즘))보다 훨씬 거친(coarse) 단위이며, 트랙이 일부만 추가/변경된 경우 이를 감지하려면 `force=True` 전체 재스캔이 필요합니다.
 
 ### ㉒ 메타데이터 소스: `metadata.json` 우선, `audio.json` 레거시 폴백
-* **`metadata.json`** (우선 사용, 더 풍부한 스키마): `title`, `publisher`, `description`, `publishedDate`/`publishedYear`, `isbn`, `web_id`, `authors[]`(배열), `narrators[]`(배열, 3명 초과 시 "N명 등"으로 축약해 저자 필드에 병기), `chapters[{start, end}]`(챕터별 시작/종료 초 — 오디오 파일 개수와 1:1로 맞으면 트랙 재생시간을 파일 프로빙 없이 이 값으로 대체).
-* **`audio.json`** (레거시, `metadata.json`이 없을 때만 사용): 평탄한 구조로 `title`, `author`, `publisher`, `code`, `web_id`, `poster`, `premiered`, `author_intro`, `desc`/`description`, `ratings`.
+* **`metadata.json`** (우선 사용, 더 풍부한 스키마): `title`, `publisher`, `description`, `publishedDate`/`publishedYear`, `isbn`, `web_id`, `authors[]`(배열), `narrators[]`(배열, 3명 초과 시 "N명 등"으로 축약해 저자 필드에 병기), `chapters[{start, end}]`(챕터별 시작/종료 초 — 오디오 파일 개수와 1:1로 맞으면 트랙 재생시간을 파일 프로빙 없이 이 값으로 대체), `images.cover` + `image_blobs`(내장 표지, [㉓](#-포스터표지-탐색) 참고). 인코딩은 UTF-8(BOM 포함)/UTF-16/UTF-32를 자동 판별하고, 그래도 안 되면 cp949(한글 윈도우 ANSI)로 다시 읽습니다(`load_json_any_encoding`, audio.json도 동일). cp949로 읽은 경우 로그에 남깁니다. 그 밖의 ANSI(cp1252, Shift-JIS 등)는 지원하지 않아 파싱 실패로 처리됩니다. `files`/`title_sort`/`genres`/`tags`/`series` 등 나머지 필드는 읽지 않습니다.
+* **`audio.json`** (레거시, `metadata.json`이 없거나 문법 오류·최상위가 객체가 아니어서 파싱에 실패했을 때 사용): 평탄한 구조로 `title`, `author`, `publisher`, `code`, `web_id`, `poster`, `premiered`, `author_intro`, `desc`/`description`, `ratings`.
 * 이 두 파서는 [⑧](#-메타데이터-파싱-및-병합-플러그인-확장형-파서-로더)의 `tools/scanner/metadata/` 플러그인 로더와는 **완전히 별개의 독립 파서**이며 `merge_local_metadata()`를 거치지 않습니다.
 * **제목/저자 폴백**: `metadata.json`/`audio.json` 어느 쪽에도 제목/저자가 없으면 폴더명을 `" - "` 기준으로 분리해 `"저자 - 제목"` 패턴으로 추정합니다.
 
 ### ㉓ 포스터(표지) 탐색
-* 후보 파일명 순서대로 탐색: `poster.jpg` → `cover.jpg` → `folder.jpg` (및 `.png`/`.jpeg` 변형) → 어느 것도 없으면 폴더 내 첫 번째 `.jpg`/`.jpeg`/`.png`/`.webp` 파일.
+* 후보 파일명 순서대로 탐색: `poster.jpg` → `cover.jpg` → `folder.jpg` (및 `.png`/`.jpeg` 변형) → 어느 것도 없으면 폴더 내 첫 번째 `.jpg`/`.jpeg`/`.png`/`.webp` 파일 → 그래도 없고 `metadata.json`에 `images.cover`가 가리키는 `image_blobs` 항목(base64)이 있으면 **`metadata.json` 경로 자체**를 포스터 소스로 저장합니다(base64는 DB에 넣지 않음). 디코딩은 첫 표지 요청 때 `utils/cover_helper.py`가 하며, 표지가 없으면 `.none` 표시를 남겨 반복 파싱을 막습니다.
 * 일반 스캐너의 [⑨](#-단계별-표지-이미지-추출-및-매핑-전략) 파이프라인과 달리 WebP 변환이나 해시 파일명 재저장을 거치지 않고, 원본 파일 경로를 그대로 DB에 저장합니다.
 
 ### ㉔ 트랙 길이(Duration) 분석: 다단계 폴백과 원격 고속 경로
 가장 정교한 서브시스템으로, 오디오 파일 전체를 열지 않고도 재생 시간을 추정하는 것을 목표로 합니다 (`get_audio_duration_and_size`):
 1. **`metadata.json`의 챕터 구간**이 오디오 파일 개수와 정확히 1:1로 대응하면, 파일을 프로빙하지 않고 챕터의 `end - start` 값을 트랙 길이로 그대로 사용합니다.
+   * **원격 카테고리에서 챕터 시간이 없으면 파일을 아예 열지 않습니다**(음악·오디오북 공통, `duration_source=deferred`, 길이 0). rclone VFS(cache-mode full, 256M read-chunk)에서는 mutagen으로 길이만 읽어도 m4a 전체가 내려받아지고(faststart 여부 무관), mp3 앞부분 읽기도 파일당 약 252KB가 전송되어 공유 드라이브 일일 전송량을 소모하기 때문입니다(2026-10-11 측정). 파일 크기는 `os.stat`(목록 정보)이라 전송이 없습니다. 길이는 재생 요청 15초 뒤 이미 캐시된 파일에서 `music_enrich_service`가 채우며(추가 전송 0), 오디오북은 길이만(트랙 제목·저자는 태그로 덮지 않음), 비어 있으면 표지만 채웁니다. 재생 전 트랙 시간은 `-`로 표시됩니다.
 2. **캐시 재사용**: 기존 트랙 레코드가 있고 `file_path` + `file_size` + `file_mtime`(정수 단위)이 모두 일치하면 저장된 duration을 재사용해 재분석을 생략합니다.
 3. **MP3 전용 순수 파이썬 프레임 헤더 분석**: MP3 파일은 `mutagen`/`tinytag` 같은 전체 파일 분석 라이브러리를 우회하고, 파일 앞/뒤 최대 64KB 버퍼만 읽어 첫 MPEG 프레임 헤더를 찾습니다(`_find_first_mp3_frame`, `_parse_mp3_frame_header`). Xing/Info VBR 헤더가 있으면 총 프레임 수 기반으로, 없으면 CBR 비트레이트 기반으로 길이를 역산합니다.
 4. **원격 고속 경로(`remote_fast_path`)**: 대상 폴더가 원격 마운트(`is_remote_path`)로 판별되면 파일 끝부분(tail) 버퍼 읽기를 생략해 원격 seek 비용을 줄입니다.

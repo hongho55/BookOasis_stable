@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-music_enrich_service.py – 원격 음악 곡 정보를 "재생할 때" 채운다
+music_enrich_service.py – 원격 음악/오디오북 트랙 정보를 "재생할 때" 채운다
 
-원격 마운트(GDS 등)의 음악 카테고리 스캔은 곡 파일을 열지 않는다(audiobook_scanner.parse_audiobook_folder
-참고 - rclone VFS는 태그만 읽어도 파일 전체를 내려받는다). 그래서 길이가 0이고 제목은 album.yaml/파일명이다.
+원격 마운트(GDS 등)의 음악·오디오북 카테고리 스캔은 파일을 열지 않는다(audiobook_scanner.parse_audiobook_folder
+참고 - rclone VFS는 길이/태그만 읽어도 파일 전체를 내려받는다). 그래서 길이가 0이고 제목은 album.yaml/파일명이다.
+(오디오북은 metadata.json 챕터 시간이 파일 수와 맞으면 그 값을 쓰므로 여기 올 일이 없다.)
 곡이 재생되면 그 파일은 이미 rclone 캐시에 들어오므로, 그때 태그·길이·내장 아트를 읽어 채우면 공유
 드라이브에 추가 요청이 없다.
 
 - stream 요청에서 길이가 0인 곡이면 ENRICH_DELAY_SEC 뒤 백그라운드로 한 번 읽는다(앞부분이 캐시된 뒤).
 - 같은 곡을 동시에 여러 번 예약하지 않는다(Range 요청이 곡마다 여러 번 온다).
-- 채우는 것: 곡 길이, 태그 제목/아티스트(태그가 있을 때만 덮음), 앨범 총 재생시간,
-  비어 있으면 앨범 아티스트(곡 아티스트 다수결)와 포스터(이 곡의 내장 아트).
+- 채우는 것: 곡 길이, 태그 제목/아티스트(음악만, 태그가 있을 때만 덮음), 앨범 총 재생시간,
+  비어 있으면 앨범 아티스트(음악만, 곡 아티스트 다수결)와 포스터(이 곡의 내장 아트).
 """
 import os
 import threading
@@ -52,14 +53,19 @@ def enrich_track(audiobook_id, track_id):
     if not needs_enrich(track) or not track.get('file_path'):
         return False
     path = track['file_path']
+    album = AudiobookRepository.get_audiobook_by_id(audiobook_id) or {}
+    from services.category_service import CategoryService
+    music = CategoryService.is_music_library(album.get('library_id'))
     duration, (title, artist) = probe_track(path)
     if duration <= 0:
         return False
+    if not music:
+        # 오디오북: 트랙 제목은 파일명, 저자는 폴더/metadata.json 기준이라 태그로 덮지 않고 길이만 채운다
+        title = artist = None
     AudiobookRepository.update_track_probe(track_id, duration, title, artist)
 
-    album = AudiobookRepository.get_audiobook_by_id(audiobook_id) or {}
     author = None
-    if not str(album.get('author') or '').strip():
+    if music and not str(album.get('author') or '').strip():
         tracks = AudiobookRepository.get_audiobook_tracks(audiobook_id)
         top = Counter(str(t.get('artist') or '').strip() for t in tracks if str(t.get('artist') or '').strip()).most_common(1)
         if top and top[0][1] * 2 >= len(tracks):

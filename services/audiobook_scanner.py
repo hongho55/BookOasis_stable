@@ -392,6 +392,44 @@ def _extract_xing_frames(buf):
     return None
 
 
+def metadata_json_cover_blob(data):
+    """metadata.json의 images.cover → image_blobs[hash] 내장 표지(base64 문자열)를 돌려준다. 없으면 None."""
+    if not isinstance(data, dict):
+        return None
+    images = data.get('images')
+    blobs = data.get('image_blobs')
+    if not isinstance(images, dict) or not isinstance(blobs, dict):
+        return None
+    blob = blobs.get(images.get('cover'))
+    if not isinstance(blob, dict) or str(blob.get('encoding', 'base64')).lower() != 'base64':
+        return None
+    payload = blob.get('data')
+    return payload if isinstance(payload, str) and payload else None
+
+
+def load_json_any_encoding(json_path):
+    """사용자가 만든 json을 인코딩과 무관하게 읽는다: (data, encoding).
+    json.loads(bytes)가 UTF-8(BOM 포함)/UTF-16/UTF-32를 판별하고, 그래도 안 되면 한글 윈도우 ANSI(cp949)로 다시 읽는다."""
+    with open(json_path, 'rb') as f:
+        raw = f.read()
+    try:
+        return json.loads(raw), 'utf'
+    except UnicodeDecodeError:
+        return json.loads(raw.decode('cp949')), 'cp949'
+
+
+def read_metadata_json_cover(json_path, max_bytes=20 * 1024 * 1024):
+    """metadata.json에 내장된 표지 이미지 바이트를 꺼낸다. 실패 시 None."""
+    import base64
+    try:
+        if os.path.getsize(json_path) > max_bytes:
+            return None
+        payload = metadata_json_cover_blob(load_json_any_encoding(json_path)[0])
+        return base64.b64decode(payload) if payload else None
+    except Exception:
+        return None
+
+
 def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_path=False, music=False):
     """
     단일 오디오북 디렉터리를 분석하여 메타데이터 및 트랙 목록을 파싱합니다.
@@ -410,8 +448,12 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
     folder_name = os.path.basename(os.path.normpath(folder_path))
     audio_files = []
 
-    # 오디오 파일 검색
+    # 오디오 파일 검색 (하위 폴더까지 한 권으로 모은다)
+    book_root = os.path.normpath(folder_path)
+    nested_meta_dirs = set()
     for root, _, files in os.walk(folder_path):
+        if os.path.normpath(root) != book_root and ('metadata.json' in files or 'audio.json' in files):
+            nested_meta_dirs.add(os.path.relpath(root, book_root))
         for file in files:
             if file.lower().endswith(AUDIO_EXTENSIONS):
                 full_path = os.path.normpath(os.path.join(root, file))
@@ -419,6 +461,15 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
 
     if not audio_files:
         return None
+
+    # 이 폴더 자체에도 음원이 있는데 하위 폴더에도 음원이 있으면, 하위 폴더들이 따로 등록되지 않고
+    # 이 책에 합쳐진다(라이브러리 스캔은 음원이 있는 폴더에서 더 내려가지 않는다). 알림센터로 알린다.
+    nested_audio_dirs = sorted({os.path.relpath(os.path.dirname(p), book_root) for p in audio_files
+                                if os.path.dirname(p) != book_root})
+    has_own_audio = any(os.path.dirname(p) == book_root for p in audio_files)
+    nested_audio = None
+    if has_own_audio and nested_audio_dirs:
+        nested_audio = {'dirs': nested_audio_dirs, 'meta_dirs': sorted(nested_meta_dirs)}
 
     # 트랙 파일 자연어 순서 정렬 (음악: CD1/01, CD2/01 이 섞이지 않게 하위 폴더 순서가 먼저)
     if music:
@@ -450,59 +501,68 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
     metadata_json_path = os.path.join(folder_path, 'metadata.json')
     audio_json_path = os.path.join(folder_path, 'audio.json')
     metadata_track_durations = []
+    metadata_has_cover_blob = False
+    metadata_json_loaded = False
 
     if os.path.exists(metadata_json_path):
         try:
-            with open(metadata_json_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                meta['title'] = str(data.get('title', '')).strip()
-                meta['publisher'] = str(data.get('publisher', '')).strip()
-                meta['description'] = str(data.get('description', '')).strip()
-                meta['premiered'] = str(data.get('publishedDate', '') or data.get('publishedYear', '')).strip()
-                meta['isbn'] = str(data.get('isbn', '')).strip()
-                meta['web_id'] = str(data.get('web_id', '')).strip()
+            data, json_encoding = load_json_any_encoding(metadata_json_path)
+            if json_encoding != 'utf':
+                print(f"[AudiobookScanner] metadata.json read as {json_encoding} (not UTF-8) in {folder_path}")
+            if not isinstance(data, dict):
+                raise ValueError('top-level JSON is not an object')
+            metadata_json_loaded = True
+            metadata_has_cover_blob = metadata_json_cover_blob(data) is not None
+            meta['title'] = str(data.get('title', '')).strip()
+            meta['publisher'] = str(data.get('publisher', '')).strip()
+            meta['description'] = str(data.get('description', '')).strip()
+            meta['premiered'] = str(data.get('publishedDate', '') or data.get('publishedYear', '')).strip()
+            meta['isbn'] = str(data.get('isbn', '')).strip()
+            meta['web_id'] = str(data.get('web_id', '')).strip()
 
-                authors_list = data.get('authors', [])
-                narrators_list = data.get('narrators', [])
-                author_str = ", ".join(authors_list) if isinstance(authors_list, list) else str(authors_list or '')
-                if narrators_list and isinstance(narrators_list, list):
-                    narrator_str = ", ".join(narrators_list[:3])
-                    if len(narrators_list) > 3:
-                        narrator_str += " 등"
-                    author_str = f"{author_str} (낭독: {narrator_str})" if author_str else f"낭독: {narrator_str}"
-                meta['author'] = author_str
+            authors_list = data.get('authors', [])
+            narrators_list = data.get('narrators', [])
+            author_str = ", ".join(str(a).strip() for a in authors_list if a) if isinstance(authors_list, list) else str(authors_list or '')
+            if narrators_list and isinstance(narrators_list, list):
+                narrator_str = ", ".join(str(n).strip() for n in narrators_list[:3] if n)
+                if len(narrators_list) > 3:
+                    narrator_str += " 등"
+                author_str = f"{author_str} (낭독: {narrator_str})" if author_str else f"낭독: {narrator_str}"
+            meta['author'] = author_str
 
-                chapters = data.get('chapters', [])
-                if isinstance(chapters, list):
-                    for chapter in chapters:
-                        if not isinstance(chapter, dict):
-                            continue
-                        try:
-                            start_sec = float(chapter.get('start', 0.0) or 0.0)
-                            end_sec = float(chapter.get('end', 0.0) or 0.0)
-                        except (TypeError, ValueError):
-                            continue
-                        if end_sec >= start_sec:
-                            metadata_track_durations.append(end_sec - start_sec)
+            chapters = data.get('chapters', [])
+            if isinstance(chapters, list):
+                for chapter in chapters:
+                    if not isinstance(chapter, dict):
+                        continue
+                    try:
+                        start_sec = float(chapter.get('start', 0.0) or 0.0)
+                        end_sec = float(chapter.get('end', 0.0) or 0.0)
+                    except (TypeError, ValueError):
+                        continue
+                    if end_sec >= start_sec:
+                        metadata_track_durations.append(end_sec - start_sec)
         except Exception as err:
             print(f"[AudiobookScanner Warning] metadata.json read error in {folder_path}: {err}")
-    elif os.path.exists(audio_json_path):
+    # metadata.json이 없거나 파싱에 실패하면 audio.json으로 폴백한다
+    if not metadata_json_loaded and os.path.exists(audio_json_path):
         try:
-            with open(audio_json_path, 'r', encoding='utf-8') as f:
-                json_data = json.load(f)
-                meta['title'] = str(json_data.get('title', '')).strip()
-                meta['author'] = str(json_data.get('author', '')).strip()
-                meta['publisher'] = str(json_data.get('publisher', '')).strip()
-                meta['code'] = str(json_data.get('code', '')).strip()
-                meta['web_id'] = str(json_data.get('web_id', '')).strip()
-                meta['poster'] = str(json_data.get('poster', '')).strip()
-                meta['premiered'] = str(json_data.get('premiered', '')).strip()
-                meta['author_intro'] = str(json_data.get('author_intro', '')).strip()
-                meta['description'] = str(json_data.get('desc', '') or json_data.get('description', '')).strip()
-                try:
-                    meta['ratings'] = float(json_data.get('ratings', 0.0))
-                except (ValueError, TypeError):
-                    meta['ratings'] = 0.0
+            json_data, json_encoding = load_json_any_encoding(audio_json_path)
+            if json_encoding != 'utf':
+                print(f"[AudiobookScanner] audio.json read as {json_encoding} (not UTF-8) in {folder_path}")
+            meta['title'] = str(json_data.get('title', '')).strip()
+            meta['author'] = str(json_data.get('author', '')).strip()
+            meta['publisher'] = str(json_data.get('publisher', '')).strip()
+            meta['code'] = str(json_data.get('code', '')).strip()
+            meta['web_id'] = str(json_data.get('web_id', '')).strip()
+            meta['poster'] = str(json_data.get('poster', '')).strip()
+            meta['premiered'] = str(json_data.get('premiered', '')).strip()
+            meta['author_intro'] = str(json_data.get('author_intro', '')).strip()
+            meta['description'] = str(json_data.get('desc', '') or json_data.get('description', '')).strip()
+            try:
+                meta['ratings'] = float(json_data.get('ratings', 0.0))
+            except (ValueError, TypeError):
+                meta['ratings'] = 0.0
         except Exception as err:
             print(f"[AudiobookScanner Warning] audio.json read error in {folder_path}: {err}")
 
@@ -547,6 +607,10 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
 
         if found_poster:
             meta['poster'] = found_poster
+        elif metadata_has_cover_blob:
+            # 폴더 이미지가 없고 metadata.json에 표지가 내장(image_blobs)돼 있으면 json 경로를 포스터 소스로 둔다
+            # (base64를 DB에 넣지 않고, 커버 캐시가 첫 요청 때 디코딩한다)
+            meta['poster'] = os.path.normpath(metadata_json_path)
         elif music and not meta['poster'] and not skip_audio_reads:
             # 폴더 이미지가 없는 음악 앨범: 첫 곡 경로를 포스터 소스로 두면 커버 캐시가 내장 아트를 꺼낸다
             # (원격은 곡 파일 전체를 받게 되므로 하지 않는다 - album.yaml 포스터 URL 또는 재생 후 채움)
@@ -608,8 +672,10 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
                 duration = float(metadata_track_durations[idx - 1] or 0.0)
                 metadata_duration_hits += 1
                 duration_source = 'metadata'
-            elif skip_audio_reads:
-                # 원격 음악: 곡 파일을 열지 않는다 (길이는 재생할 때 채운다)
+            elif remote_fast_path:
+                # 원격(음악·오디오북 공통): 파일을 열지 않는다. rclone VFS는 길이만 읽어도 m4a 전체를 내려받아
+                # (2026-10-11 측정: 9.4MiB m4a → 9.4MiB 전송, mp3도 파일당 ~252KB) 공유 드라이브 일일 전송량을
+                # 소모한다. 길이는 재생할 때 이미 캐시된 파일에서 music_enrich_service가 채운다.
                 duration = 0.0
                 duration_source = 'deferred'
             else:
@@ -689,8 +755,46 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
         'metadata_duration_hits': metadata_duration_hits,
         'metadata_duration_fallbacks': metadata_duration_fallbacks,
         'metadata_track_duration_mode': use_metadata_track_durations,
-        'file_probe_hits': file_probe_hits
+        'file_probe_hits': file_probe_hits,
+        'nested_audio': nested_audio,
     }
+
+
+CODE_NESTED_AUDIO = 'audiobook_nested_audio'
+CODE_SAVE_FAILED = 'audiobook_save_failed'
+
+
+def _library_root_paths(library_id):
+    if not library_id:
+        return set()
+    try:
+        from repositories.category_repository import CategoryRepository
+        lib = CategoryRepository.get_library_by_id('audiobook', library_id) or {}
+        return {os.path.normpath(p.strip()) for p in str(lib.get('physical_path') or '').replace('\r', '').split('\n') if p.strip()}
+    except Exception:
+        return set()
+
+
+def _report_nested_audio(audiobook_id, library_id, folder_path, title, nested_audio):
+    """하위 폴더 음원이 한 권으로 합쳐진 책을 알림센터에 올리거나(있을 때), 해제한다(없어졌을 때).
+    자동으로 고치지 않는다 - 안내는 카드 문구(음원을 옮긴 뒤 카테고리를 다시 등록)에 있다."""
+    from services.problem_service import ProblemService, SEVERITY_ACTION_REQUIRED, SEVERITY_NOTICE, make_series_key
+    target_id = f'ab:{audiobook_id}'  # 숫자가 아니어야 카드에 도서 단위 재스캔 버튼이 붙지 않는다
+    if not nested_audio:
+        ProblemService.resolve(CODE_NESTED_AUDIO, 'book', target_id, db_type='audiobook')
+        return
+    is_library_root = os.path.normpath(folder_path) in _library_root_paths(library_id)
+    meta_dirs = set(nested_audio.get('meta_dirs') or [])
+    dirs = nested_audio['dirs']
+    shown = [d + (' [metadata.json]' if d in meta_dirs else '') for d in dirs[:8]]
+    detail = ', '.join(shown) + (f' +{len(dirs) - 8}' if len(dirs) > 8 else '')
+    ProblemService.report(
+        CODE_NESTED_AUDIO, 'book', target_id, db_type='audiobook', library_id=library_id,
+        severity=SEVERITY_ACTION_REQUIRED if (is_library_root or meta_dirs) else SEVERITY_NOTICE,
+        target_path=os.path.normpath(folder_path), series_key=make_series_key(library_id, title),
+        title=title, detail=detail,
+        context={'library_root': is_library_root, 'nested_dirs': len(dirs), 'ignored_metadata_dirs': sorted(meta_dirs)[:20]},
+    )
 
 
 def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
@@ -763,6 +867,13 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
         track_deletes = scan_result['track_deletes']
         if music:
             track_updates += AudiobookRepository.update_track_tags(audiobook_id, tracks)
+        _report_nested_audio(audiobook_id, library_id, normalized_folder_path, meta['title'], result.get('nested_audio'))
+        from services.problem_service import ProblemService
+        from services.scan_problem_service import _path_target_id
+        ProblemService.resolve(CODE_SAVE_FAILED, 'book', _path_target_id(normalized_folder_path), db_type='audiobook')
+        # 하위 폴더가 이 책에 합쳐졌으면 그 폴더들은 더 이상 따로 저장되지 않는다 - 예전 실패 기록도 닫는다
+        for rel in (result.get('nested_audio') or {}).get('dirs') or []:
+            ProblemService.resolve(CODE_SAVE_FAILED, 'book', _path_target_id(os.path.normpath(os.path.join(normalized_folder_path, rel))), db_type='audiobook')
 
         elapsed_sec = time.perf_counter() - started_at
         elapsed_ms = int(elapsed_sec * 1000)
@@ -819,6 +930,16 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
         return audiobook_id
     except Exception as err:
         print(f"[AudiobookScanner ERROR] Failed to save audiobook {folder_path}: {err}")
+        try:
+            # 로그에만 남으면 사용자가 모른다(예: 하위 폴더를 정리한 뒤 '트랙 파일 경로 중복'으로 등록 실패)
+            from services.problem_service import ProblemService
+            from services.scan_problem_service import _path_target_id
+            norm = os.path.normpath(folder_path)
+            ProblemService.report(CODE_SAVE_FAILED, 'book', _path_target_id(norm), db_type='audiobook',
+                                  library_id=library_id, target_path=norm, title=os.path.basename(norm),
+                                  detail=str(err)[:300])
+        except Exception:
+            pass
         return None
 
 

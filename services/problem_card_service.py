@@ -156,6 +156,7 @@ def get_card_items(group_key, series_key=None, offset=0, limit=50):
             'file_name': os.path.basename(path) if path else None,
             'scan_path': relative_scan_path(roots, os.path.dirname(path)) if path and r['target_type'] == 'book' else None,
             'message': r.get('message') or '',
+            'detail': r.get('detail') or '',
             'occurrence_count': int(r.get('occurrence_count') or 0),
             'first_seen_at': r.get('first_seen_at'),
             'last_seen_at': r.get('last_seen_at'),

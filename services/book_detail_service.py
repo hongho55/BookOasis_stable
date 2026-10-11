@@ -113,8 +113,8 @@ class BookDetailService:
                 dur_sec = t['duration'] or 0.0
                 mins = int(dur_sec // 60)
                 secs = int(dur_sec % 60)
-                # 원격 음악은 재생하기 전엔 길이를 모른다(스캔이 곡 파일을 열지 않음) - 00:00 대신 '-'
-                time_str = '-' if (is_music and dur_sec <= 0) else f"{mins:02d}:{secs:02d}"
+                # 원격 카테고리는 재생하기 전엔 길이를 모른다(스캔이 파일을 열지 않음) - 00:00 대신 '-'
+                time_str = '-' if dur_sec <= 0 else f"{mins:02d}:{secs:02d}"
                 saved_track_progress = track_progress.get(int(t['id']))
                 if is_completed:
                     track_progress_pct = 100.0

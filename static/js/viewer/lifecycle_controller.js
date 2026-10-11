@@ -28,8 +28,11 @@ registerActiveViewerGetter(getActiveViewerInstance);
 
 // ── 열린 책 기억 (탭 정리 후 복귀용) ──
 // 모바일 OS가 백그라운드 탭을 정리하면 돌아올 때 /#viewer 로 새로 로드되는데, 그동안은 뷰어를
-// 복원하지 못하고 목록이 떠서 "읽던 곳으로 못 돌아간다"로 보였다. sessionStorage는 같은 탭이
-// 되살아날 때 유지되므로 여기에 열린 책을 남기고, 정상적으로 닫으면 지운다.
+// 복원하지 못하고 목록이 떠서 "읽던 곳으로 못 돌아간다"로 보였다.
+// 열린 책은 뷰어 히스토리 항목의 history.state(resume)에 둔다 - 실제 안드로이드 크롬에서 프로세스가
+// 종료된 뒤 탭이 복원되면 sessionStorage·window.name은 사라지지만 #viewer 주소와 history.state는
+// 남는다(2026-10-11 에뮬레이터 실측 4/4). 탭마다 따로라 여러 탭이 섞이지 않는다.
+// sessionStorage는 예전 동작 호환용 보조 기록으로만 남긴다.
 const OPEN_VIEWER_SESSION_KEY = 'bookoasis_open_viewer';
 
 function rememberOpenViewer(entry) {
@@ -38,9 +41,19 @@ function rememberOpenViewer(entry) {
 
 function forgetOpenViewer() {
   try { sessionStorage.removeItem(OPEN_VIEWER_SESSION_KEY); } catch (e) {}
+  // 닫은 뒤 이 항목으로 다시 로드돼도(앞으로 가기·새로고침) 책이 다시 열리지 않게 표식을 지운다
+  try {
+    if (history.state && history.state.resume) {
+      history.replaceState({ ...history.state, resume: null }, '', window.location.href);
+    }
+  } catch (e) {}
 }
 
 export function readOpenViewerSession() {
+  try {
+    const fromHistory = history.state && history.state.view === 'viewer' ? history.state.resume : null;
+    if (fromHistory && fromHistory.bookId) return fromHistory;
+  } catch (e) {}
   try {
     const entry = JSON.parse(sessionStorage.getItem(OPEN_VIEWER_SESSION_KEY) || 'null');
     return entry && entry.bookId ? entry : null;
@@ -82,13 +95,14 @@ export function openReader(bookId, format, title, pagesRead, totalPages) {
   const viewerModal = document.getElementById('media-viewer-modal');
   if (!viewerModal) return;
 
-  rememberOpenViewer({
+  const resumeEntry = {
     bookId,
     format: fmt,
     title: title || '',
     type: state.currentLibraryType,
     libraryId: state.currentLibraryId || 'all',
-  });
+  };
+  rememberOpenViewer(resumeEntry);
 
   if (viewerModal.parentNode !== document.body) {
     document.body.appendChild(viewerModal);
@@ -103,7 +117,12 @@ export function openReader(bookId, format, title, pagesRead, totalPages) {
   }
 
   if (window.location.hash !== '#viewer') {
-    history.pushState({ view: 'viewer', bookId, libraryId: state.currentLibraryId }, '', '#viewer');
+    history.pushState({ view: 'viewer', bookId, libraryId: state.currentLibraryId, resume: resumeEntry }, '', '#viewer');
+  } else {
+    // 다음 권 이어보기·탭 복원 후 다시 열기처럼 이미 뷰어 항목이면 새 책 정보로 바꿔 둔다
+    try {
+      history.replaceState({ ...(history.state || {}), view: 'viewer', bookId, libraryId: state.currentLibraryId, resume: resumeEntry }, '', '#viewer');
+    } catch (e) {}
   }
 
   document.body.style.setProperty('overflow', 'hidden', 'important');

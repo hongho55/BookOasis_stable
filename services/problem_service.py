@@ -52,6 +52,11 @@ CATALOG = {
     'file_corrupt': {'severity': SEVERITY_NOTICE, 'actions': ['rescan']},
     'cover_missing': {'severity': SEVERITY_NOTICE, 'actions': ['rescan']},
     'metadata_invalid': {'severity': SEVERITY_AUTO_FIXED, 'actions': ['auto_fix']},
+    # 오디오북: 책 폴더와 하위 폴더 모두에 음원이 있어 한 권으로 합쳐짐. 자동으로 고치지 않고 안내만 한다
+    # (심각도는 행마다: 카테고리 폴더 자체가 책이 됐거나 하위 metadata.json이 무시되면 조치 필요).
+    'audiobook_nested_audio': {'severity': SEVERITY_NOTICE, 'actions': []},
+    # 오디오북 폴더 저장 실패(트랙 파일 경로 중복 등). 다음 스캔에서 저장되면 해제된다.
+    'audiobook_save_failed': {'severity': SEVERITY_ACTION_REQUIRED, 'actions': ['rescan']},
     CODE_SYSTEM_TASK_FAILED: {'severity': SEVERITY_ACTION_REQUIRED, 'actions': []},
     # 일반 사용자가 뷰어 오류 자리에서 [관리자에게 알리기]를 누름 (5단계). 스캐너가 판단할 근거가 없어
     # 자동 해제하지 않고, 관리자가 확인 후 [해결됨]으로 닫는다.
