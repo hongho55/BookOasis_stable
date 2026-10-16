@@ -53,10 +53,10 @@ export async function loadDashboardData() {
 
   // 탭 타입 전환 시 이전 탭의 카드를 즉시 지우고 로딩 스피너로 초기화 (1~2초 잔상 현상 방지)
   if (isTypeSwitched || (historyRow && !historyRow.children.length)) {
-    if (historyRow) historyRow.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> 최근 항목을 불러오는 중...</div>';
+    if (historyRow) historyRow.innerHTML = '<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> 최근 항목을 불러오는 중...</div>';
   }
   if (isTypeSwitched || (newRow && !newRow.children.length)) {
-    if (newRow) newRow.innerHTML = '<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> 신규 항목을 불러오는 중...</div>';
+    if (newRow) newRow.innerHTML = '<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> 신규 항목을 불러오는 중...</div>';
   }
   
   try {
@@ -207,8 +207,8 @@ function applyHomeWidgetLockUi(locked) {
   btn.setAttribute('data-locked', locked ? '1' : '0');
   btn.classList.toggle('home-widget-lock-toggle--unlocked', !locked);
   btn.innerHTML = locked
-    ? '<i class="fa-solid fa-lock"></i> <span>배치 잠금</span>'
-    : '<i class="fa-solid fa-lock-open"></i> <span>배치 편집 중</span>';
+    ? '<i class="lc lc-lock"></i> <span>배치 잠금</span>'
+    : '<i class="lc lc-lock-open"></i> <span>배치 편집 중</span>';
 }
 
 function setHomeWidgetsLocked(locked) {
@@ -379,7 +379,7 @@ export async function loadHomeDashboardLayout(targetType, { allowSsr = false } =
     // (get_dashboard_data → loadDashboardWidgetData)를 그대로 재사용한다.
     const widgetId = widget.id;
     const contentId = `home-widget-content-${widgetId}`;
-    const iconClass = widget.icon || 'fa-solid fa-puzzle-piece';
+    const iconClass = window.boIcon(widget.icon || 'lc lc-puzzle');
     const title = escapeHtml(widget.title || widget.plugin_id || widgetId);
     const provider = escapeHtml(widget.provider || widget.title || 'Plugin');
     const subtitle = widget.subtitle ? `<div class="plugin-widget-subtitle">${escapeHtml(widget.subtitle)}</div>` : '';
@@ -389,16 +389,30 @@ export async function loadHomeDashboardLayout(targetType, { allowSsr = false } =
       layoutClass = span >= 3 ? ' home-widget-slot--span-3' : (span === 2 ? ' home-widget-slot--span-2' : '');
     }
 
+    const removeBtnHtml = `<button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>`;
+    // frame:'none' 위젯(배너 등)은 제목줄 없이 내용만 - 제거 버튼은 오른쪽 위에 겹쳐 놓는다 (home_dashboard_service.py)
+    if (widget.frame === 'none') {
+      stack.insertAdjacentHTML('beforeend', `
+      <div class="plugin-card home-widget-slot home-widget-slot--frameless${layoutClass}" id="home-widget-${widgetId}" data-widget-id="${widgetId}" data-widget-kind="plugin" data-plugin-id="${widget.plugin_id}" data-limit="${Number(widget.limit) || 10}"${widget.hidden ? ' style="display:none;"' : ''}>
+          ${removeBtnHtml}
+          <div id="${contentId}" class="plugin-widget-body"></div>
+      </div>`);
+      if (!widget.hidden) {
+        dataFetchPromises.push(loadDashboardWidgetData(widget.plugin_id, Number(widget.limit) || 10, contentId, pluginsLoadToken));
+      }
+      continue;
+    }
+
     const cardHtml = `
       <div class="plugin-card home-widget-slot${layoutClass}" id="home-widget-${widgetId}" data-widget-id="${widgetId}" data-widget-kind="plugin" data-plugin-id="${widget.plugin_id}" data-limit="${Number(widget.limit) || 10}"${widget.hidden ? ' style="display:none;"' : ''}>
           <h4 class="plugin-card-header">
               <span class="plugin-card-header-title"><i class="${iconClass}"></i><span class="plugin-card-header-title-text">${title}</span></span>
               <span class="plugin-card-provider">제공: ${provider}</span>
-              <button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="홈 화면에서 위젯 제거"><i class="fa-solid fa-xmark"></i></button>
+              <button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
           </h4>
           ${subtitle}
           <div id="${contentId}" class="plugin-widget-body">
-              <div class="loading-spinner loading-spinner--widget"><i class="fa-solid fa-circle-notch fa-spin"></i> 위젯 데이터를 불러오는 중...</div>
+              <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> 위젯 데이터를 불러오는 중...</div>
           </div>
       </div>
     `;
@@ -451,10 +465,10 @@ function renderHomeWidgetCatalog(catalog) {
 
   el.style.display = 'flex';
   el.innerHTML = `
-    <span class="home-widget-catalog-label"><i class="fa-solid fa-plus"></i> 위젯 추가:</span>
+    <span class="home-widget-catalog-label"><i class="lc lc-plus"></i> 위젯 추가:</span>
     ${catalog.map((w) => `
       <button type="button" class="home-widget-catalog-btn" data-add-widget-id="${escapeHtml(w.id)}">
-        <i class="${w.icon || 'fa-solid fa-puzzle-piece'}"></i> ${escapeHtml(w.title || w.plugin_id || w.id)}
+        <i class="${window.boIcon(w.icon || 'lc lc-puzzle')}"></i> ${escapeHtml(w.title || w.plugin_id || w.id)}
       </button>
     `).join('')}
   `;
@@ -562,7 +576,7 @@ export async function loadDashboardPlugins(requestToken = null) {
         if (!widgetId) continue;
 
         const contentId = `dashboard-widget-content-${widgetId}`;
-        const iconClass = widget.icon || 'fa-solid fa-puzzle-piece';
+        const iconClass = window.boIcon(widget.icon || 'lc lc-puzzle');
         const title = escapeHtml(widget.title || widget.name || widgetId);
         const provider = escapeHtml(widget.provider || widget.name || 'Plugin');
         const subtitle = widget.subtitle ? `<div class="plugin-widget-subtitle">${escapeHtml(widget.subtitle)}</div>` : '';
@@ -575,7 +589,7 @@ export async function loadDashboardPlugins(requestToken = null) {
               </h4>
               ${subtitle}
               <div id="${contentId}" class="plugin-widget-body">
-                  <div class="loading-spinner loading-spinner--widget"><i class="fa-solid fa-circle-notch fa-spin"></i> 위젯 데이터를 불러오는 중...</div>
+                  <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> 위젯 데이터를 불러오는 중...</div>
               </div>
           </div>
         `;
@@ -591,7 +605,7 @@ export async function loadDashboardPlugins(requestToken = null) {
         if (!widgetId) continue;
 
         const contentId = `dashboard-widget-content-${widgetId}`;
-        const iconClass = widget.icon || 'fa-solid fa-puzzle-piece';
+        const iconClass = window.boIcon(widget.icon || 'lc lc-puzzle');
         const title = escapeHtml(widget.title || widget.name || widgetId);
         const provider = escapeHtml(widget.provider || widget.name || 'Plugin');
         const subtitle = widget.subtitle ? `<div class="plugin-widget-subtitle plugin-widget-subtitle--tab">${escapeHtml(widget.subtitle)}</div>` : '';
@@ -619,7 +633,7 @@ export async function loadDashboardPlugins(requestToken = null) {
                 </div>
                 ${subtitle}
                 <div id="${contentId}" class="plugin-tab-widget-body">
-                  <div class="loading-spinner loading-spinner--widget-grid"><i class="fa-solid fa-circle-notch fa-spin"></i> 데이터를 불러오는 중...</div>
+                  <div class="loading-spinner loading-spinner--widget-grid"><i class="lc lc-loader-circle lc-spin"></i> 데이터를 불러오는 중...</div>
                 </div>
               </div>
             </div>

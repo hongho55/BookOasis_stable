@@ -24,6 +24,7 @@ class BaseMetadataProvider(ABC):
     #     'sessions': 'all',  # _resolve_plugin_sessions()와 동일 규칙 (all / 리스트 / 미지정→general)
     #     'layout': 'grid',  # 'full'(기본, 1열 전체 차지) | 'grid'(카드처럼 다른 grid 위젯과 한 행에 나란히 배치)
     #     'size': 2,  # 'grid'일 때만 의미 있음. 1(기본)/2/3 - auto-fill 컬럼 기준 몇 칸을 이어 붙일지
+    #     'frame': 'card',  # 'card'(기본, 제목줄 있는 카드) | 'none'(제목줄 없이 내용만 - 배너형, 2.9.4+)
     # }
     # 커스텀 CSS/이미지가 필요하면 플러그인 디렉토리에 dashboard.html/dashboard.css(선택:
     # dashboard.js)를 두면 된다(category_tab의 index.html/style.css/script.js와 동일한

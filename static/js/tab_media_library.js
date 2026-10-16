@@ -293,7 +293,7 @@ function injectKioskBackButton(returnUrl) {
   btn.type = 'button';
   btn.className = 'kiosk-back-btn';
   btn.title = '돌아가기';
-  btn.innerHTML = '<i class="fa-solid fa-arrow-left"></i>';
+  btn.innerHTML = '<i class="lc lc-arrow-left"></i>';
   btn.addEventListener('click', () => {
     window.location.href = returnUrl;
   });

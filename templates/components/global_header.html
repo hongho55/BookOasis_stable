@@ -5,13 +5,13 @@
 <div class="library-header">
     <!-- 데스크톱 전용 사이드바 토글 버튼 -->
     <button id="btn-sidebar-toggle-desktop" class="btn-sidebar-toggle-desktop" data-role="desktop-sidebar-toggle" title="사이드바 접기/펼치기" style="background: transparent; border: none; color: var(--app-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.4rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; outline: none; flex-shrink: 0;">
-        <i class="fa-solid fa-bars"></i>
+        <i class="lc lc-menu"></i>
     </button>
 
     <!-- 모바일 전용 햄버거(좌측 드로어 열기): 모바일은 로고 앱바 없이 이 헤더 카드 한 장이 앱바 역할을 한다(2026-10-01).
          데스크톱에선 sidebar_manager.js syncSidebarResponsiveControls가 숨긴다 -->
     <button id="btn-sidebar-toggle" class="btn-sidebar-toggle" aria-expanded="false" aria-controls="sidebar-collapsible-content" data-i18n-title="sidebar.open_menu" title="메뉴" style="display: none; background: transparent; border: none; color: var(--app-text-primary); font-size: 1.25rem; cursor: pointer; padding: 0.2rem 0.5rem; outline: none;">
-        <i class="fa-solid fa-bars"></i>
+        <i class="lc lc-menu"></i>
         <!-- 스크롤하면 스캔활동 아이콘 줄이 접히므로, 진행 중 표시 점을 햄버거에도 띄운다 -->
         <span class="drawer-scan-dot" data-role="scan-activity-mirror" aria-hidden="true"></span>
     </button>
@@ -20,19 +20,19 @@
     <button id="btn-mobile-session-select" class="mobile-session-select mobile-drawer-only" type="button"
         aria-haspopup="true" aria-expanded="false" aria-controls="mobile-session-menu" hidden>
         <span class="mobile-session-select-label"></span>
-        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+        <i class="lc lc-chevron-down" aria-hidden="true"></i>
     </button>
 
     <!-- 현재 선택된 카테고리 정보(ID/경로/시리즈·도서 수) 팝오버 트리거: 마우스 오버 또는 클릭 -->
     <button id="btn-category-info" class="btn-category-info" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="category-info-popover" title="현재 카테고리 정보">
-        <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+        <i class="lc lc-ellipsis" aria-hidden="true"></i>
     </button>
 
     <!-- 페이지 타이틀/건수: 사이드바 active 항목과 중복돼 화면에는 숨기지만, 다른 뷰(그리드/컬렉션/스마트추천/검색결과)에서
          JS가 검색결과 건수·컬렉션명 등을 이 위치에 계속 채워 넣으므로 DOM 자체는 유지 -->
     <h2 class="library-title" style="display: none;">
-        <span class="library-title-main"><i class="fa-solid fa-book-open" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span id="current-category-indicator" class="current-category-indicator-title" aria-live="polite">도서 보관함</span></span>
-        <i id="header-category-scan-spinner" class="fa-solid fa-circle-notch fa-spin" style="color:var(--app-accent); margin-left:0.6rem; font-size:0.95rem;" title="스캔 진행 중"></i>
+        <span class="library-title-main"><i class="lc lc-book-open" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span id="current-category-indicator" class="current-category-indicator-title" aria-live="polite">도서 보관함</span></span>
+        <i id="header-category-scan-spinner" class="lc lc-loader-circle lc-spin" style="color:var(--app-accent); margin-left:0.6rem; font-size:0.95rem;" title="스캔 진행 중"></i>
         <span id="library-total-count" style="font-size: 0.9rem; color: var(--app-text-muted); margin-left: 0.8rem; font-weight: normal; white-space: nowrap;"></span>
     </h2>
 
@@ -40,29 +40,30 @@
         <input type="text" id="library-search" data-role="library-search-input" class="form-control input-sm" enterkeyhint="search" placeholder="제목, 시리즈, 작가 검색...">
         <button id="btn-library-search-detail" data-role="library-search-detail" class="btn-search-icon btn-search-detail" style="display: none;"
             data-i18n-title="search_overlay.open_detail" title="결과 상세 보기 (Enter)">
-            <i class="fa-solid fa-table-list" aria-hidden="true"></i>
+            <i class="lc lc-table-properties" aria-hidden="true"></i>
             <span data-i18n="search_overlay.open_detail" class="sr-only">결과 상세 보기</span>
         </button>
         <button id="btn-library-search-action" data-role="library-search-action" class="btn-search-icon"
             data-i18n-title="common.search" title="검색">
-            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <i class="lc lc-search" aria-hidden="true"></i>
             <span data-i18n="common.search" class="sr-only">검색</span>
         </button>
     </div>
 
     <div id="group-mode-toggle-group" class="library-toggle-group library-toggle-group--compact">
-        <button class="btn-toggle active" id="btn-group-default" data-role="grouping-mode-toggle" data-group-mode="default" data-i18n="header.group_mode_default">기본</button>
-        <button class="btn-toggle" id="btn-group-author" data-role="grouping-mode-toggle" data-group-mode="author" data-i18n="header.group_mode_author">작가별</button>
+        <button class="btn-toggle btn-toggle--icon active" id="btn-group-default" data-role="grouping-mode-toggle" data-group-mode="default" title="기본" data-i18n-title="header.group_mode_default"><i class="lc lc-layout-grid" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.group_mode_default">기본</span></button>
+        <button class="btn-toggle btn-toggle--icon" id="btn-group-author" data-role="grouping-mode-toggle" data-group-mode="author" title="작가별" data-i18n-title="header.group_mode_author"><i class="lc lc-users" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.group_mode_author">작가별</span></button>
     </div>
 
     <!-- 라이브러리 타입(세션) 탭: 페이지의 1차 내비게이션이자 "지금 어느 세션인지" 보여주는 유일한 지표라
          플러그인 화면을 포함해 어떤 뷰에서도 숨기지 않는다 (view_manager.js 참고).
-         모바일은 CSS로 숨기고 #btn-mobile-session-select + 팝업이 이 탭을 원본 삼아 복제해 보여준다 -->
+         모바일은 CSS로 숨기고 #btn-mobile-session-select + 팝업이 이 탭을 원본 삼아 복제해 보여준다(라벨은 textContent로 읽음).
+         데스크톱은 선택된 세션만 아이콘+이름, 나머지는 아이콘만(이름은 툴팁/화면낭독기용 라벨) -->
     <div id="library-type-toggle-group" class="library-toggle-group">
-        <button class="btn-toggle active" id="btn-lib-general" data-role="library-type-toggle" data-library-type="general" data-i18n="header.general_books">일반 도서</button>
-        <button class="btn-toggle" id="btn-lib-adult" data-role="library-type-toggle" data-library-type="adult" data-i18n="header.adult_books">성인 도서</button>
-        <button class="btn-toggle" id="btn-lib-audiobook" data-role="library-type-toggle" data-library-type="audiobook" data-i18n="header.audiobooks">오디오북</button>
-        <button class="btn-toggle" id="btn-lib-video" data-role="library-type-toggle" data-library-type="video" data-i18n="header.videos">영상 강좌</button>
+        <button class="btn-toggle btn-toggle--session active" id="btn-lib-general" data-role="library-type-toggle" data-library-type="general" title="일반 도서" data-i18n-title="header.general_books"><i class="lc lc-book-open" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.general_books">일반 도서</span></button>
+        <button class="btn-toggle btn-toggle--session" id="btn-lib-adult" data-role="library-type-toggle" data-library-type="adult" title="성인 도서" data-i18n-title="header.adult_books"><i class="lc lc-book-lock" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.adult_books">성인 도서</span></button>
+        <button class="btn-toggle btn-toggle--session" id="btn-lib-audiobook" data-role="library-type-toggle" data-library-type="audiobook" title="오디오북" data-i18n-title="header.audiobooks"><i class="lc lc-headphones" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.audiobooks">오디오북</span></button>
+        <button class="btn-toggle btn-toggle--session" id="btn-lib-video" data-role="library-type-toggle" data-library-type="video" title="영상 강좌" data-i18n-title="header.videos"><i class="lc lc-monitor-play" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.videos">영상 강좌</span></button>
     </div>
 
     <!-- 오른쪽 끝 액션 묶음: 상황별(필터/스캔활동)과 상시(환경설정/계정) 그룹이 서로 떨어지지 않도록
@@ -73,13 +74,13 @@
         <button id="btn-open-filter" data-role="library-open-filter" class="btn-toggle"
             style="display: flex; align-items: center; gap: 0.3rem;"
             data-i18n-title="header.filter_title" title="장르/태그 필터 열기">
-            <i class="fa-solid fa-filter"></i> <span data-i18n="header.filter" class="sr-only">필터</span>
+            <i class="lc lc-filter"></i> <span data-i18n="header.filter" class="sr-only">필터</span>
         </button>
         <div class="scan-activity-wrap">
             <button id="btn-scan-activity" class="btn-scan-activity" type="button"
                 aria-label="알림" aria-expanded="false" aria-controls="scan-activity-popover"
                 title="알림">
-                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                <i class="lc lc-bell" aria-hidden="true"></i>
                 <span id="scan-activity-indicator" class="scan-activity-indicator" aria-hidden="true"></span>
             </button>
             <section id="scan-activity-popover" class="scan-activity-popover" hidden aria-live="polite">
@@ -91,12 +92,12 @@
                     <button id="btn-clear-notifications" class="scan-activity-clear" type="button" hidden
                         data-i18n="notify.clear" data-i18n-title="notify.clear_hint" title="완료 기록을 지우고 참고 알림을 '알고 있음'으로 둡니다">지우기</button>
                     <button id="btn-close-scan-activity" type="button" aria-label="닫기" title="닫기">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                        <i class="lc lc-x" aria-hidden="true"></i>
                     </button>
                 </header>
                 <div id="scan-activity-list" class="scan-activity-list">
                     <div class="scan-activity-empty">
-                        <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                        <i class="lc lc-bell" aria-hidden="true"></i>
                         <span data-i18n="notify.empty">새 알림이 없습니다.</span>
                     </div>
                 </div>
@@ -105,7 +106,7 @@
         <button id="btn-lib-sort" data-role="library-sort-toggle" class="btn-toggle"
             style="display: none; align-items: center; gap: 0.3rem;"
             data-i18n-title="header.sort_title" title="정렬 조건 변경">
-            <i class="fa-solid fa-sort-alpha-down"></i> <span data-i18n="header.sort_asc" class="sr-only">가나다 오름차순</span>
+            <i class="lc lc-arrow-down-a-z"></i> <span data-i18n="header.sort_asc" class="sr-only">가나다 오름차순</span>
         </button>
     </div>
 
@@ -114,7 +115,7 @@
         <!-- 환경설정: 사이드바 하단에 있던 항목을 상단 아이콘으로 이동 (사이드바 클릭 위임 로직 재사용) -->
         <button id="category-settings" class="btn-header-icon" data-role="sidebar-category-static" data-category-id="settings"
             data-i18n-title="sidebar.settings" title="환경설정">
-            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+            <i class="lc lc-settings" aria-hidden="true"></i>
             <span data-i18n="sidebar.settings" class="sr-only">환경설정</span>
         </button>
 
@@ -122,16 +123,16 @@
         <div class="account-menu-wrap">
             <button id="btn-account-menu" class="btn-header-icon" type="button"
                 aria-label="계정 메뉴" aria-expanded="false" aria-controls="account-menu-popover" title="계정">
-                <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+                <i class="lc lc-circle-user" aria-hidden="true"></i>
             </button>
             <section id="account-menu-popover" class="account-menu-popover" hidden aria-live="polite">
                 <div class="account-menu-user">
-                    <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+                    <i class="lc lc-circle-user" aria-hidden="true"></i>
                     <span id="session-username-display">-</span>
                 </div>
                 <!-- KOReader 진행 동기화(kosync): 동기화 비밀번호 설정 - static/js/kosync_settings.js -->
                 <button type="button" id="btn-kosync-settings" class="account-menu-item" aria-expanded="false" aria-controls="kosync-settings-panel">
-                    <i class="fa-solid fa-book-open-reader" aria-hidden="true"></i>
+                    <i class="lc lc-book-open-text" aria-hidden="true"></i>
                     <span>KOReader 동기화</span>
                     <span id="kosync-status-badge" class="kosync-status-badge" hidden>켜짐</span>
                 </button>
@@ -147,7 +148,7 @@
                     <p class="kosync-hint">KOReader → 진행 상황 동기화 → 사용자 지정 동기화 서버에 위 서버 주소, 로그인에 사용자명과 이 비밀번호를 넣으세요. BookOasis 로그인 비밀번호와 따로 정합니다. OPDS로 내려받은 책이 동기화됩니다.</p>
                 </div>
                 <a href="/logout" data-i18n-title="sidebar.logout_title" title="로그아웃" class="account-menu-logout">
-                    <i class="fa-solid fa-power-off" aria-hidden="true"></i>
+                    <i class="lc lc-power" aria-hidden="true"></i>
                     <span data-i18n="sidebar.logout_title">로그아웃</span>
                 </a>
             </section>

@@ -17,7 +17,7 @@ function ensureModal() {
     <div class="diagnose-dialog" role="dialog" aria-modal="true" aria-labelledby="diagnose-modal-title">
       <header class="diagnose-header">
         <strong id="diagnose-modal-title"></strong>
-        <button type="button" class="diagnose-close" data-diagnose-action="close" aria-label="close"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        <button type="button" class="diagnose-close" data-diagnose-action="close" aria-label="close"><i class="lc lc-x" aria-hidden="true"></i></button>
       </header>
       <div class="diagnose-body" data-role="diagnose-body"></div>
       <footer class="diagnose-footer">

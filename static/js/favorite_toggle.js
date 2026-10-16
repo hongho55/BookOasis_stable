@@ -5,7 +5,7 @@
 // 다음 상태는 항상 "지금 화면의 별 상태"에서 계산하고, 적용할 때 data-next-status도 함께 맞춘다.
 
 const ACTIVE_ICON_CLASS = 'fa-solid fa-star';
-const INACTIVE_ICON_CLASS = 'fa-regular fa-star';
+const INACTIVE_ICON_CLASS = 'lc lc-star';
 
 export function readNextFavoriteStatus(btn) {
   return btn && btn.classList.contains('active') ? 0 : 1;

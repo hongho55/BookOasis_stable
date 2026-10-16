@@ -3,14 +3,14 @@
 import { bindFloatingMenuOutsideClose, hideFloatingMenu, isFloatingMenuOpen, positionMenuAtElement } from './context_menu_manager.js';
 
 export const SORT_OPTIONS = [
-  { value: 'asc', labelKey: 'book_list.sort_asc', icon: 'fa-solid fa-arrow-down-a-z' },
-  { value: 'desc', labelKey: 'book_list.sort_desc', icon: 'fa-solid fa-arrow-up-z-a' },
-  { value: 'folder_asc', labelKey: 'book_list.sort_folder_asc', icon: 'fa-solid fa-folder' },
-  { value: 'folder_desc', labelKey: 'book_list.sort_folder_desc', icon: 'fa-solid fa-folder-open' },
-  { value: 'date_desc', labelKey: 'book_list.sort_date_desc', icon: 'fa-solid fa-sort-numeric-down-alt' },
-  { value: 'date_asc', labelKey: 'book_list.sort_date_asc', icon: 'fa-solid fa-sort-numeric-up' },
-  { value: 'count_desc', labelKey: 'book_list.sort_count_desc', icon: 'fa-solid fa-arrow-down-wide-short' },
-  { value: 'count_asc', labelKey: 'book_list.sort_count_asc', icon: 'fa-solid fa-arrow-up-short-wide' },
+  { value: 'asc', labelKey: 'book_list.sort_asc', icon: 'lc lc-arrow-down-a-z' },
+  { value: 'desc', labelKey: 'book_list.sort_desc', icon: 'lc lc-arrow-up-z-a' },
+  { value: 'folder_asc', labelKey: 'book_list.sort_folder_asc', icon: 'lc lc-folder' },
+  { value: 'folder_desc', labelKey: 'book_list.sort_folder_desc', icon: 'lc lc-folder-open' },
+  { value: 'date_desc', labelKey: 'book_list.sort_date_desc', icon: 'lc lc-arrow-down-1-0' },
+  { value: 'date_asc', labelKey: 'book_list.sort_date_asc', icon: 'lc lc-arrow-up-0-1' },
+  { value: 'count_desc', labelKey: 'book_list.sort_count_desc', icon: 'lc lc-arrow-down-wide-narrow' },
+  { value: 'count_asc', labelKey: 'book_list.sort_count_asc', icon: 'lc lc-arrow-up-narrow-wide' },
   { value: 'score_desc', labelKey: 'book_list.sort_score_desc', icon: 'fa-solid fa-star' },
 ];
 
@@ -51,7 +51,7 @@ function renderMenu(menu, current, onSelect) {
     const li = document.createElement('li');
     li.className = 'context-menu-item library-sort-item';
     li.classList.toggle('active', option.value === current);
-    li.innerHTML = `<i class="${option.icon}"></i> <span></span><i class="fa-solid fa-check library-sort-check"></i>`;
+    li.innerHTML = `<i class="${option.icon}"></i> <span></span><i class="lc lc-check library-sort-check"></i>`;
     li.querySelector('span').textContent = i18n.t(option.labelKey);
     li.addEventListener('click', () => {
       hideFloatingMenu(menu);

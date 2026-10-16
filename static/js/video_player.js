@@ -82,13 +82,13 @@ function renderPlayerModal(startTime = 0) {
              src="/api/media/videos/${currentMeta.id}/episodes/${episode.id}/stream">${episode.has_subtitle ? `<track kind="subtitles" src="/api/media/videos/${currentMeta.id}/episodes/${episode.id}/subtitle" srclang="ko" label="자막" default>` : ''}</video>
       <div style="display:flex; justify-content:center; align-items:center; gap:0.8rem;">
         <button data-role="video-player-prev" ${hasPrev ? '' : 'disabled'} title="이전 회차" style="${transportBtnStyle(hasPrev)} width:3rem; height:3rem;">
-          <i class="fa-solid fa-backward-step"></i>
+          <i class="lc lc-skip-back"></i>
         </button>
         <button data-role="video-player-toggle" title="재생/일시정지" style="${transportBtnStyle(true)} width:3.6rem; height:3.6rem; background:rgba(168,85,247,0.25); border-color:rgba(168,85,247,0.5); font-size:1.2rem;">
-          <i class="fa-solid fa-pause" data-role="video-player-toggle-icon"></i>
+          <i class="lc lc-pause" data-role="video-player-toggle-icon"></i>
         </button>
         <button data-role="video-player-next" ${hasNext ? '' : 'disabled'} title="다음 회차" style="${transportBtnStyle(hasNext)} width:3rem; height:3rem;">
-          <i class="fa-solid fa-forward-step"></i>
+          <i class="lc lc-skip-forward"></i>
         </button>
       </div>
     </div>
@@ -107,7 +107,7 @@ function renderPlayerModal(startTime = 0) {
   const toggleIcon = overlay.querySelector('[data-role="video-player-toggle-icon"]');
 
   const syncToggleIcon = () => {
-    toggleIcon.className = (videoEl.paused || videoEl.ended) ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+    toggleIcon.className = (videoEl.paused || videoEl.ended) ? 'lc lc-play' : 'lc lc-pause';
   };
   toggleBtn.addEventListener('click', () => {
     if (videoEl.paused || videoEl.ended) {

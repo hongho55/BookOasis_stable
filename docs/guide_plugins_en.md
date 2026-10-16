@@ -30,7 +30,8 @@ This document describes the current plugin standard for BookOasis metadata/dashb
 | 1.1.0 | `search`, `apply` | `detail_view` | Added a contract for replacing the entire book detail page body with a custom screen (single slot per session) |
 | 1.1.1 | `search`, `apply` | `dashboard.html`/`dashboard.css`/`dashboard.js` | `home_widget` can now use full custom CSS/images - rendered in a per-widget Shadow DOM for isolation (§5-1) |
 | 1.1.2 (BookOasis 2.8.4+) | `search`, `apply` | `report_problem`, `resolve_problem` | Raise/resolve problem cards in the admin notifications - base-class helpers, additive contract (see "Admin Notification Problem Cards") |
-| 1.1.3+ (current, BookOasis 2.8.4+) | `search`, `apply` | `lookup_music_album` | Look up album info for music-category albums without album.yaml - additive contract the core calls in the background (see "Music Album Lookup") |
+| 1.1.3 (BookOasis 2.8.4+) | `search`, `apply` | `lookup_music_album` | Look up album info for music-category albums without album.yaml - additive contract the core calls in the background (see "Music Album Lookup") |
+| 1.1.4+ (current, BookOasis 2.9.4+) | `search`, `apply` | `home_widget.frame` | `'none'` shows a home widget without its title bar - for banner-style widgets, additive field (§5-1 "Frame") |
 
 Compatibility rules:
 
@@ -485,6 +486,13 @@ sits as a card alongside other widgets in the same row.
   widgets, so several can sit side by side when there's room. `size` picks how many cells to
   span: `1` (default), `2`, or `3` - the grid wraps to the next row on its own when the screen is
   too narrow for that many columns.
+
+### Frame (`frame`, BookOasis 2.9.4+)
+
+By default (`'card'`, when omitted) the core wraps the widget in a card with a title bar (icon, title,
+provider, remove ×). With `'none'` there is no title bar, card padding or border - the `dashboard.html`
+content is the widget itself, for banner-style widgets where the picture is the whole point. The remove
+(×) button appears over the top-right corner on hover. Example: `sample_plugins/metadata/home_banner/`.
 
 Users with plugin layout mode on can drag-reorder core widgets (reading insights/recently
 read/newly added) together with `home_widget` plugin cards right on the home screen; the order is

@@ -11,8 +11,8 @@ export function scrollRow(rowId, dir) {
 export function buildRowNavButtonsHtml(rowId, prevTitle, nextTitle) {
   return `
     <div class="section-nav-btns">
-      <button data-scroll-row-nav="${rowId}" data-dir="left" class="btn-nav-arrow" title="${prevTitle}"><i class="fa-solid fa-chevron-left"></i></button>
-      <button data-scroll-row-nav="${rowId}" data-dir="right" class="btn-nav-arrow" title="${nextTitle}"><i class="fa-solid fa-chevron-right"></i></button>
+      <button data-scroll-row-nav="${rowId}" data-dir="left" class="btn-nav-arrow" title="${prevTitle}"><i class="lc lc-chevron-left"></i></button>
+      <button data-scroll-row-nav="${rowId}" data-dir="right" class="btn-nav-arrow" title="${nextTitle}"><i class="lc lc-chevron-right"></i></button>
     </div>
   `;
 }

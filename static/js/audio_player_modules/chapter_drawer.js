@@ -19,7 +19,7 @@ export function createChapterDrawer(deps) {
     container.innerHTML = tracks.map((t, idx) => {
       const isPlaying = idx === currentTrackIndex;
       const activeStyle = isPlaying ? 'background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8;' : 'background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); color: var(--app-text-primary);';
-      const playIcon = isPlaying ? '<i class="fa-solid fa-volume-high" style="color: #38bdf8;"></i>' : `<span style="font-size: 0.8rem; color: var(--app-text-muted);">${t.track_number || (idx + 1)}</span>`;
+      const playIcon = isPlaying ? '<i class="lc lc-volume-2" style="color: #38bdf8;"></i>' : `<span style="font-size: 0.8rem; color: var(--app-text-muted);">${t.track_number || (idx + 1)}</span>`;
 
       return `
         <div data-role="audio-chapter-track" data-track-id="${t.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; border-radius: 12px; cursor: pointer; transition: all 0.2s; ${activeStyle}">

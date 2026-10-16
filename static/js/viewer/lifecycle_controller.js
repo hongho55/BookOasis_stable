@@ -276,7 +276,7 @@ export function closeMediaViewer(triggerBack = true, isTransitioning = false, op
       viewerModal.classList.remove('fullscreen-mode');
       viewerModal.style.display = 'none';
       const fullscreenIcon = document.getElementById('fullscreen-icon');
-      if (fullscreenIcon) fullscreenIcon.className = 'fa-solid fa-expand';
+      if (fullscreenIcon) fullscreenIcon.className = 'lc lc-expand';
     }
 
     // body 및 documentElement 인라인 스크롤 락 스타일만 안전 소거 (CSS 변수 유실 방지)

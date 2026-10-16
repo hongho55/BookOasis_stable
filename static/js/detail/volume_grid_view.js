@@ -57,7 +57,7 @@ export function renderVolumeGrid(orderedBooks, safeSeriesName, dbType = 'general
              download
              title="${i18n.t('detail.btn_download') || '다운로드'}"
              data-role="detail-download-link">
-            <i class="fa-solid fa-download"></i>
+            <i class="lc lc-download"></i>
           </a>` : ''}
         </div>
         ${pagesRead > 0 && !isCompletedValue ? `
@@ -73,7 +73,7 @@ export function renderVolumeGrid(orderedBooks, safeSeriesName, dbType = 'general
   <div class="volumes-section">
     <div class="volumes-section-toolbar">
       <h4 class="volumes-section-title">
-        <i class="fa-solid fa-layer-group"></i> ${i18n.t('dashboard.single_book_list')}
+        <i class="lc lc-layers"></i> ${i18n.t('dashboard.single_book_list')}
         <span class="vol-count-badge">${i18n.t('dashboard.book_unit', { count: books.length })}</span>
       </h4>
       <div class="volume-list-controls" aria-label="${i18n.t('detail.list_controls')}">

@@ -28,7 +28,7 @@ export async function renderSmartRecommendView() {
   container.innerHTML = `
     <div class="smart-rec-page">
       <div id="smart-rec-tabs" class="smart-rec-tabs-bar">
-        <div class="smart-rec-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('smart_recommend.loading')}</div>
+        <div class="smart-rec-loading"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('smart_recommend.loading')}</div>
       </div>
       <div id="smart-rec-body"></div>
     </div>
@@ -55,7 +55,7 @@ export async function renderSmartRecommendView() {
       document.getElementById('smart-rec-tabs').innerHTML = '';
       document.getElementById('smart-rec-body').innerHTML = `
         <div class="smart-rec-empty-state">
-          <i class="fa-solid fa-wand-magic-sparkles smart-rec-empty-state-icon"></i>
+          <i class="lc lc-wand-sparkles smart-rec-empty-state-icon"></i>
           <h4 class="smart-rec-empty-state-title">${i18n.t('smart_recommend.no_history_title')}</h4>
           <p class="smart-rec-empty-state-desc">${i18n.t('smart_recommend.no_history_desc')}</p>
         </div>
@@ -110,7 +110,7 @@ function renderTabs(recentSeries) {
 async function renderRecommendationsFor(seriesItem) {
   const bodyEl = document.getElementById('smart-rec-body');
   if (!bodyEl) return;
-  bodyEl.innerHTML = `<div class="smart-rec-loading smart-rec-loading--centered"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('smart_recommend.loading')}</div>`;
+  bodyEl.innerHTML = `<div class="smart-rec-loading smart-rec-loading--centered"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('smart_recommend.loading')}</div>`;
 
   try {
     const dbType = state.currentLibraryType || 'general';
@@ -158,7 +158,7 @@ function buildSection(rowId, title, iconClass, items, isFallback) {
   heading.className = 'smart-rec-section-header';
   heading.innerHTML = `
     <h3 class="smart-rec-section-title">
-      <i class="fa-solid ${iconClass}"></i> ${title}
+      <i class="${window.boIcon(iconClass)}"></i> ${title}
       ${isFallback ? `<span class="smart-rec-fallback-note">${i18n.t('smart_recommend.fallback_note')}</span>` : ''}
     </h3>
     ${buildRowNavButtonsHtml(rowId, i18n.t('common.prev'), i18n.t('common.next'))}

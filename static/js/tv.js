@@ -170,7 +170,7 @@
     var info = SORT_LABELS[state.sort] || SORT_LABELS.asc;
     var toggle = $('tv-sort-toggle');
     if (!toggle) return;
-    toggle.querySelector('i').className = 'fa-solid ' + info.icon;
+    toggle.querySelector('i').className = window.boIcon(info.icon);
     $('tv-sort-label').textContent = info.label;
   }
 
@@ -232,19 +232,19 @@
     groups.forEach(function (group) {
       var groupLibs = byGroup[String(group.id)] || [];
       if (groupLibs.length === 0) return;
-      html += '<div class="tv-drawer-group-header"><i class="fa-solid ' + escapeHtml(group.icon || 'fa-folder') + '"></i>' + escapeHtml(group.name || '') + '</div>';
+      html += '<div class="tv-drawer-group-header"><i class="' + escapeHtml(window.boIcon(group.icon || 'fa-folder')) + '"></i>' + escapeHtml(group.name || '') + '</div>';
       groupLibs.forEach(function (lib) {
-        html += '<button type="button" class="tv-drawer-item" data-library-id="' + lib.id + '" data-name="' + escapeHtml(lib.name || '') + '"><i class="fa-solid ' + escapeHtml(lib.icon || 'fa-book') + '"></i><span>' + escapeHtml(lib.name || '') + '</span></button>';
+        html += '<button type="button" class="tv-drawer-item" data-library-id="' + lib.id + '" data-name="' + escapeHtml(lib.name || '') + '"><i class="' + escapeHtml(window.boIcon(lib.icon || 'fa-book')) + '"></i><span>' + escapeHtml(lib.name || '') + '</span></button>';
       });
     });
     ungrouped.forEach(function (lib) {
-      html += '<button type="button" class="tv-drawer-item" data-library-id="' + lib.id + '" data-name="' + escapeHtml(lib.name || '') + '"><i class="fa-solid ' + escapeHtml(lib.icon || 'fa-book') + '"></i><span>' + escapeHtml(lib.name || '') + '</span></button>';
+      html += '<button type="button" class="tv-drawer-item" data-library-id="' + lib.id + '" data-name="' + escapeHtml(lib.name || '') + '"><i class="' + escapeHtml(window.boIcon(lib.icon || 'fa-book')) + '"></i><span>' + escapeHtml(lib.name || '') + '</span></button>';
     });
 
     if (plugins.length > 0) {
-      html += '<div class="tv-drawer-group-header"><i class="fa-solid fa-puzzle-piece"></i>플러그인</div>';
+      html += '<div class="tv-drawer-group-header"><i class="lc lc-puzzle"></i>플러그인</div>';
       plugins.forEach(function (plugin) {
-        html += '<button type="button" class="tv-drawer-item" data-plugin-id="' + escapeHtml(plugin.id) + '" data-name="' + escapeHtml(plugin.title || plugin.name || '') + '"><i class="' + escapeHtml(plugin.icon || 'fa-solid fa-puzzle-piece') + '"></i><span>' + escapeHtml(plugin.title || plugin.name || '') + '</span></button>';
+        html += '<button type="button" class="tv-drawer-item" data-plugin-id="' + escapeHtml(plugin.id) + '" data-name="' + escapeHtml(plugin.title || plugin.name || '') + '"><i class="' + escapeHtml(window.boIcon(plugin.icon || 'lc lc-puzzle')) + '"></i><span>' + escapeHtml(plugin.title || plugin.name || '') + '</span></button>';
       });
     }
 

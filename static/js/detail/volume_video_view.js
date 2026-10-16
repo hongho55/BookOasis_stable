@@ -27,7 +27,7 @@ export function renderVideoVolumes(orderedBooks, detailMeta = null) {
 
     rowsHtml += `
       <tr data-role="detail-video-open" data-video-id="${videoId}" data-episode-id="${ep.id}">
-        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-video-play" data-video-id="${videoId}" data-episode-id="${ep.id}"><i class="fa-solid fa-play"></i></button></td>
+        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-video-play" data-video-id="${videoId}" data-episode-id="${ep.id}"><i class="lc lc-play"></i></button></td>
         <td class="ab-col-id">${ep.episode_number}</td>
         <td class="ab-col-title"><span class="ab-track-title-text">${ep.title || ''}</span>${completedDotHtml}</td>
         <td class="ab-col-time">${ep.premiered || ''}</td>

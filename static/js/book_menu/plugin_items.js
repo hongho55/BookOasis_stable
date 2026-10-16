@@ -84,7 +84,7 @@ function renderPluginContextMenuItems(items, { onItemClick, onRendered }) {
       const pluginId = String(item.plugin_id || '').trim();
       const actionId = String(item.id || '').trim();
       const label = String(item.label || '').trim();
-      const iconClass = String(item.icon || 'fa-solid fa-puzzle-piece').trim();
+      const iconClass = window.boIcon(String(item.icon || 'lc lc-puzzle').trim());
       if (!pluginId || !actionId || !label) return;
 
       const li = document.createElement('li');

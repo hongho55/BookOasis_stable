@@ -188,6 +188,10 @@ if not IS_WORKER:
                 template_folder=os.path.join(BASE_DIR, 'templates'),
                 static_folder=os.path.join(BASE_DIR, 'static'))
 
+    # 아이콘 값(FA 이름: 카테고리 DB/플러그인 manifest) -> Lucide 클래스. 템플릿: {{ w.icon | bo_icon }}
+    from utils.icon_class import bo_icon
+    app.jinja_env.filters['bo_icon'] = bo_icon
+
     def _get_max_content_length_bytes():
         raw = os.environ.get('MAX_CONTENT_LENGTH_MB', '100').strip()
         try:

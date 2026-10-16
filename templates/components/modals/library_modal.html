@@ -34,11 +34,11 @@
                 <div class="library-path-input-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <textarea id="library-form-path" name="physical_path" required rows="3" maxlength="8192" placeholder="예: C:\library\fantasy&#10;/home/user/manga{% if develop_mode %}&#10;https://drive.google.com/drive/folders/1A2B3C4D5E6F7G8H9I{% endif %}" style="flex: 1;"></textarea>
                     <button type="button" id="btn-browse-paths" class="btn-browse-paths ui-hover-library-browse" data-role="library-open-path-browser" style="padding: 0.5rem 1rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.5); color: #a855f7; border-radius: 4px; cursor: pointer; font-weight: 600; white-space: nowrap; align-self: flex-start; transition: all 0.2s;" title="찾아보기">
-                        <i class="fa-solid fa-folder-open"></i> 찾아보기
+                        <i class="lc lc-folder-open"></i> 찾아보기
                     </button>
                     {% if develop_mode %}
                     <button type="button" id="btn-test-gdrive-links" class="btn-test-gdrive-links ui-hover-library-gdrive" data-role="library-test-gdrive" style="padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5); color: #60a5fa; border-radius: 4px; cursor: pointer; font-weight: 600; white-space: nowrap; align-self: flex-start; transition: all 0.2s;" title="링크 연결 테스트">
-                        <i class="fa-solid fa-bolt"></i> <span data-i18n="modal.btn_test_gdrive_link">연결 테스트</span>
+                        <i class="lc lc-zap"></i> <span data-i18n="modal.btn_test_gdrive_link">연결 테스트</span>
                     </button>
                     {% endif %}
                 </div>
@@ -67,15 +67,13 @@
     transition: all 0.2s;
 }
 .icon-option:hover {
-    background: rgba(168, 85, 247, 0.15);
-    border-color: rgba(168, 85, 247, 0.4);
-    color: #a855f7;
+    color: var(--app-text-primary);
+    border-color: rgba(var(--app-panel-border-rgb), 0.25);
 }
 .icon-option.active {
-    background: rgba(168, 85, 247, 0.25);
-    border-color: #a855f7;
-    color: var(--app-text-primary);
-    box-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+    background: var(--app-accent-soft);
+    border-color: var(--app-accent);
+    color: var(--app-accent-hover);
 }
 .color-option {
     width: 28px;
@@ -90,9 +88,9 @@
     transform: scale(1.15);
 }
 .color-option.active {
-    border-color: #fff;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-    transform: scale(1.1);
+    /* 선택 표시는 빛 번짐 대신 바깥 테두리 고리 */
+    border-color: var(--app-bg-card);
+    box-shadow: 0 0 0 2px var(--app-text-primary);
 }
 .library-form-collapsible {
     border: 1px solid rgba(var(--app-panel-border-rgb), 0.08);
@@ -140,7 +138,6 @@
 }
 .library-form-status-dot.active {
     background: #22c55e;
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 .library-form-collapsible-chevron {
     margin-left: auto;
@@ -157,7 +154,7 @@
                 <summary class="library-form-collapsible-summary">
                     <span>원격 / 고급 설정</span>
                     <span id="library-form-advanced-status-dot" class="library-form-status-dot"></span>
-                    <i class="fa-solid fa-chevron-down library-form-collapsible-chevron"></i>
+                    <i class="lc lc-chevron-down library-form-collapsible-chevron"></i>
                 </summary>
                 <div style="margin-top: 0.8rem;">
                     <div class="library-form-group-row" id="library-form-remote-row">
@@ -168,7 +165,7 @@
                     <div class="library-form-group" id="library-form-rclone-url-group" style="display: none; margin-top: 0.8rem;">
                         <label for="library-form-rclone-url" data-i18n="modal.rclone_url_label">Rclone RC API 주소 (VFS 캐시 갱신용)</label>
                         <input type="text" id="library-form-rclone-url" name="rclone_rc_url" data-i18n-placeholder="modal.rclone_url_placeholder" placeholder="예: http://localhost:5572">
-                        <div id="library-form-remote-warning" style="margin-top: 0.5rem; padding: 0.7rem; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; color: #ef4444; font-weight: 600; font-size: 10pt; display: none;" data-i18n="modal.remote_path_warning">원격 디렉토리(rclone등)가 하나라도 있다면 VFS 및 RC 주소를 꼭 입력하세요</div>
+                        <div id="library-form-remote-warning" style="margin-top: 0.5rem; padding: 0.7rem; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 6px; color: #f87171; font-weight: 500; font-size: 10pt; display: none;" data-i18n="modal.remote_path_warning">원격 디렉토리(rclone등)가 하나라도 있다면 VFS 및 RC 주소를 꼭 입력하세요</div>
                     </div>
 
                 </div>
@@ -181,11 +178,11 @@
                 <summary class="library-form-collapsible-summary">
                     <span>구글 드라이브 사본 뷰어 연결</span>
                     <span id="library-form-gdrive-copy-status-dot" class="library-form-status-dot"></span>
-                    <i class="fa-solid fa-chevron-down library-form-collapsible-chevron"></i>
+                    <i class="lc lc-chevron-down library-form-collapsible-chevron"></i>
                 </summary>
                 <div style="margin-top: 0.8rem;">
                     <div class="library-form-group" id="library-form-gdrive-copy-group">
-                        <div style="margin-bottom: 0.7rem; padding: 0.6rem 0.8rem; background: rgba(59, 130, 246, 0.08); border-left: 3px solid #60a5fa; border-radius: 4px; color: var(--app-text-muted); font-size: 0.82rem;">
+                        <div style="margin-bottom: 0.7rem; padding: 0.6rem 0.8rem; background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid var(--app-border); border-radius: 6px; color: var(--app-text-muted); font-size: 0.82rem;">
                             물리 경로에 구글 드라이브 공유 링크가 있는 카테고리 전용 설정입니다. 책을 열 때마다 그 1권만 아래 리모트(내 드라이브 계정)로 복사해 보여줍니다 — 별도 입력 없이 <strong>지정된 경로 하위에 임시 디렉토리가 자동 생성</strong>됩니다. 폴더 전체를 미리 복사해두고 싶다면 카테고리와 무관한 "Drive에서 복사해오기"를 따로 사용하세요.
                         </div>
                         <label for="library-form-gdrive-copy-remote" id="library-form-gdrive-copy-remote-label">연결할 내 구글 드라이브 리모트 (선택, 실험적)</label>
@@ -196,12 +193,12 @@
 
                         <div id="library-form-gdrive-view-mirror-group" style="display: none; margin-top: 0.6rem;">
                             <label for="library-form-gdrive-view-mirror-path">이 리모트의 로컬 마운트 루트 (자동 감지)
-                                <i class="fa-solid fa-circle-info library-form-info-icon" title="이 rclone 리모트 전체가 마운트된 서버 내 경로입니다. 리모트를 선택하면 자동으로 감지를 시도하고(리모트 이름만으로 조회하므로 물리 경로 입력이 불필요), 실패했을 때만 직접 입력하면 됩니다. Drive 루트가 지저분해지는 게 싫다면 자동 감지된 값 뒤에 원하는 하위 폴더 이름을 이어붙이세요 — 예: '/mnt/sjva' → '/mnt/sjva/tempview'. 그 폴더가 Drive 쪽에도 그대로 만들어져 안에 정리됩니다."></i>
+                                <i class="lc lc-info library-form-info-icon" title="이 rclone 리모트 전체가 마운트된 서버 내 경로입니다. 리모트를 선택하면 자동으로 감지를 시도하고(리모트 이름만으로 조회하므로 물리 경로 입력이 불필요), 실패했을 때만 직접 입력하면 됩니다. Drive 루트가 지저분해지는 게 싫다면 자동 감지된 값 뒤에 원하는 하위 폴더 이름을 이어붙이세요 — 예: '/mnt/sjva' → '/mnt/sjva/tempview'. 그 폴더가 Drive 쪽에도 그대로 만들어져 안에 정리됩니다."></i>
                             </label>
                             <div style="display: flex; gap: 0.5rem;">
                                 <input type="text" id="library-form-gdrive-view-mirror-path" name="gdrive_view_local_mirror_path" maxlength="1024" placeholder="리모트 선택 시 자동 감지, 실패하면 직접 입력" style="flex: 1;">
                                 <button type="button" data-role="library-detect-gdrive-mount-root" style="padding: 0.5rem 1rem; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5); color: #60a5fa; border-radius: 4px; cursor: pointer; font-weight: 600; white-space: nowrap;" title="rclone RC로 마운트 루트 자동 감지">
-                                    <i class="fa-solid fa-magnifying-glass"></i> 자동 감지
+                                    <i class="lc lc-search"></i> 자동 감지
                                 </button>
                             </div>
                         </div>
@@ -214,9 +211,9 @@
             <details class="library-form-group library-form-collapsible" style="margin-top: 1rem;">
                 <summary class="library-form-collapsible-summary">
                     <span>표시 설정</span>
-                    <span id="library-form-appearance-preview-icon" class="library-form-appearance-preview-icon"><i class="fa-solid fa-book"></i></span>
+                    <span id="library-form-appearance-preview-icon" class="library-form-appearance-preview-icon"><i class="lc lc-book"></i></span>
                     <span id="library-form-appearance-preview-color" class="library-form-appearance-preview-color" style="background-color: #94a3b8;"></span>
-                    <i class="fa-solid fa-chevron-down library-form-collapsible-chevron"></i>
+                    <i class="lc lc-chevron-down library-form-collapsible-chevron"></i>
                 </summary>
                 <div style="margin-top: 0.8rem;">
                     <div class="library-form-group-row">
@@ -226,7 +223,7 @@
 
                     <div id="library-form-hide-title-row" class="library-form-group-row" style="margin-top: 0.4rem;">
                         <input type="checkbox" id="library-form-hide-title" name="hide_title">
-                        <label for="library-form-hide-title">제목 감추기 (썸네일만 표시, 넷플릭스 스타일)</label>
+                        <label for="library-form-hide-title">제목 감추기 (표지만 표시, 마우스를 올리면 제목)</label>
                     </div>
 
                     <div id="library-form-cover-ratio-row" class="library-form-group-row" style="margin-top: 0.6rem;">
@@ -247,17 +244,17 @@
 
                     <label data-i18n="modal.category_icon_label" style="margin-top: 1rem; display: block;">카테고리 아이콘</label>
                     <div class="category-icon-selector" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; margin-top: 0.4rem;">
-                        <div class="icon-option active" data-role="library-icon-option" data-icon="fa-book"><i class="fa-solid fa-book"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-book-open"><i class="fa-solid fa-book-open"></i></div>
+                        <div class="icon-option active" data-role="library-icon-option" data-icon="fa-book"><i class="lc lc-book"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-book-open"><i class="lc lc-book-open"></i></div>
                         <div class="icon-option" data-role="library-icon-option" data-icon="fa-bookmark"><i class="fa-solid fa-bookmark"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-images"><i class="fa-solid fa-images"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-masks-theater"><i class="fa-solid fa-masks-theater"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-newspaper"><i class="fa-solid fa-newspaper"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-file-lines"><i class="fa-solid fa-file-lines"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-pen-nib"><i class="fa-solid fa-pen-nib"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-compass"><i class="fa-solid fa-compass"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-music"><i class="fa-solid fa-music"></i></div>
-                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-film"><i class="fa-solid fa-film"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-images"><i class="lc lc-images"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-masks-theater"><i class="lc lc-drama"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-newspaper"><i class="lc lc-newspaper"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-file-lines"><i class="lc lc-file-text"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-pen-nib"><i class="lc lc-pen-tool"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-compass"><i class="lc lc-compass"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-music"><i class="lc lc-music"></i></div>
+                        <div class="icon-option" data-role="library-icon-option" data-icon="fa-film"><i class="lc lc-film"></i></div>
                         <div class="icon-option" data-role="library-icon-option" data-icon="fa-star"><i class="fa-solid fa-star"></i></div>
                     </div>
                     <input type="hidden" id="library-form-icon" name="icon" value="fa-book">
@@ -299,7 +296,7 @@
             <label style="flex-shrink: 0; color: #a855f7; font-weight: 600;">경로:</label>
             <input type="text" id="path-browser-input" value="" maxlength="1024" style="flex: 1; background: rgba(var(--app-panel-rgb), 0.8); border: 1px solid rgba(var(--app-panel-border-rgb), 0.15); color: var(--app-text-primary); padding: 0.5rem 0.8rem; border-radius: 4px; font-size: 0.85rem;" placeholder="경로를 입력하거나 아래에서 선택하세요">
             <button type="button" data-role="path-browser-refresh" style="padding: 0.5rem 0.8rem; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(168, 85, 247, 0.5); color: #a855f7; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-                <i class="fa-solid fa-rotate"></i> 새로고침
+                <i class="lc lc-rotate-cw"></i> 새로고침
             </button>
         </div>
         

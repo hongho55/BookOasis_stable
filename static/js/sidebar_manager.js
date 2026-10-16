@@ -52,7 +52,7 @@ function setSidebarMenuOpen(isOpen, options = {}) {
       content.scrollTop = 0;
       if (scroller) scroller.scrollTop = 0;
     }
-    if (btnIcon) btnIcon.className = 'fa-solid fa-xmark';
+    if (btnIcon) btnIcon.className = 'lc lc-x';
     if (btn) btn.setAttribute('aria-expanded', 'true');
     content.dataset.open = '1';
     syncDrawerChromeState(true);
@@ -61,7 +61,7 @@ function setSidebarMenuOpen(isOpen, options = {}) {
 
   content.classList.remove('show');
   content.hidden = true;
-  if (btnIcon) btnIcon.className = 'fa-solid fa-bars';
+  if (btnIcon) btnIcon.className = 'lc lc-menu';
   if (btn) btn.setAttribute('aria-expanded', 'false');
   content.dataset.open = '0';
   syncDrawerChromeState(false);
@@ -126,7 +126,7 @@ export function syncSidebarMenuState() {
 
   const isOpen = content.classList.contains('show');
   btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  if (btnIcon) btnIcon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+  if (btnIcon) btnIcon.className = isOpen ? 'lc lc-x' : 'lc lc-menu';
   content.dataset.open = isOpen ? '1' : '0';
   content.hidden = !isOpen;
   syncDrawerChromeState(isOpen);

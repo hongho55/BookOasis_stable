@@ -137,14 +137,14 @@ function renderLibraryItem(lib, isPinned) {
   const countBadgeHtml = bookCount > 0
     ? `<span class="category-count-badge" title="${bookCount.toLocaleString()}">${formatCompactCount(bookCount)}</span>`
     : '';
-  return `<li class="menu-item ${isActive}" data-type="custom" data-role="sidebar-category-dynamic" data-id="${lib.id}" data-category-id="${lib.id}" data-name="${safeName}" data-path="${safePath}" data-remote="${lib.is_remote || 0}" data-rclone-url="${safeRclone}" data-icon="${safeIcon}" data-color="${safeColor}" data-hide-cover="${hideCover}" data-hide-title="${hideTitle}" data-content-kind="${contentKind}" data-cover-aspect-ratio="${coverAspectRatio}" data-group-id="${groupId}" data-gdrive-copy-remote="${safeGdriveCopyRemote}" data-gdrive-view-local-mirror-path="${safeGdriveViewMirrorPath}" ${draggableAttr} style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;"><span style="display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><i class="fa-solid ${safeIcon}" style="color: ${safeColor}; flex-shrink: 0;"></i><span class="sidebar-bare-label" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeName}</span></span><div style="display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">${countBadgeHtml}<i class="fa-solid fa-circle-notch fa-spin category-scan-spinner" style="display:none; color:var(--app-accent-hover); font-size:0.75rem;" title="스캔 진행 중"></i></div></li>`;
+  return `<li class="menu-item ${isActive}" data-type="custom" data-role="sidebar-category-dynamic" data-id="${lib.id}" data-category-id="${lib.id}" data-name="${safeName}" data-path="${safePath}" data-remote="${lib.is_remote || 0}" data-rclone-url="${safeRclone}" data-icon="${safeIcon}" data-color="${safeColor}" data-hide-cover="${hideCover}" data-hide-title="${hideTitle}" data-content-kind="${contentKind}" data-cover-aspect-ratio="${coverAspectRatio}" data-group-id="${groupId}" data-gdrive-copy-remote="${safeGdriveCopyRemote}" data-gdrive-view-local-mirror-path="${safeGdriveViewMirrorPath}" ${draggableAttr} style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;"><span style="display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><i class="${window.boIcon(safeIcon)}" style="color: ${safeColor}; flex-shrink: 0;"></i><span class="sidebar-bare-label" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeName}</span></span><div style="display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">${countBadgeHtml}<i class="lc lc-loader-circle lc-spin category-scan-spinner" style="display:none; color:var(--app-accent-hover); font-size:0.75rem;" title="스캔 진행 중"></i></div></li>`;
 }
 
 function renderPluginItem(cp) {
   const catId = cp.category_id;
   const isActive = String(state.currentLibraryId) === String(catId) ? 'active' : '';
   const safeTitle = escapeHtml(cp.title || cp.name);
-  const safeIcon = escapeHtml(cp.icon || 'fa-puzzle-piece');
+  const safeIcon = escapeHtml(window.boIcon(cp.icon || 'fa-puzzle-piece'));
   return `<li class="menu-item ${isActive}" data-type="plugin" data-role="sidebar-category-dynamic" id="category-${catId}" data-id="${catId}" data-category-id="${catId}" data-plugin-id="${cp.id}"><i class="${safeIcon}" style="color: #38bdf8;"></i> ${safeTitle}</li>`;
 }
 
@@ -256,10 +256,10 @@ export function applySidebarShowMore(sidebar, currentLibraryId) {
   moreBtn.dataset.type = 'system';  // Sortable filter 제외 등록
   const hiddenCount = total - visibleCount;
   if (expanded) {
-    moreBtn.innerHTML = `<i class="fa-solid fa-chevron-up"></i> <span>접기</span>`;
+    moreBtn.innerHTML = `<i class="lc lc-chevron-up"></i> <span>접기</span>`;
     sidebar.appendChild(moreBtn);
   } else {
-    moreBtn.innerHTML = `<span>더 보기 (${hiddenCount})</span> <i class="fa-solid fa-chevron-right"></i>`;
+    moreBtn.innerHTML = `<span>더 보기 (${hiddenCount})</span> <i class="lc lc-chevron-right"></i>`;
     // visibleCount - 1번째 항목 바로 뒤에 삽입
     const insertAfter = items[visibleCount - 1];
     if (insertAfter && insertAfter.parentNode) {
@@ -528,11 +528,11 @@ function renderSidebarAdminTools({ isAdmin, isPinned, pinTitle }) {
     : '';
 
   container.innerHTML = `<details${isOpen ? ' open' : ''}>
-      <summary><i class="fa-solid fa-chevron-right" aria-hidden="true"></i><span>${escapeHtml(t('sidebar.admin_tools', '관리 도구'))}</span></summary>
+      <summary><i class="lc lc-chevron-right" aria-hidden="true"></i><span>${escapeHtml(t('sidebar.admin_tools', '관리 도구'))}</span></summary>
       <div class="sidebar-admin-tool-list">
-        <button type="button" data-role="sidebar-pin-categories"><i class="fa-solid fa-thumbtack"${pinIconStyle}></i><span>${escapeHtml(pinTitle)}</span></button>
-        <button type="button" data-role="sidebar-add-library-group"><i class="fa-solid fa-folder-plus"></i><span>${escapeHtml(t('sidebar.add_group', '그룹 추가'))}</span></button>
-        <button type="button" data-role="sidebar-add-library"><i class="fa-solid fa-plus"></i><span>${escapeHtml(t('category.add_new_tooltip', '새 카테고리 추가'))}</span></button>
+        <button type="button" data-role="sidebar-pin-categories"><i class="lc lc-pin"${pinIconStyle}></i><span>${escapeHtml(pinTitle)}</span></button>
+        <button type="button" data-role="sidebar-add-library-group"><i class="lc lc-folder-plus"></i><span>${escapeHtml(t('sidebar.add_group', '그룹 추가'))}</span></button>
+        <button type="button" data-role="sidebar-add-library"><i class="lc lc-plus"></i><span>${escapeHtml(t('category.add_new_tooltip', '새 카테고리 추가'))}</span></button>
         ${gdriveBtn}
       </div>
     </details>`;
@@ -570,28 +570,10 @@ export async function loadLibraries() {
       state.libraryGroups = Array.isArray(data.groups) ? data.groups : [];
       state.libraryKinds = Array.isArray(data.kinds) ? data.kinds : [];
       const isPinned = localStorage.getItem('category_order_pinned') !== 'false';
-      const pinBtnStyle = isPinned
-        ? "color: var(--app-accent); transform: none;"
-        : "color: var(--app-text-muted); transform: rotate(45deg);";
       const pinTitle = isPinned ? i18n.t('category.pin_pinned') : i18n.t('category.pin_unpinned');
 
+      // 관리자 버튼(순서 고정/그룹·카테고리 추가/Drive 복사)은 사이드바 하단 "관리 도구"에 모아 둔다 (renderSidebarAdminTools)
       const isAdmin = isCurrentUserAdmin();
-      const addBtnHtml = isAdmin
-        ? `<button data-role="sidebar-add-library" style="background: none; border: none; color: var(--app-accent); cursor: pointer; padding: 0.2rem 0.4rem; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;" title="${i18n.t('category.add_new_tooltip')}">
-            <i class="fa-solid fa-plus"></i>
-          </button>`
-        : '';
-      const addGroupBtnHtml = isAdmin
-        ? `<button data-role="sidebar-add-library-group" style="background: none; border: none; color: var(--app-accent); cursor: pointer; padding: 0.2rem 0.4rem; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;" title="그룹 추가">
-            <i class="fa-solid fa-folder-plus"></i>
-          </button>`
-        : '';
-      const addGdriveCopyBtnHtml = (isAdmin && window.DEVELOP_MODE)
-        ? `<button data-role="sidebar-add-gdrive-copy" style="background: none; border: none; color: #60a5fa; cursor: pointer; padding: 0.2rem 0.4rem; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px;" title="Drive에서 복사해오기 (실험적)">
-            <i class="fa-brands fa-google-drive"></i>
-          </button>`
-        : '';
-      
       const tHome = (window.i18n && typeof window.i18n.t === 'function') ? window.i18n.t('category.home', 'Home') : 'Home';
       const tHistory = (window.i18n && typeof window.i18n.t === 'function') ? window.i18n.t('category.history', '최근 읽은 도서') : '최근 읽은 도서';
       const tFavorite = (window.i18n && typeof window.i18n.t === 'function') ? window.i18n.t('category.favorite', '즐겨찾기') : '즐겨찾기';
@@ -602,36 +584,28 @@ export async function loadLibraries() {
       const tHomeSubToggle = (window.i18n && typeof window.i18n.t === 'function') ? window.i18n.t('category.home_sub_toggle', '하위 메뉴 펼치기/접기') : '하위 메뉴 펼치기/접기';
 
       let html = `<li class="menu-item ${state.currentLibraryId === 'home' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-home" data-id="home" data-category-id="home" style="display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
-        <span style="display: inline-flex; align-items: center; gap: 0.6rem;"><i class="fa-solid fa-house"></i> ${tHome}</span>
+        <span style="display: inline-flex; align-items: center; gap: 0.6rem;"><i class="lc lc-house"></i> ${tHome}</span>
         <div class="sidebar-home-right" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-        <div class="sidebar-home-admin" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-          <button id="btn-pin-categories" data-role="sidebar-pin-categories" style="background: none; border: none; cursor: pointer; padding: 0.2rem 0.4rem; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; ${pinBtnStyle}" title="${pinTitle}">
-            <i class="fa-solid fa-thumbtack"></i>
-          </button>
-          ${addGroupBtnHtml}
-          ${addBtnHtml}
-          ${addGdriveCopyBtnHtml}
-        </div>
           <button type="button" class="sidebar-home-sub-toggle" data-role="sidebar-home-sub-toggle" aria-expanded="true" title="${escapeHtml(tHomeSubToggle)}" aria-label="${escapeHtml(tHomeSubToggle)}">
-            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+            <i class="lc lc-chevron-down" aria-hidden="true"></i>
           </button>
         </div>
       </li>`;
 
-      html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'history' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-history" data-id="history" data-category-id="history"><i class="fa-solid fa-clock-rotate-left"></i> ${tHistory}</li>`;
+      html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'history' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-history" data-id="history" data-category-id="history"><i class="lc lc-history"></i> ${tHistory}</li>`;
       html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'favorite' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-favorite" data-id="favorite" data-category-id="favorite"><i class="fa-solid fa-star" style="color: #eab308;"></i> ${tFavorite}</li>`;
       html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'collection' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-collection" data-id="collection" data-category-id="collection"><i class="fa-solid fa-bookmark" style="color: var(--app-accent);"></i> ${tCollection}</li>`;
       if (state.smartRecommendEnabled !== false) {
-        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'smart_rec' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-smart-rec" data-id="smart_rec" data-category-id="smart_rec"><i class="fa-solid fa-wand-magic-sparkles" style="color: #34d399;"></i> ${tSmartRec}</li>`;
+        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'smart_rec' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-smart-rec" data-id="smart_rec" data-category-id="smart_rec"><i class="lc lc-wand-sparkles" style="color: #34d399;"></i> ${tSmartRec}</li>`;
       }
       // 음성 준비됨(서버에 미리 만든 듣기 음성이 있는 책) — 서버 미리 만들기가 켜진 도서 세션에서만
       if (state.ttsPregenEnabled && ['general', 'adult'].includes(state.currentLibraryType)) {
         const tTtsReady = (window.i18n && typeof window.i18n.t === 'function') ? window.i18n.t('category.tts_ready', '음성 준비됨') : '음성 준비됨';
-        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'tts_ready' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-tts-ready" data-id="tts_ready" data-category-id="tts_ready"><i class="fa-solid fa-headphones" style="color: #a78bfa;"></i> ${tTtsReady}</li>`;
+        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'tts_ready' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-tts-ready" data-id="tts_ready" data-category-id="tts_ready"><i class="lc lc-headphones" style="color: #a78bfa;"></i> ${tTtsReady}</li>`;
       }
-      html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'plugins' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-plugins" data-id="plugins" data-category-id="plugins"><i class="fa-solid fa-puzzle-piece" style="color: #38bdf8;"></i> ${tPlugins}</li>`;
+      html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'plugins' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-plugins" data-id="plugins" data-category-id="plugins"><i class="lc lc-puzzle" style="color: #38bdf8;"></i> ${tPlugins}</li>`;
       if (state.showSidebarCategoryAll !== false) {
-        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'all' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-all" data-id="all" data-category-id="all"><i class="fa-solid fa-layer-group"></i> ${tAll}</li>`;
+        html += `<li class="menu-item sidebar-home-sub ${state.currentLibraryId === 'all' ? 'active' : ''}" data-type="system" data-role="sidebar-category-dynamic" id="category-all" data-id="all" data-category-id="all"><i class="lc lc-layers"></i> ${tAll}</li>`;
       }
       
       if (data.libraries && data.libraries.length > 0) {
@@ -701,7 +675,7 @@ export async function loadLibraries() {
         const safeGroupColor = escapeHtml(group.color || 'var(--app-accent)');
         html += `<li class="sidebar-library-group${isCollapsed ? ' collapsed' : ''}" data-type="group-container" data-library-group-id="${groupId}">
           <button type="button" class="menu-item sidebar-group-header" data-type="group" data-role="sidebar-group-toggle" data-id="${groupId}" data-name="${safeGroupName}" aria-expanded="${isCollapsed ? 'false' : 'true'}">
-            <span><i class="fa-solid fa-chevron-down sidebar-group-chevron"></i><i class="fa-solid ${safeGroupIcon}" style="color:${safeGroupColor};"></i>${safeGroupName}</span>
+            <span><i class="lc lc-chevron-down sidebar-group-chevron"></i><i class="${window.boIcon(safeGroupIcon)}" style="color:${safeGroupColor};"></i>${safeGroupName}</span>
             <small>${groupLibraries.length + groupPlugins.length}</small>
           </button>
           <ul class="sidebar-library-group-items" data-group-id="${groupId}">${groupLibraries.map((lib) => renderLibraryItem(lib, isPinned)).join('')}${groupPlugins.map((cp) => renderPluginItem(cp)).join('')}</ul>

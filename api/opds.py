@@ -20,7 +20,7 @@ import database
 from api.cache import LRUCache
 from api.opds_common.auth import authenticate_basic_auth_user, unauthorized_response
 from api.opds_common.xml import atom_response, build_external_request_url, get_external_base_url, get_page_params
-from api.opds_common.xml_opds import build_opds_standard_xml
+from api.opds_common.xml_opds import build_opds_standard_xml, wants_pse_stream
 from services.opds_service import (
     get_book_entries,
     get_favorite_entries,
@@ -147,8 +147,13 @@ OPDS_MAX_PAGE_SIZE = 200
 opds_response_cache = LRUCache(capacity=50)
 
 
+def _opds_cache_key(key: str) -> str:
+    # PSE를 받는 앱(KOReader)과 아닌 앱의 피드가 다르므로 따로 캐시한다
+    return f'{key}:pse' if wants_pse_stream(request) else key
+
+
 def _get_cached_opds_response(key: str):
-    cached = opds_response_cache.get(key)
+    cached = opds_response_cache.get(_opds_cache_key(key))
     if cached is None:
         return None
     xml, timestamp = cached
@@ -158,7 +163,7 @@ def _get_cached_opds_response(key: str):
 
 
 def _set_cached_opds_response(key: str, xml: str):
-    opds_response_cache.put(key, (xml, time.time()))
+    opds_response_cache.put(_opds_cache_key(key), (xml, time.time()))
 
 
 def _get_page_params():

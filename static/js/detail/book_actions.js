@@ -27,7 +27,7 @@ export function showGlobalLoadingSpinner(message = '처리 중입니다. 잠시�
     `;
     overlay.innerHTML = `
       <div style="background: rgba(var(--app-panel-rgb), 0.95); padding: 2rem 2.5rem; border-radius: 16px; border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; max-width: 90vw; width: 400px;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--app-accent); margin-bottom: 1.2rem;"></i>
+        <i class="lc lc-loader-circle lc-spin" style="font-size: 2.5rem; color: var(--app-accent); margin-bottom: 1.2rem;"></i>
         <div id="global-loading-overlay-msg" style="font-size: 1rem; font-weight: 600; color: var(--app-text-primary); line-height: 1.5; word-break: keep-all;">${message}</div>
         <div style="font-size: 0.8rem; color: var(--app-text-muted); margin-top: 0.8rem;">작업이 진행되는 동안 잠시만 기다려 주세요</div>
       </div>
@@ -135,7 +135,7 @@ export async function rescanBook(event, bookId, seriesName, libraryId) {
   const btn = (event.target && typeof event.target.closest === 'function' && event.target.closest('button')) || event.currentTarget;
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('modal.scanning')}`;
+  btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('modal.scanning')}`;
 
   try {
     const formData = new FormData();
@@ -184,7 +184,7 @@ export async function rescanMissingBooks(event, seriesName, libraryId) {
   const btn = (event.target && typeof event.target.closest === 'function' && event.target.closest('button')) || event.currentTarget;
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('modal.scanning')}`;
+  btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('modal.scanning')}`;
 
   try {
     const missingCards = Array.from(document.querySelectorAll('.volume-card[data-page-missing="1"]'));
@@ -251,7 +251,7 @@ export async function rescanSeries(event, seriesName, libraryId) {
   const btn = (event.target && typeof event.target.closest === 'function' && event.target.closest('button')) || event.currentTarget;
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('modal.scanning')}`;
+  btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('modal.scanning')}`;
 
   try {
     // 오디오북 상세에는 권 카드가 없다 - 상세에 떠 있는 오디오북 한 권(폴더)을 재스캔한다
@@ -317,7 +317,7 @@ export async function markSeriesCompleted(event, seriesName, libraryId) {
   const btn = (event.target && typeof event.target.closest === 'function' && event.target.closest('button')) || event.currentTarget;
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('detail.marking_completed')}`;
+  btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('detail.marking_completed')}`;
 
   try {
     const isAudiobook = state.currentLibraryType === 'audiobook';
@@ -412,7 +412,7 @@ export async function markSeriesUnread(event, seriesName, libraryId) {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('detail.marking_unread')}`;
+    btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('detail.marking_unread')}`;
   }
 
   try {

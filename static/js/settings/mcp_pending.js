@@ -55,7 +55,7 @@ export async function loadMcpPendingChanges() {
     renderMcpPendingTable(data.changes || []);
   } catch (err) {
     console.error('[MCP-Pending] 목록 로드 실패:', err);
-    tbody.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(t('mcp_pending.load_error', null, '대기 목록을 불러오지 못했습니다.'))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: #ef4444;"><i class="lc lc-triangle-alert"></i> ${escapeHtml(t('mcp_pending.load_error', null, '대기 목록을 불러오지 못했습니다.'))}</td></tr>`;
   }
 }
 window.loadMcpPendingChanges = loadMcpPendingChanges;
@@ -87,7 +87,7 @@ function formatPreview(toolName, preview) {
 
 function getToolLabel(toolName) {
   const labels = {
-    bulk_update_book_metadata: `<i class="fa-solid fa-pen"></i> ${escapeHtml(t('mcp_pending.tool_bulk_metadata', null, '메타데이터 일괄 수정'))}`,
+    bulk_update_book_metadata: `<i class="lc lc-pen"></i> ${escapeHtml(t('mcp_pending.tool_bulk_metadata', null, '메타데이터 일괄 수정'))}`,
     bulk_set_favorite: `<i class="fa-solid fa-star"></i> ${escapeHtml(t('mcp_pending.tool_bulk_favorite', null, '즐겨찾기 일괄 처리'))}`,
   };
   return labels[toolName] || escapeHtml(toolName);
@@ -98,7 +98,7 @@ function renderMcpPendingTable(changes) {
   if (!tbody) return;
 
   if (changes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="padding: 3rem; text-align: center; color: var(--app-text-muted);"><i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #22c55e;"></i>${escapeHtml(t('mcp_pending.empty', null, '대기 중인 제안이 없습니다.'))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="padding: 3rem; text-align: center; color: var(--app-text-muted);"><i class="lc lc-circle-check" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #22c55e;"></i>${escapeHtml(t('mcp_pending.empty', null, '대기 중인 제안이 없습니다.'))}</td></tr>`;
     return;
   }
 
@@ -112,10 +112,10 @@ function renderMcpPendingTable(changes) {
       <td style="padding: 1rem;">
         <div style="display: flex; gap: 0.4rem;">
           <button class="action-btn" data-role="mcp-approve" data-change-id="${change.id}" style="padding: 0.35rem 0.7rem; background-color: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 6px; color: #4ade80; font-weight: 600; cursor: pointer; white-space: nowrap;">
-            <i class="fa-solid fa-check"></i> ${escapeHtml(t('mcp_pending.btn_approve', null, '승인'))}
+            <i class="lc lc-check"></i> ${escapeHtml(t('mcp_pending.btn_approve', null, '승인'))}
           </button>
           <button class="action-btn" data-role="mcp-reject" data-change-id="${change.id}" style="padding: 0.35rem 0.7rem; background-color: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 6px; color: #fca5a5; font-weight: 600; cursor: pointer; white-space: nowrap;">
-            <i class="fa-solid fa-xmark"></i> ${escapeHtml(t('mcp_pending.btn_reject', null, '거부'))}
+            <i class="lc lc-x"></i> ${escapeHtml(t('mcp_pending.btn_reject', null, '거부'))}
           </button>
         </div>
       </td>

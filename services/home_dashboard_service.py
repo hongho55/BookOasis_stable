@@ -81,6 +81,12 @@ class HomeDashboardService:
             if size_val not in (1, 2, 3):
                 size_val = 1
 
+            # 'none'이면 코어가 위젯 위 제목줄(제목/제공/x)을 그리지 않는다 - 배너처럼 내용 자체가 화면인 위젯용.
+            # 제거(x) 버튼은 마우스를 올리면 오른쪽 위에 겹쳐 나온다. 기본 'card'(기존 동작).
+            frame_val = str(widget.get('frame') or 'card').strip().lower()
+            if frame_val not in ('card', 'none'):
+                frame_val = 'card'
+
             widget_id = f"plugin_{p.get('id')}"
             available[widget_id] = {
                 'id': widget_id,
@@ -94,6 +100,7 @@ class HomeDashboardService:
                 'order': order_val,
                 'layout': layout_val,
                 'size': size_val,
+                'frame': frame_val,
             }
 
         default_order = sorted(available.values(), key=lambda w: w['order'])

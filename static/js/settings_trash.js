@@ -67,7 +67,7 @@ function loadTrashList() {
         selectAllCheckbox.checked = false;
     }
     
-    body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--app-text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> 목록 로딩 중...</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> 목록 로딩 중...</td></tr>';
     emptyState.style.display = 'none';
 
     fetch('/api/admin/trash')

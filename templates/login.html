@@ -8,6 +8,10 @@
     <link rel="icon" type="image/png" href="{{ static_asset_url('images/logo.png') }}">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="{{ static_asset_url('lib/font-awesome/css/all.min.css') }}">
+    <!-- 코어 UI 아이콘: Lucide 선 아이콘(FA는 플러그인·브랜드·채움 상태 아이콘용으로 계속 로드) -->
+    <link rel="stylesheet" href="{{ static_asset_url('lib/lucide/lucide.css') }}">
+    <script src="{{ static_asset_url('lib/lucide/fa_map.js') }}"></script>
+    <script src="{{ static_asset_url('js/bo_icon.js') }}"></script>
     <link rel="stylesheet" href="{{ static_asset_url('css/login.css') }}">
     <!-- i18n 다국어 지원 엔진 -->
     <script src="{{ static_asset_url('js/i18n.js') }}"></script>
@@ -25,17 +29,17 @@
         </div>
 
         <div id="login-error" class="error-message">
-            <i class="fa-solid fa-circle-exclamation"></i> <span id="login-error-text" data-i18n="common.error">오류</span>
+            <i class="lc lc-circle-alert"></i> <span id="login-error-text" data-i18n="common.error">오류</span>
         </div>
 
         <form id="login-form" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <input type="text" id="username" class="form-control" data-i18n-placeholder="login.username_placeholder" placeholder="아이디" required autocomplete="username" maxlength="128">
-                <i class="fa-solid fa-user"></i>
+                <i class="lc lc-user"></i>
             </div>
             <div class="form-group">
                 <input type="password" id="password" class="form-control" data-i18n-placeholder="login.password_placeholder" placeholder="비밀번호" required autocomplete="current-password" maxlength="256">
-                <i class="fa-solid fa-lock"></i>
+                <i class="lc lc-lock"></i>
             </div>
             <div style="margin: -0.5rem 0 1rem 0; text-align: left;">
                 <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-secondary); font-size: 0.9rem;">
@@ -44,7 +48,7 @@
                 </label>
             </div>
             <button type="submit" class="btn-submit">
-                <span data-i18n="login.submit_btn">로그인</span> <i class="fa-solid fa-arrow-right"></i>
+                <span data-i18n="login.submit_btn">로그인</span> <i class="lc lc-arrow-right"></i>
             </button>
         </form>
         <!-- 다국어 선택기 (로그인 버튼 아래로 이동) -->
@@ -54,26 +58,26 @@
     <!-- 2. 비밀번호 강제 변경 폼 카드 (초기 로그인용) -->
     <div id="change-card" class="auth-card force-change-border hidden">
         <div class="auth-header">
-            <span class="auth-logo"><i class="fa-solid fa-shield-halved icon-warning"></i></span>
+            <span class="auth-logo"><i class="lc lc-shield-half icon-warning"></i></span>
             <h2 class="auth-title title-warning">보안 변경 강제</h2>
             <p class="auth-subtitle subtitle-warning">초기 비밀번호(admin)를 사용 중입니다.<br>안전한 새 비밀번호를 설정해 주세요.</p>
         </div>
 
         <div id="change-error" class="error-message">
-            <i class="fa-solid fa-circle-exclamation"></i> <span id="change-error-text">오류</span>
+            <i class="lc lc-circle-alert"></i> <span id="change-error-text">오류</span>
         </div>
 
         <form id="change-form" onsubmit="handleChangePassword(event)">
             <div class="form-group">
                 <input type="password" id="new-password" class="form-control" placeholder="새 비밀번호 (4자리 이상)" required autocomplete="new-password" maxlength="256">
-                <i class="fa-solid fa-lock"></i>
+                <i class="lc lc-lock"></i>
             </div>
             <div class="form-group">
                 <input type="password" id="confirm-password" class="form-control" placeholder="새 비밀번호 확인" required autocomplete="new-password" maxlength="256">
-                <i class="fa-solid fa-lock"></i>
+                <i class="lc lc-lock"></i>
             </div>
             <button type="submit" class="btn-submit btn-warning">
-                비밀번호 변경 및 메인 이동 <i class="fa-solid fa-check"></i>
+                비밀번호 변경 및 메인 이동 <i class="lc lc-check"></i>
             </button>
         </form>
     </div>

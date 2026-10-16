@@ -12,7 +12,7 @@ export async function loadPluginsSettings() {
     return;
   }
 
-  container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>플러그인 목록 로드 중...</div>';
+  container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="lc lc-loader-circle lc-spin lc-2x"></i><br><br>플러그인 목록 로드 중...</div>';
 
   try {
     console.log('[Plugins-Settings] api.fetchMetadataPluginsForManagement() API 호출 시작');
@@ -45,7 +45,7 @@ export async function loadPluginsSettings() {
         card.innerHTML = `
               <div class="plugin-settings-card-header" data-role="plugin-card-toggle" data-plugin-id="${p.id}" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0; flex-wrap: wrap; gap: 0.8rem; cursor: pointer;">
                   <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
-                      <i class="fa-solid fa-chevron-right plugin-settings-card-chevron" data-plugin-chevron="${p.id}" style="color: var(--app-text-muted); font-size: 0.8rem; transition: transform 0.2s; flex-shrink: 0;"></i>
+                      <i class="lc lc-chevron-right plugin-settings-card-chevron" data-plugin-chevron="${p.id}" style="color: var(--app-text-muted); font-size: 0.8rem; transition: transform 0.2s; flex-shrink: 0;"></i>
                       <div style="min-width: 0;">
                           <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                               ${escapeHtmlText(p.name)}
@@ -81,7 +81,7 @@ export async function loadPluginsSettings() {
                       ${(hasCustomSettingsUi || schema.length > 0) ? `
                       <div style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
                           <button type="submit" class="btn-submit" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.2rem; font-size: 0.82rem;">
-                              <i class="fa-regular fa-floppy-disk"></i> 설정 저장
+                              <i class="lc lc-save"></i> 설정 저장
                           </button>
                       </div>
                       ` : ''}
@@ -89,7 +89,7 @@ export async function loadPluginsSettings() {
                       ${showSampleUpdateButton ? `
                       <div style="margin-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
                         <button type="button" class="plugin-sample-update-btn" data-plugin-id="${p.id}" style="display: inline-flex; align-items: center; gap: 0.45rem; width: fit-content; padding: 0.5rem 1.0rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(56,189,248,0.5); background: rgba(2,132,199,0.22); color: #dbeafe; cursor: pointer;">
-                          <i class="fa-solid fa-cloud-arrow-down"></i> 샘플 업데이트 (${p.id})
+                          <i class="lc lc-cloud-download"></i> 샘플 업데이트 (${p.id})
                         </button>
                         <span id="plugin-sample-update-status-${p.id}" style="font-size: 0.78rem; color: var(--app-text-muted);">업데이트 가능 조건: 현재 버전 &lt; GitHub 버전</span>
                       </div>
@@ -441,7 +441,7 @@ function bindPluginEvents() {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fa-regular fa-floppy-disk"></i> 설정 저장';
+          submitBtn.innerHTML = '<i class="lc lc-save"></i> 설정 저장';
         }
       }
     });
@@ -455,7 +455,7 @@ function bindPluginEvents() {
       const prevText = btn.innerHTML;
       try {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 업데이트 중...';
+        btn.innerHTML = '<i class="lc lc-loader-circle lc-spin"></i> 업데이트 중...';
         if (statusEl) {
           statusEl.textContent = '업데이트 확인/적용 진행 중...';
           statusEl.style.color = '#38bdf8';
@@ -525,7 +525,7 @@ function closeSamplePluginsModal() {
 async function loadSamplePluginsList() {
   const list = document.getElementById('sample-plugins-list');
   if (!list) return;
-  list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: var(--app-accent);"><i class="fa-solid fa-circle-notch fa-spin"></i></div>';
+  list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: var(--app-accent);"><i class="lc lc-loader-circle lc-spin"></i></div>';
 
   try {
     const data = await api.fetchSamplePlugins();
@@ -541,9 +541,9 @@ async function loadSamplePluginsList() {
           <div style="color: var(--app-text-muted); font-size: 0.75rem;">${escapeHtmlText(s.id)}</div>
         </div>
         ${s.installed
-          ? `<span style="flex-shrink: 0; font-size: 0.8rem; color: #4ade80; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="fa-solid fa-check"></i> 설치됨</span>`
+          ? `<span style="flex-shrink: 0; font-size: 0.8rem; color: #4ade80; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="lc lc-check"></i> 설치됨</span>`
           : `<button type="button" class="sample-plugin-install-btn" data-plugin-id="${escapeHtmlAttr(s.id)}" style="flex-shrink: 0; padding: 0.45rem 0.9rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(168,85,247,0.5); background: rgba(168,85,247,0.18); color: #e9d5ff; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <i class="fa-solid fa-download"></i> 설치
+              <i class="lc lc-download"></i> 설치
             </button>`
         }
       </div>
@@ -554,7 +554,7 @@ async function loadSamplePluginsList() {
         const pluginId = btn.dataset.pluginId;
         const prevText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> 설치 중...';
+        btn.innerHTML = '<i class="lc lc-loader-circle lc-spin"></i> 설치 중...';
         try {
           const res = await api.installSamplePlugin(pluginId);
           if (res.success) {

@@ -335,7 +335,7 @@ function renderMatrixHeader(headerRow, users) {
                   style="font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">전체선택/해제</button>
           <button type="button" class="permission-copy-btn" data-user-id="${user.id}" title="이 사용자 권한을 다른 사용자에게 복사"
                   style="font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">
-            <i class="fa-solid fa-copy"></i>
+            <i class="lc lc-copy"></i>
           </button>
         </div>
         `}
@@ -350,7 +350,7 @@ function renderMatrixBody(users, categories, permissions, targetDb) {
     let rowHTML = `
       <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-category-name="${cat.name}">
         <td style="padding:1rem; color: var(--app-text-primary);">
-          <i class="fa-solid fa-folder" style="color: var(--app-text-muted); margin-right:0.5rem;"></i>${cat.name}
+          <i class="lc lc-folder" style="color: var(--app-text-muted); margin-right:0.5rem;"></i>${cat.name}
           <button type="button" class="permission-row-toggle-all" data-library-id="${cat.id}" data-db-type="${cat.db_type || targetDb}"
                   style="margin-left:0.5rem; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">전체선택/해제</button>
         </td>

@@ -233,9 +233,9 @@ function ensurePill() {
   pill.id = 'viewer-slideshow-pill';
   pill.className = 'viewer-slideshow-pill';
   pill.innerHTML = `
-    <button type="button" class="viewer-slideshow-pill-btn" data-slideshow="pause"><i class="fa-solid fa-pause"></i></button>
+    <button type="button" class="viewer-slideshow-pill-btn" data-slideshow="pause"><i class="lc lc-pause"></i></button>
     <span class="viewer-slideshow-pill-label"></span>
-    <button type="button" class="viewer-slideshow-pill-btn" data-slideshow="stop"><i class="fa-solid fa-xmark"></i></button>
+    <button type="button" class="viewer-slideshow-pill-btn" data-slideshow="stop"><i class="lc lc-x"></i></button>
   `;
   // 아래쪽 탭존/오버레이 토글로 이벤트가 새지 않게 막는다
   ['pointerdown', 'touchstart', 'mousedown'].forEach((type) => {
@@ -265,7 +265,7 @@ function updatePill() {
   const pill = document.getElementById('viewer-slideshow-pill');
   if (pill && running) {
     const icon = pill.querySelector('[data-slideshow="pause"] i');
-    if (icon) icon.className = paused ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+    if (icon) icon.className = paused ? 'lc lc-play' : 'lc lc-pause';
     const label = pill.querySelector('.viewer-slideshow-pill-label');
     if (label) {
       label.textContent = isScrollMode()
@@ -298,7 +298,7 @@ export function syncSlideshowControls() {
 
   const icon = document.querySelector('#btn-slideshow-toggle i');
   const label = document.getElementById('slideshow-toggle-label');
-  if (icon) icon.className = running ? 'fa-solid fa-stop' : 'fa-solid fa-play';
+  if (icon) icon.className = running ? 'lc lc-square' : 'lc lc-play';
   if (label) label.textContent = running ? t('viewer.slideshow_stop', null, '슬라이드 끄기') : t('viewer.slideshow_start', null, '슬라이드');
 
   const intervalSelect = document.getElementById('viewer-slideshow-interval-select');

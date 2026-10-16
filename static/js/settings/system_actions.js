@@ -11,7 +11,7 @@ export async function runVaapiCheck() {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 점검 중...';
+    btn.innerHTML = '<i class="lc lc-loader lc-spin"></i> 점검 중...';
   }
   resultEl.style.display = 'block';
   resultEl.style.background = 'rgba(15, 23, 42, 0.6)';
@@ -60,7 +60,7 @@ export async function runVaapiCheck() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> 지금 점검';
+      btn.innerHTML = '<i class="lc lc-search"></i> 지금 점검';
     }
   }
 }

@@ -199,7 +199,7 @@ export async function loadBooksList(isAppend = false, startPage = null, options 
       state.hasPrevious = targetPage > 1;
       // 스캔 후 자동 갱신(keepCurrentGrid)은 기존 그리드를 유지한 채 교체해 깜빡임을 줄인다.
       if (!options.keepCurrentGrid) {
-        container.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('book_list.loading')}</div>`;
+        container.innerHTML = `<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('book_list.loading')}</div>`;
         const countSpan = document.getElementById('library-total-count');
         if (countSpan) countSpan.innerText = '';
       }
@@ -358,7 +358,7 @@ export async function loadReadingHistory() {
   if (spinnerTop) spinnerTop.style.display = 'none';
   const container = document.getElementById('books-list-container');
   if (!container) { state.isLoading = false; return; }
-  container.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('book_list.history_loading')}</div>`;
+  container.innerHTML = `<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('book_list.history_loading')}</div>`;
   try {
     const data = await api.fetchReadingHistory(state.currentLibraryType);
     if (data.success) {
@@ -447,10 +447,10 @@ export function updateSearchActionButtonUI(query) {
   const btn = document.getElementById('btn-library-search-action');
   if (!btn) return;
   if (query) {
-    btn.innerHTML = `<i class="fa-solid fa-xmark" aria-hidden="true"></i> <span class="sr-only">${i18n.t('common.reset')}</span>`;
+    btn.innerHTML = `<i class="lc lc-x" aria-hidden="true"></i> <span class="sr-only">${i18n.t('common.reset')}</span>`;
     btn.title = i18n.t('common.reset');
   } else {
-    btn.innerHTML = `<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> <span class="sr-only">${i18n.t('common.search')}</span>`;
+    btn.innerHTML = `<i class="lc lc-search" aria-hidden="true"></i> <span class="sr-only">${i18n.t('common.search')}</span>`;
     btn.title = i18n.t('common.search');
   }
 }

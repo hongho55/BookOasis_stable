@@ -105,6 +105,12 @@
     color: #f87171 !important;
 }
 
+/* 앱 UI 글꼴 - 테마와 무관하게 하나 */
+:root {
+    --app-font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+        'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+
 /* ======================================================== */
 /* 🎨 DASHBOARD THEME SYSTEM (data-app-theme)               */
 /* ======================================================== */
@@ -733,17 +739,26 @@ html {
 body {
     background-color: var(--app-bg-main);
     color: var(--app-text-primary);
+    /* 앱 UI 글꼴 (번들 Pretendard 가변 글꼴). 지정이 없으면 브라우저 기본 글꼴(Windows: 맑은 고딕)로 나와 기기마다 달랐다.
+       뷰어 본문은 각 뷰어 글꼴 설정을 그대로 따른다. */
+    font-family: var(--app-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
     overscroll-behavior: none;
 }
 
+/* 폼 컨트롤은 기본적으로 글꼴을 상속하지 않는다 */
+button, input, select, textarea {
+    font-family: inherit;
+}
+
 .main-wrapper {
-    /* body padding 대신 margin으로 여백 확보 (flex padding-bottom 버그 회피) */
-    margin: 20px;
-    background: var(--app-bg-card);
-    border: 1px solid var(--app-border);
-    border-radius: 12px;
-    box-shadow: var(--app-shadow);
+    /* 바깥 프레임(여백·테두리·둥근 모서리·그림자) 없이 화면 전체를 쓴다. 예전엔 상자 안에 사이드바·헤더 카드가
+       또 상자로 들어가 이중 테두리처럼 보였다. 구조는 안쪽 카드(사이드바, 상단 헤더 카드)가 맡는다.
+       (폰은 2026-10-02부터 이미 이렇게 썼다) */
+    margin: 0;
+    background: var(--app-bg-main);
     flex: 1 1 0%;
     min-height: 0;
     display: flex;
@@ -790,6 +805,82 @@ body {
     display: none;
 }
 
+/* 사이드바 하단 접이식 "관리 도구"(관리자 전용: 순서 고정/그룹·카테고리 추가 등).
+   예전엔 데스크톱 Home 줄에 아이콘 4개로 늘 보였는데, 매일 쓰지 않는 관리 기능이 맨 위에 나와 있어 접어 둔다.
+   모바일 터치 크기는 mobile.css가 키운다. */
+.sidebar-admin-tools:not([hidden]) {
+    display: block;
+    margin-top: 0.6rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--app-border-light);
+}
+
+.sidebar-admin-tools details > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.2rem;
+    padding: 0 0.6rem;
+    color: var(--app-text-muted);
+    font-size: 0.82rem;
+    cursor: pointer;
+    list-style: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sidebar-admin-tools details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.sidebar-admin-tools details > summary i {
+    width: 1rem;
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-admin-tools details[open] > summary i {
+    transform: rotate(90deg);
+}
+
+.sidebar-admin-tool-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0 0 0.3rem 0.4rem;
+}
+
+.sidebar-admin-tool-list button {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 2.1rem;
+    padding: 0 0.6rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--app-text-primary);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 400;
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidebar-admin-tool-list button i {
+    width: 1.25em;
+    text-align: center;
+    color: var(--app-accent);
+}
+
+.sidebar-admin-tool-list button:hover,
+.sidebar-admin-tool-list button:active {
+    background: var(--app-bg-card-hover);
+}
+
+.library-sidebar.collapsed .sidebar-admin-tools {
+    display: none !important;
+}
+
 /* 데스크톱 사이드바 접힌 상태 - 완전히 숨기지 않고 아이콘만 남는 좁은 레일로 전환
    (텍스트 라벨은 title 속성 툴팁으로 대체, sidebar_manager.js의 syncCollapsedSidebarTooltips 참고) */
 .library-sidebar.collapsed {
@@ -811,7 +902,7 @@ body {
     background: rgba(var(--app-panel-rgb), 0.6);
     color: var(--app-text-muted);
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     padding: 0.2rem 0.42rem;
     border-radius: 999px;
@@ -827,11 +918,15 @@ body {
     display: none;
 }
 
-/* 접힌 레일에서는 텍스트가 사라져 로고 아이콘만 남는데, 기존 40px가 "너무 안 보인다"는
+/* 접힌 레일에서는 텍스트가 사라져 야자수 표시만 남는데, 예전 40px 로고가 "너무 안 보인다"는
    커뮤니티 피드백이 있어(2026-09-11) 좁은 레일(60px) 안에서 여유 있게 키운다. */
-.library-sidebar.collapsed .sidebar-title img {
-    width: 52px !important;
-    height: 52px !important;
+.library-sidebar.collapsed .sidebar-title {
+    justify-content: center;
+    padding-left: 0;
+}
+
+.library-sidebar.collapsed .sidebar-brand-mark {
+    font-size: 1.9rem;
 }
 
 .library-sidebar.collapsed .menu-item,
@@ -918,13 +1013,32 @@ body {
     border: 1px dashed var(--app-accent);
 }
 
+/* 사이드바 브랜드: 선 아이콘 야자수(강조색) + "Book" 기본색 / "Oasis" 강조색.
+   야자수는 아래 메뉴 아이콘 열과 세로로 맞춘다(padding-left). 파비콘/앱 아이콘(logo.png)은 그대로. */
 .sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    /* 오른쪽 상단바 카드(50px)와 같은 높이 -> 세로 가운데가 같은 줄에 온다 */
+    min-height: 50px;
+    box-sizing: border-box;
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 650;
+    letter-spacing: -0.01em;
     color: var(--app-text-primary);
-    margin: 0;
-    padding-bottom: 0.5rem;
+    margin: 0 0 0.4rem;
+    padding: 0 0 0 1rem;
     cursor: pointer;
+}
+
+/* 야자수는 메뉴 아이콘 열(x), "BookOasis"는 메뉴 글자 열에 맞춘 크기/간격 */
+.sidebar-brand-mark {
+    color: var(--app-accent-hover);
+    font-size: 1.1rem;
+}
+
+.sidebar-brand-accent {
+    color: var(--app-accent-hover);
 }
 
 .sidebar-menu {
@@ -1514,6 +1628,42 @@ body {
     box-shadow: 0 0 0 1px var(--app-accent-soft) inset;
 }
 
+/* 상단바 아이콘 토글: 기본|작가별은 아이콘만, 세션 탭은 선택된 것만 아이콘+이름.
+   숨긴 이름은 화면에서만 감춘다(화면낭독기 라벨 유지, 툴팁은 title). 모바일 기본|작가별은 mobile.css가 이름을 다시 보인다 */
+.btn-toggle--icon,
+.btn-toggle--session {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.btn-toggle--icon {
+    padding: 0.35rem 0.6rem;
+}
+
+.btn-toggle--session:not(.active) {
+    padding: 0.4rem 0.7rem;
+}
+
+.btn-toggle--icon .lc,
+.btn-toggle--session .lc {
+    font-size: 1.05em;
+}
+
+.btn-toggle--icon .btn-toggle-label,
+.btn-toggle--session:not(.active) .btn-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /* 아이콘 전용 컴팩트 버튼 - 라벨 텍스트는 화면에서만 숨기고 title 툴팁으로 접근성 유지 */
 .sr-only {
     position: absolute;
@@ -1576,8 +1726,8 @@ body {
 
 .btn-scan-activity:hover,
 .btn-scan-activity[aria-expanded="true"] {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: color-mix(in srgb, var(--app-text-primary) 6%, transparent);
+    border-color: color-mix(in srgb, var(--app-text-primary) 12%, transparent);
     color: var(--app-text-primary);
 }
 
@@ -1594,7 +1744,7 @@ body {
     height: 0.42rem;
     border-radius: 50%;
     background: var(--notify-running);
-    box-shadow: 0 0 0 2px #172033;
+    box-shadow: 0 0 0 2px var(--app-bg-card);
     opacity: 0;
 }
 
@@ -1624,10 +1774,10 @@ body {
     /* 머리말(제목+요약 두 줄) 높이가 고정이 아니라, 목록이 남은 높이를 채우게 한다 */
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(148, 163, 184, 0.22);
+    border: 1px solid color-mix(in srgb, var(--app-text-primary) 18%, transparent);
     border-radius: 6px;
-    background: #20272b;
-    color: #d5d9dc;
+    background: var(--app-bg-card);
+    color: var(--app-text-primary);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.48);
 }
 
@@ -1641,7 +1791,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--app-text-primary) 8%, transparent);
 }
 
 .scan-activity-header > div {
@@ -1656,7 +1806,7 @@ body {
 }
 
 .scan-activity-header span {
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.72rem;
 }
 
@@ -1665,7 +1815,7 @@ body {
     height: 1.9rem;
     border: 0;
     background: transparent;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     cursor: pointer;
 }
 
@@ -1675,7 +1825,7 @@ body {
     margin-left: auto;
     margin-right: 0.25rem;
     padding: 0 0.6rem;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid color-mix(in srgb, var(--app-text-primary) 14%, transparent);
     border-radius: 6px;
     font-size: 0.74rem;
     font-weight: 600;
@@ -1685,7 +1835,7 @@ body {
 .scan-activity-header .scan-activity-clear:hover,
 .scan-activity-header .scan-activity-clear:focus-visible {
     color: var(--app-text-primary);
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: color-mix(in srgb, var(--app-text-primary) 30%, transparent);
 }
 
 .scan-activity-header .scan-activity-clear[hidden] {
@@ -1704,7 +1854,7 @@ body {
     gap: 0.65rem;
     align-items: start;
     padding: 0.85rem 0.9rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid color-mix(in srgb, var(--app-text-primary) 6%, transparent);
 }
 
 .scan-activity-item:last-child {
@@ -1748,7 +1898,7 @@ body {
     padding: 0.05rem 0.4rem;
     border-radius: 999px;
     background: var(--notify-tone-soft, transparent);
-    color: var(--notify-tone, #8f9aa3);
+    color: var(--notify-tone, var(--app-text-secondary));
     font-size: 0.66rem;
     font-weight: 700;
     white-space: nowrap;
@@ -1777,12 +1927,12 @@ body {
     border: 0;
     border-radius: 4px;
     background: transparent;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     cursor: pointer;
 }
 
 .notify-card-toggle:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--app-text-primary) 6%, transparent);
     color: var(--app-text-primary);
 }
 
@@ -1807,10 +1957,10 @@ body {
 .notify-card-btn {
     flex-shrink: 0;
     padding: 0.2rem 0.55rem;
-    border: 1px solid rgba(148, 163, 184, 0.3);
+    border: 1px solid color-mix(in srgb, var(--app-text-primary) 24%, transparent);
     border-radius: 4px;
-    background: rgba(255, 255, 255, 0.04);
-    color: #d5d9dc;
+    background: color-mix(in srgb, var(--app-text-primary) 4%, transparent);
+    color: var(--app-text-primary);
     font-size: 0.7rem;
     cursor: pointer;
 }
@@ -1832,7 +1982,7 @@ body {
 
 .notify-card-book-note {
     display: block;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.68rem;
     white-space: normal;
 }
@@ -1858,7 +2008,7 @@ body {
     max-height: calc(100vh - 32px);
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid color-mix(in srgb, var(--app-text-primary) 10%, transparent);
     border-radius: 10px;
     background: rgb(var(--app-panel-rgb));
     color: var(--app-text-primary);
@@ -1875,7 +2025,7 @@ body {
 }
 
 .diagnose-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid color-mix(in srgb, var(--app-text-primary) 8%, transparent);
 }
 
 .diagnose-header strong {
@@ -1887,13 +2037,13 @@ body {
 
 .diagnose-footer {
     justify-content: flex-end;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid color-mix(in srgb, var(--app-text-primary) 8%, transparent);
 }
 
 .diagnose-close {
     border: 0;
     background: transparent;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     cursor: pointer;
     font-size: 1rem;
 }
@@ -1910,7 +2060,7 @@ body {
 
 .diagnose-book-path {
     margin-top: 0.15rem;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.72rem;
     word-break: break-all;
 }
@@ -1936,12 +2086,12 @@ body {
 .diagnose-check.is-fail i { color: var(--notify-error); }
 .diagnose-check.is-warn i { color: var(--notify-running); }
 .diagnose-check.is-skip i { color: var(--notify-muted); }
-.diagnose-check.is-skip { color: #8f9aa3; }
+.diagnose-check.is-skip { color: var(--app-text-secondary); }
 
 .diagnose-conclusion {
     padding: 0.6rem 0.7rem;
     border-radius: 6px;
-    background: var(--notify-tone-soft, rgba(255, 255, 255, 0.05));
+    background: var(--notify-tone-soft, color-mix(in srgb, var(--app-text-primary) 5%, transparent));
     border-left: 3px solid var(--notify-tone, var(--notify-notice));
     line-height: 1.45;
 }
@@ -1968,12 +2118,12 @@ body {
 }
 
 .diagnose-subtitle {
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-weight: 600;
 }
 
 .diagnose-problem-msg {
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     word-break: break-all;
 }
 
@@ -2023,7 +2173,7 @@ body {
 }
 
 .notify-card-line + .notify-card-line {
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid color-mix(in srgb, var(--app-text-primary) 5%, transparent);
 }
 
 .notify-card-line-head {
@@ -2040,7 +2190,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #b8c0c6;
+    color: var(--app-text-secondary);
     font-size: 0.75rem;
 }
 
@@ -2058,7 +2208,7 @@ body {
 .notify-card-line-toggle i {
     width: 0.7rem;
     font-size: 0.6rem;
-    color: #7f8a93;
+    color: var(--app-text-muted);
 }
 
 .notify-card-books {
@@ -2078,12 +2228,12 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.72rem;
 }
 
 .notify-card-note {
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.72rem;
 }
 
@@ -2103,14 +2253,14 @@ body {
 }
 
 .scan-activity-item-title {
-    color: #d5d9dc;
+    color: var(--app-text-primary);
     font-size: 0.84rem;
     font-weight: 650;
 }
 
 .scan-activity-item-detail {
     margin-top: 0.25rem;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.75rem;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -2120,7 +2270,7 @@ body {
 }
 
 .scan-activity-item-time {
-    color: #7f8a93;
+    color: var(--app-text-secondary);
     font-size: 0.7rem;
     white-space: nowrap;
 }
@@ -2132,12 +2282,12 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
-    color: #8f9aa3;
+    color: var(--app-text-secondary);
     font-size: 0.82rem;
 }
 
 .scan-activity-empty i {
-    color: #64727c;
+    color: var(--app-text-muted);
     font-size: 1.35rem;
 }
 
@@ -3179,9 +3329,75 @@ body {
     transform: scale3d(1.08, 1.08, 1);
 }
 
-/* 제목 감추기(넷플릭스 스타일) - 카드 하단 제목/서브텍스트 영역을 통째로 숨겨 썸네일만 노출 */
+/* 표지 아래쪽 진행 막대 (홈 "최근 읽은 도서" 등 showProgress 카드, 퍼센트를 알 때만 그린다 - ui.js createBookCard) */
+.book-card-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+}
+
+.book-card-progress > span {
+    display: block;
+    height: 100%;
+    background: var(--app-accent);
+}
+
+/* 제목 감추기(넷플릭스 스타일) - 썸네일만 보이고, 마우스를 올리면 표지 아래쪽에 제목이 겹쳐 나온다.
+   터치 기기(hover 없음)는 그대로 썸네일만. 테마별 .book-card-info/.book-card-title 색(!important)보다 우선한다. */
+.book-card.book-card--hide-title {
+    position: relative;
+}
+
 .book-card.book-card--hide-title .book-card-info {
     display: none;
+}
+
+@media (hover: hover) {
+    .book-card.book-card--hide-title .book-card-info {
+        display: block;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* 표지 위 어둡게 덮는 층(z 2) 위, 즐겨찾기/⋯ 버튼(z 4~5) 아래. 제목은 표지 맨 아래에 두고
+           ⋯ 버튼은 오른쪽 아래로 옮겨(아래 규칙) 가운데 읽기 버튼과도 겹치지 않게 한다 */
+        z-index: 3;
+        padding: 1.6rem 2.2rem 0.55rem 0.6rem;
+        background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.82)) !important;
+        border: 0 !important;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+    }
+
+    .book-card.book-card--hide-title:hover .book-card-info,
+    .book-card.book-card--hide-title:focus-visible .book-card-info {
+        opacity: 1;
+    }
+
+    /* 겹쳐 보이는 제목은 한 줄 (작은 카드에서 가운데 읽기 버튼과 겹치지 않게, 전체 제목은 title 툴팁) */
+    .book-card.book-card--hide-title .book-card-title {
+        color: #fff !important;
+        -webkit-line-clamp: 1;
+    }
+
+    .book-card.book-card--hide-title .book-card-subinfo {
+        color: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    .book-card.book-card--hide-title .book-card-sub-progress {
+        color: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    .book-card.book-card--hide-title .btn-card-info-toggle {
+        left: auto;
+        right: 8px;
+    }
 }
 
 .book-badge-count {
@@ -3209,14 +3425,16 @@ body {
 .book-card-title {
     margin: 0;
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 600;
+    /* 한글 제목을 글자 중간이 아니라 띄어쓰기에서 줄바꿈 (띄어쓰기 없는 긴 제목은 그래도 넘치지 않게) */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
     color: var(--app-text-primary);
     line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    word-break: break-all;
 }
 
 /* 로딩 스피너 */
@@ -3848,7 +4066,7 @@ body {
 .edit-meta-input, .edit-meta-textarea {
     width: 100%;
     background: rgba(var(--app-panel-rgb), 0.6);
-    border: 1px solid rgba(168, 85, 247, 0.3);
+    border: 1px solid var(--app-border);
     border-radius: 6px;
     color: var(--app-text-primary);
     font-size: 0.9rem;
@@ -3877,10 +4095,11 @@ body {
     width: 100%;
 }
 
+/* 항목 이름은 흐린 회색 - 강조색은 저장 버튼과 입력 중인 칸(focus)에만 */
 .edit-meta-row-item label {
     font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--app-accent-hover);
+    font-weight: 500;
+    color: var(--app-text-secondary);
 }
 
 /* 편집 폼 그룹 */
@@ -3897,25 +4116,46 @@ body {
     margin-top: 0.5rem;
 }
 
+/* 상세 화면 액션 버튼. 예전엔 버튼마다 색(보라/파랑/주황/초록/회색)이 달라 알록달록했다.
+   기본은 중립(보조) 버튼이고, 화면의 핵심 동작 하나(이어서 읽기/재생, 저장)만 .ridi-link-btn--primary로 강조색을 쓴다. */
 .ridi-link-btn {
     display: inline-block;
     align-self: flex-start;
-    background: #1e293b;
-    border: 1px solid #475569;
-    color: #fff;
+    background: var(--app-bg-card-hover);
+    border: 1px solid var(--app-border);
+    color: var(--app-text-primary);
     padding: 0.4rem 1rem;
     border-radius: 6px;
     text-decoration: none;
     font-size: 0.85rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
+    font-weight: 500;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ridi-link-btn .lc {
+    color: var(--app-text-secondary);
 }
 
 .ridi-link-btn:hover {
-    background: #0ea5e9;
-    border-color: #38bdf8;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+    background: color-mix(in srgb, var(--app-text-primary) 8%, var(--app-bg-card-hover));
+    border-color: color-mix(in srgb, var(--app-text-primary) 18%, transparent);
+    color: var(--app-text-primary);
+}
+
+.ridi-link-btn--primary,
+.ridi-link-btn--primary:hover {
+    background: var(--app-accent);
+    border-color: var(--app-accent);
+    color: var(--app-accent-contrast);
+    font-weight: 600;
+}
+
+.ridi-link-btn--primary .lc {
+    color: inherit;
+}
+
+.ridi-link-btn--primary:hover {
+    background: color-mix(in srgb, var(--app-accent) 85%, white);
 }
 
 /* 메타데이터 잠금 해제 액션은 상세 메타 영역에 포인터를 올리거나
@@ -4009,12 +4249,15 @@ body {
 }
 
 .volume-filter-btn:hover,
-.volume-sort-btn:hover,
+.volume-sort-btn:hover {
+    color: var(--app-text-primary);
+}
+
 .volume-filter-btn.active,
 .volume-sort-btn.active {
-    border-color: #34d399;
-    background: rgba(16, 185, 129, 0.16);
-    color: #6ee7b7;
+    border-color: color-mix(in srgb, var(--app-accent) 45%, transparent);
+    background: var(--app-accent-soft);
+    color: var(--app-accent-hover);
 }
 
 .volumes-empty-filter {
@@ -4487,17 +4730,17 @@ body {
     color: var(--app-text-muted);
 }
 
+/* 권별 행 버튼: 권마다 반복되므로 강조색을 옅게(처음부터/이어읽기), 듣기/다운로드는 중립 */
 .btn-read {
-    background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 70%, black) 100%);
-    border: none;
-    color: var(--app-accent-contrast);
+    background: var(--app-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--app-accent) 35%, transparent);
+    color: var(--app-accent-hover);
     padding: 0.45rem 1rem;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--app-accent) 35%, transparent);
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -4506,8 +4749,8 @@ body {
 }
 
 .btn-read:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--app-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--app-accent) 26%, transparent);
+    border-color: color-mix(in srgb, var(--app-accent) 55%, transparent);
 }
 
 /* 이어보기 + 다운로드 버튼 행 컨테이너 (epub/pdf/txt 전용) */
@@ -4524,17 +4767,17 @@ body {
     margin-top: 0;
 }
 
-.btn-download {
-    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
-    border: none;
-    color: #fff;
+.btn-download,
+.btn-listen {
+    background: var(--app-bg-card-hover);
+    border: 1px solid var(--app-border);
+    color: var(--app-text-primary);
     padding: 0.45rem 0.9rem;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 500;
     border-radius: 6px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(3, 105, 161, 0.35);
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     white-space: nowrap;
     display: flex;
     align-items: center;
@@ -4543,33 +4786,15 @@ body {
     text-decoration: none;
 }
 
-.btn-download:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(3, 105, 161, 0.5);
+.btn-download .lc,
+.btn-listen .lc {
+    color: var(--app-text-secondary);
 }
 
-/* 음성으로 듣기 (TXT/EPUB) — 다운로드 버튼과 같은 모양 */
-.btn-listen {
-    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    border: none;
-    color: #fff;
-    padding: 0.45rem 0.9rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.35);
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-shrink: 0;
-}
-
+.btn-download:hover,
 .btn-listen:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.5);
+    background: color-mix(in srgb, var(--app-text-primary) 8%, var(--app-bg-card-hover));
+    border-color: color-mix(in srgb, var(--app-text-primary) 18%, transparent);
 }
 
 /* 하위 호환 레이아웃 */
@@ -5368,6 +5593,42 @@ body {
 
 .home-widget-remove-btn:hover {
   color: #f87171;
+}
+
+/* home_widget frame:'none' (배너 등): 카드 테두리/여백/제목줄 없이 위젯 내용이 곧 화면.
+   제거 버튼은 오른쪽 위에 겹쳐 두고 마우스를 올렸을 때만 보인다 */
+.plugin-card.home-widget-slot--frameless {
+  position: relative;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+.home-widget-slot--frameless .plugin-widget-body {
+  margin: 0;
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.home-widget-slot--frameless .home-widget-remove-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  width: 1.8rem;
+  height: 1.8rem;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.home-widget-slot--frameless:hover .home-widget-remove-btn,
+.home-widget-slot--frameless .home-widget-remove-btn:focus-visible {
+  opacity: 1;
 }
 
 /* Drag and Drop Sortable Plugins Style */

@@ -59,7 +59,7 @@ export async function initReportsTab() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-        <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i> ${window.i18n ? window.i18n.t('settings.report_empty_message') : '카테고리와 리포트를 선택하여 상세 오류 내역을 확인하십시오.'}
+        <i class="lc lc-info" style="margin-right: 0.3rem;"></i> ${window.i18n ? window.i18n.t('settings.report_empty_message') : '카테고리와 리포트를 선택하여 상세 오류 내역을 확인하십시오.'}
       </td>
     </tr>
   `;
@@ -88,7 +88,7 @@ export async function loadScanHistory() {
   tbody.innerHTML = `
     <tr>
       <td colspan="6" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-        <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> 최근 스캔 이력을 불러오는 중...
+        <i class="lc lc-loader-circle lc-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> 최근 스캔 이력을 불러오는 중...
       </td>
     </tr>
   `;
@@ -101,7 +101,7 @@ export async function loadScanHistory() {
       tbody.innerHTML = `
         <tr>
           <td colspan="6" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-            <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i> 최근 기록된 스캔 작업 이력이 없습니다.
+            <i class="lc lc-info" style="margin-right: 0.3rem;"></i> 최근 기록된 스캔 작업 이력이 없습니다.
           </td>
         </tr>
       `;
@@ -116,13 +116,13 @@ export async function loadScanHistory() {
 
       let statusBadge = `<span style="color: var(--app-text-muted);">대기</span>`;
       if (item.status === 'completed') {
-        statusBadge = `<span style="color: #4ade80; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> 완료</span>`;
+        statusBadge = `<span style="color: #4ade80; font-weight: 600;"><i class="lc lc-circle-check"></i> 완료</span>`;
       } else if (item.status === 'running') {
-        statusBadge = `<span style="color: #38bdf8; font-weight: 600;"><i class="fa-solid fa-circle-notch fa-spin"></i> 스캔중</span>`;
+        statusBadge = `<span style="color: #38bdf8; font-weight: 600;"><i class="lc lc-loader-circle lc-spin"></i> 스캔중</span>`;
       } else if (item.status === 'failed') {
-        statusBadge = `<span style="color: #f87171; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> 실패</span>`;
+        statusBadge = `<span style="color: #f87171; font-weight: 600;"><i class="lc lc-triangle-alert"></i> 실패</span>`;
       } else if (item.status === 'cancelled' || item.status === 'canceled') {
-        statusBadge = `<span style="color: #f59e0b; font-weight: 600;"><i class="fa-solid fa-ban"></i> 취소</span>`;
+        statusBadge = `<span style="color: #f59e0b; font-weight: 600;"><i class="lc lc-ban"></i> 취소</span>`;
       }
 
       const startedAt = item.started_at || item.enqueue_at || '-';
@@ -167,7 +167,7 @@ export async function loadReportList() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-        <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i> ${window.i18n ? window.i18n.t('settings.report_empty_message') : '리포트를 선택하여 상세 오류 내역을 확인하십시오.'}
+        <i class="lc lc-info" style="margin-right: 0.3rem;"></i> ${window.i18n ? window.i18n.t('settings.report_empty_message') : '리포트를 선택하여 상세 오류 내역을 확인하십시오.'}
       </td>
     </tr>
   `;
@@ -182,7 +182,7 @@ export async function loadReportList() {
         tableBody.innerHTML = `
           <tr>
             <td colspan="3" style="padding: 2rem; text-align: center; color: #4ade80; font-weight: 600;">
-              <i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i> 해당 카테고리에는 감지된 스캔 오류 내역이 없습니다. (정상)
+              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> 해당 카테고리에는 감지된 스캔 오류 내역이 없습니다. (정상)
             </td>
           </tr>
         `;
@@ -217,7 +217,7 @@ export async function loadReportDetail() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-          <i class="fa-solid fa-info-circle" style="margin-right: 0.3rem;"></i> 리포트를 선택하여 상세 오류 내역을 확인하십시오.
+          <i class="lc lc-info" style="margin-right: 0.3rem;"></i> 리포트를 선택하여 상세 오류 내역을 확인하십시오.
         </td>
       </tr>
     `;
@@ -227,7 +227,7 @@ export async function loadReportDetail() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-accent);">
-        <i class="fa-solid fa-circle-notch fa-spin fa-lg" style="margin-right: 0.3rem;"></i> 리포트 상세 로딩 중...
+        <i class="lc lc-loader-circle lc-spin lc-lg" style="margin-right: 0.3rem;"></i> 리포트 상세 로딩 중...
       </td>
     </tr>
   `;
@@ -240,7 +240,7 @@ export async function loadReportDetail() {
         tableBody.innerHTML = `
           <tr>
             <td colspan="3" style="padding: 2rem; text-align: center; color: #4ade80; font-weight: 600;">
-              <i class="fa-solid fa-circle-check" style="margin-right: 0.3rem;"></i> 감지된 오류 내역이 비어 있습니다.
+              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> 감지된 오류 내역이 비어 있습니다.
             </td>
           </tr>
         `;
@@ -255,7 +255,7 @@ export async function loadReportDetail() {
       tableBody.innerHTML = `
         <tr>
           <td colspan="3" style="padding: 2rem; text-align: center; color: #ef4444; font-weight: 600;">
-            <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.3rem;"></i> 리포트 세부 데이터 구조가 올바르지 않습니다.
+            <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> 리포트 세부 데이터 구조가 올바르지 않습니다.
           </td>
         </tr>
       `;
@@ -265,7 +265,7 @@ export async function loadReportDetail() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="3" style="padding: 2rem; text-align: center; color: #ef4444; font-weight: 600;">
-          <i class="fa-solid fa-triangle-exclamation" style="margin-right: 0.3rem;"></i> 리포트 상세 데이터를 불러오지 못했습니다.
+          <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> 리포트 상세 데이터를 불러오지 못했습니다.
         </td>
       </tr>
     `;
@@ -335,7 +335,7 @@ function renderReportPage() {
         </td>
         <td style="padding: 0.8rem 1rem; color: var(--app-text-muted); font-size: 0.82rem; line-height: 1.4; word-break: break-all;">
           <div style="color: var(--app-text-muted); margin-bottom: 0.2rem; font-weight: 500;">${msg}</div>
-          <div style="font-size: 0.74rem; opacity: 0.6; color: var(--app-text-muted);"><i class="fa-regular fa-folder" style="margin-right: 0.2rem;"></i>${err.file_path || ''}</div>
+          <div style="font-size: 0.74rem; opacity: 0.6; color: var(--app-text-muted);"><i class="lc lc-folder" style="margin-right: 0.2rem;"></i>${err.file_path || ''}</div>
         </td>
       </tr>
     `;

@@ -69,7 +69,7 @@ function buildCard(item) {
     },
   });
   const actionIcon = card.querySelector('.btn-resume-series i');
-  if (actionIcon) actionIcon.className = 'fa-solid fa-headphones';
+  if (actionIcon) actionIcon.className = 'lc lc-headphones';
 
   const info = card.querySelector('.book-card-info');
   if (info) {
@@ -83,7 +83,7 @@ function buildCard(item) {
       del.title = tr('delete', null, '음성 지우기');
       del.setAttribute('aria-label', del.title);
       del.style.cssText = 'margin-left:auto; background:none; border:none; color:var(--app-text-muted); cursor:pointer; padding:0.2rem 0.3rem;';
-      del.innerHTML = '<i class="fa-solid fa-trash-can" aria-hidden="true"></i>';
+      del.innerHTML = '<i class="lc lc-trash-2" aria-hidden="true"></i>';
       del.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -105,7 +105,7 @@ export async function renderTtsReadyView() {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  container.innerHTML = `<div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> ${escapeHtml(tr('loading', null, '불러오는 중...'))}</div>`;
+  container.innerHTML = `<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${escapeHtml(tr('loading', null, '불러오는 중...'))}</div>`;
   const requestedType = state.currentLibraryType;
   try {
     const res = await fetch(`/api/media/tts/audio/books?type=${encodeURIComponent(requestedType)}&_ts=${Date.now()}`, { credentials: 'same-origin' });

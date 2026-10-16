@@ -353,8 +353,8 @@ export function applyAudioMiniPlayerMode(mode) {
 }
 
 function updatePlaybackToggleButtons(isPlaying) {
-  const playHtml = '<i class="fa-solid fa-play" style="margin-left: 4px;"></i>';
-  const pauseHtml = '<i class="fa-solid fa-pause"></i>';
+  const playHtml = '<i class="lc lc-play" style="margin-left: 4px;"></i>';
+  const pauseHtml = '<i class="lc lc-pause"></i>';
   const html = isPlaying ? pauseHtml : playHtml;
 
   const fullBtn = document.getElementById('btn-audio-play-toggle');
@@ -388,7 +388,7 @@ function setPlayButtonLoading(isLoading) {
   const fullBtn = document.getElementById('btn-audio-play-toggle');
   const miniBtn = document.getElementById('btn-audio-mini-play-toggle');
   if (isLoading) {
-    const spinnerHtml = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    const spinnerHtml = '<i class="lc lc-loader lc-spin"></i>';
     if (fullBtn) fullBtn.innerHTML = spinnerHtml;
     if (miniBtn) miniBtn.innerHTML = spinnerHtml;
   } else if (audioInstance) {
@@ -732,13 +732,13 @@ export function toggleAudioPlay(forcePlay = null) {
 
   if (shouldPlay) {
     audioInstance.play().then(() => {
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+      if (btn) btn.innerHTML = '<i class="lc lc-pause"></i>';
       updatePlaybackToggleButtons(true);
       updateMiniPlayerUi();
     }).catch(e => console.log('[AudioPlayer] Play blocked:', e));
   } else {
     audioInstance.pause();
-    if (btn) btn.innerHTML = '<i class="fa-solid fa-play" style="margin-left: 4px;"></i>';
+    if (btn) btn.innerHTML = '<i class="lc lc-play" style="margin-left: 4px;"></i>';
     updatePlaybackToggleButtons(false);
     updateMiniPlayerUi();
     // 저장은 onpause 핸들러에서 단일 경로로 처리한다.
@@ -828,9 +828,9 @@ export function setAudioVolume(val) {
 
   const icon = document.getElementById('audio-player-vol-icon');
   if (icon) {
-    if (volume === 0) icon.className = 'fa-solid fa-volume-xmark';
-    else if (volume < 0.5) icon.className = 'fa-solid fa-volume-low';
-    else icon.className = 'fa-solid fa-volume-high';
+    if (volume === 0) icon.className = 'lc lc-volume-x';
+    else if (volume < 0.5) icon.className = 'lc lc-volume-1';
+    else icon.className = 'lc lc-volume-2';
   }
 }
 

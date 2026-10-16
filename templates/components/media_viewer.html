@@ -2,7 +2,7 @@
 <div id="media-viewer-modal" class="viewer-modal">
     <!-- 전체화면 탈출용 플로팅 닫기 버튼 -->
     <button class="floating-close-btn" data-role="viewer-action" data-action="close" data-i18n-title="viewer.close_fullscreen" title="전체화면 닫기 (ESC)" style="display: none;">
-        <i class="fa-solid fa-xmark"></i>
+        <i class="lc lc-x"></i>
     </button>
 
     <div class="viewer-header">
@@ -13,20 +13,20 @@
             <div id="txt-controls" class="txt-controls-panel" style="display:none;">
                 <button data-role="viewer-action" data-action="font-size" data-value="-1" class="btn-txt-ctrl">A-</button>
                 <button data-role="viewer-action" data-action="font-size" data-value="1" class="btn-txt-ctrl">A+</button>
-                <button data-role="viewer-action" data-action="toggle-reader-theme" class="btn-txt-ctrl"><i class="fa-solid fa-circle-half-stroke"></i></button>
+                <button data-role="viewer-action" data-action="toggle-reader-theme" class="btn-txt-ctrl"><i class="lc lc-contrast"></i></button>
             </div>
             <!-- 만화 뷰어용 화면 맞추기 토글 -->
             <div id="comic-fit-controls" class="comic-fit-panel" style="display:none;">
                 <button id="btn-fit-height" class="btn-fit active" data-role="viewer-action" data-action="comic-fit" data-value="height" data-i18n-title="viewer.fit_height" title="높이에 맞추기">
-                    <i class="fa-solid fa-arrows-up-down"></i> <span data-i18n="viewer.height">높이</span>
+                    <i class="lc lc-move-vertical"></i> <span data-i18n="viewer.height">높이</span>
                 </button>
                 <button id="btn-fit-width" class="btn-fit" data-role="viewer-action" data-action="comic-fit" data-value="width" data-i18n-title="viewer.fit_width" title="너비에 맞추기">
-                    <i class="fa-solid fa-arrows-left-right"></i> <span data-i18n="viewer.width">너비</span>
+                    <i class="lc lc-move-horizontal"></i> <span data-i18n="viewer.width">너비</span>
                 </button>
             </div>
             <!-- 전체화면 토글 버튼 -->
             <button id="btn-fullscreen-toggle" class="btn-fullscreen" data-role="viewer-action" data-action="toggle-fullscreen" data-i18n-title="viewer.fullscreen" title="전체화면 (F)">
-                <i class="fa-solid fa-expand" id="fullscreen-icon"></i>
+                <i class="lc lc-expand" id="fullscreen-icon"></i>
             </button>
             <span class="close-viewer-btn" data-role="viewer-action" data-action="close">&times;</span>
         </div>
@@ -47,21 +47,21 @@
                 <!-- 전체화면 전환: F11이 없는 태블릿(Windows 포함)·모바일을 위해 메뉴 상단에 항상 둔다.
                      브라우저가 Fullscreen API를 지원할 때만 보임(fullscreen_controller.js가 표시 제어). -->
                 <button id="btn-overlay-fullscreen" class="overlay-fullscreen-btn" data-role="viewer-action" data-action="toggle-fullscreen" data-i18n-title="viewer.fullscreen" title="전체화면" style="display: none;">
-                    <i class="fa-solid fa-expand" id="overlay-fullscreen-icon"></i>
+                    <i class="lc lc-expand" id="overlay-fullscreen-icon"></i>
                 </button>
                 <!-- 탭 네비게이션: 항상 상단에 노출되는 메뉴 버튼들 (예전엔 화면 중앙 카드 안에 있었음) -->
                 <div class="overlay-tab-nav">
                     <button class="overlay-tab-btn active" id="tab-btn-nav" data-role="viewer-action" data-action="overlay-tab" data-value="nav">
-                        <i class="fa-solid fa-compass"></i> <span data-i18n="viewer.tab_nav">이동</span>
+                        <i class="lc lc-compass"></i> <span data-i18n="viewer.tab_nav">이동</span>
                     </button>
                     <button class="overlay-tab-btn" id="tab-btn-layout" data-role="viewer-action" data-action="overlay-tab" data-value="layout">
-                        <i class="fa-solid fa-book-open"></i> <span data-i18n="viewer.tab_layout">보기</span>
+                        <i class="lc lc-book-open"></i> <span data-i18n="viewer.tab_layout">보기</span>
                     </button>
                     <button class="overlay-tab-btn" id="tab-btn-style" data-role="viewer-action" data-action="overlay-tab" data-value="style">
-                        <i class="fa-solid fa-font"></i> <span data-i18n="viewer.tab_style">스타일</span>
+                        <i class="lc lc-type"></i> <span data-i18n="viewer.tab_style">스타일</span>
                     </button>
                     <button class="overlay-tab-btn" id="tab-btn-margin" data-role="viewer-action" data-action="overlay-tab" data-value="margin">
-                        <i class="fa-solid fa-arrows-up-down-left-right"></i> <span data-i18n="viewer.tab_margin">여백</span>
+                        <i class="lc lc-move"></i> <span data-i18n="viewer.tab_margin">여백</span>
                     </button>
                 </div>
                 <button class="overlay-close-btn" data-role="viewer-action" data-action="close" data-i18n-title="viewer.close_fullscreen" title="뷰어 닫기">&times;</button>
@@ -71,15 +71,15 @@
                 <!-- 탭 1: 탐색 / 이동 -->
                 <div class="overlay-tab-content active" id="overlay-tab-nav">
                     <div class="overlay-controls-row">
-                        <button class="btn-overlay-action" data-role="viewer-action" data-action="jump-first"><i class="fa-solid fa-backward-step"></i> <span data-i18n="viewer.from_beginning">처음부터</span></button>
-                        <button class="btn-overlay-action" data-role="viewer-action" data-action="mark-completed"><i class="fa-solid fa-circle-check"></i> <span data-i18n="viewer.mark_completed">읽음 완료</span></button>
-                        <button class="btn-overlay-action" data-role="viewer-action" data-action="jump-last"><i class="fa-solid fa-forward-step"></i> <span data-i18n="viewer.to_last_page">마지막으로</span></button>
+                        <button class="btn-overlay-action" data-role="viewer-action" data-action="jump-first"><i class="lc lc-skip-back"></i> <span data-i18n="viewer.from_beginning">처음부터</span></button>
+                        <button class="btn-overlay-action" data-role="viewer-action" data-action="mark-completed"><i class="lc lc-circle-check"></i> <span data-i18n="viewer.mark_completed">읽음 완료</span></button>
+                        <button class="btn-overlay-action" data-role="viewer-action" data-action="jump-last"><i class="lc lc-skip-forward"></i> <span data-i18n="viewer.to_last_page">마지막으로</span></button>
                         <button class="btn-overlay-action btn-overlay-action-icon-only" id="btn-add-bookmark" data-role="viewer-action" data-action="add-bookmark" data-i18n-title="viewer.add_bookmark" title="북마크 추가"><i class="fa-solid fa-bookmark"></i></button>
-                        <button class="btn-overlay-action" id="btn-viewer-listen" data-role="viewer-action" data-action="listen" data-i18n-title="tts.viewer_listen_title" title="읽던 위치부터 음성으로 듣기" style="display: none;"><i class="fa-solid fa-headphones"></i> <span data-i18n="tts.viewer_listen">듣기</span></button>
+                        <button class="btn-overlay-action" id="btn-viewer-listen" data-role="viewer-action" data-action="listen" data-i18n-title="tts.viewer_listen_title" title="읽던 위치부터 음성으로 듣기" style="display: none;"><i class="lc lc-headphones"></i> <span data-i18n="tts.viewer_listen">듣기</span></button>
                     </div>
                     <!-- 슬라이드(자동 진행): 만화/PDF 전용 (slideshow_controller.js가 표시/옵션 채움) -->
                     <div class="overlay-controls-row overlay-slideshow-row" id="overlay-slideshow-row" style="display: none;">
-                        <button class="btn-overlay-action" id="btn-slideshow-toggle" data-role="viewer-action" data-action="slideshow-toggle" data-i18n-title="viewer.slideshow_title" title="자동으로 넘기기/스크롤 (P)"><i class="fa-solid fa-play"></i> <span id="slideshow-toggle-label">슬라이드</span></button>
+                        <button class="btn-overlay-action" id="btn-slideshow-toggle" data-role="viewer-action" data-action="slideshow-toggle" data-i18n-title="viewer.slideshow_title" title="자동으로 넘기기/스크롤 (P)"><i class="lc lc-play"></i> <span id="slideshow-toggle-label">슬라이드</span></button>
                         <select id="viewer-slideshow-interval-select" data-role="viewer-action-change" data-action="slideshow-interval" class="overlay-select" data-i18n-title="viewer.slideshow_interval_title" title="페이지 모드: 넘김 간격"></select>
                         <select id="viewer-slideshow-speed-select" data-role="viewer-action-change" data-action="slideshow-speed" class="overlay-select" data-i18n-title="viewer.slideshow_speed_title" title="스크롤 모드: 자동 스크롤 속도"></select>
                     </div>
@@ -91,10 +91,10 @@
                         <!-- 공용 스크롤 방식 선택 -->
                         <div class="overlay-scroll-group" id="overlay-scroll-mode-group">
                             <button id="btn-scroll-page" class="btn-overlay-fit active" data-role="viewer-action" data-action="scroll-mode" data-value="page" data-i18n-title="viewer.scroll_page" title="책장처럼 넘기기">
-                                <i class="fa-solid fa-book-open"></i> <span data-i18n="viewer.page">페이지</span>
+                                <i class="lc lc-book-open"></i> <span data-i18n="viewer.page">페이지</span>
                             </button>
                             <button id="btn-scroll-continuous" class="btn-overlay-fit" data-role="viewer-action" data-action="scroll-mode" data-value="scroll" data-i18n-title="viewer.scroll_continuous" title="아래로 스크롤">
-                                <i class="fa-solid fa-arrows-up-down"></i> <span data-i18n="viewer.scroll">스크롤</span>
+                                <i class="lc lc-move-vertical"></i> <span data-i18n="viewer.scroll">스크롤</span>
                             </button>
                         </div>
 
@@ -106,13 +106,13 @@
 
                         <!-- 1장/2장 보기 -->
                         <button id="btn-comic-page-step" class="btn-overlay-fit" data-role="viewer-action" data-action="toggle-page-step" title="1장/2장 보기 전환">
-                            <i class="fa-solid fa-file-lines"></i> <span id="comic-page-step-label">1장</span>
+                            <i class="lc lc-file-text"></i> <span id="comic-page-step-label">1장</span>
                         </button>
 
                         <!-- 2쪽보기 정렬 한 장 밀기: 예) (9,10)(11,12)로 짝지어지던 스프레드를 (10,11)로 보정.
                              2쪽보기일 때만 노출(reader_settings.js의 syncComicPageStepUI가 표시 제어). -->
                         <button id="btn-spread-shift" class="btn-overlay-fit" data-role="viewer-action" data-action="shift-spread" data-i18n-title="viewer.shift_spread_title" title="두 페이지 짝을 한 장 밀어서 보기" style="display: none;">
-                            <i class="fa-solid fa-arrows-left-right"></i> <span data-i18n="viewer.shift_spread">한 장 밀기</span>
+                            <i class="lc lc-move-horizontal"></i> <span data-i18n="viewer.shift_spread">한 장 밀기</span>
                         </button>
 
                         <!-- 다음 버튼부터 줄바꿈 (컨트롤이 많아 한 줄에 다 안 들어감) -->
@@ -120,22 +120,22 @@
 
                         <!-- 스프레드 이미지 좌/우 분할 보기 -->
                         <button id="btn-comic-split-spread" class="btn-overlay-fit" data-role="viewer-action" data-action="toggle-split-spread" data-i18n-title="viewer.split_spread_title" title="페이지 분할 보기 전환">
-                            <i class="fa-solid fa-columns"></i> <span id="comic-split-spread-label" data-i18n="viewer.split_spread_off">분할 끔</span>
+                            <i class="lc lc-columns-2"></i> <span id="comic-split-spread-label" data-i18n="viewer.split_spread_off">분할 끔</span>
                         </button>
 
                         <!-- 2장 보기 중앙 여백 토글 -->
                         <button id="btn-comic-center-gap" class="btn-overlay-fit" data-role="viewer-action" data-action="toggle-center-gap" title="2장 보기 중앙 여백 토글">
-                            <i class="fa-solid fa-grip-lines-vertical"></i> <span id="comic-center-gap-label" data-i18n="viewer.center_gap_show">중앙 여백</span>
+                            <i class="lc lc-grip-vertical"></i> <span id="comic-center-gap-label" data-i18n="viewer.center_gap_show">중앙 여백</span>
                         </button>
 
                         <!-- 읽기 방향 -->
                         <button id="btn-comic-reading-direction" class="btn-overlay-fit" data-role="viewer-action" data-action="toggle-reading-direction" title="읽기 방향 전환">
-                            <i class="fa-solid fa-right-left"></i> <span id="comic-reading-direction-label">왼쪽→오른쪽</span>
+                            <i class="lc lc-arrow-left-right"></i> <span id="comic-reading-direction-label">왼쪽→오른쪽</span>
                         </button>
 
                         <!-- 탭존 방향 (좌/우 ↔ 상/하, 한손 파지 대응) -->
                         <button id="btn-tap-zone-direction" class="btn-overlay-fit" data-role="viewer-action" data-action="toggle-tap-zone-direction" data-i18n-title="viewer.tap_zone_direction" title="탭존 방향 전환 (좌/우 ↔ 상/하)">
-                            <i class="fa-solid fa-arrows-up-down"></i> <span id="tap-zone-direction-label" data-i18n="viewer.tap_zone_horizontal">좌/우</span>
+                            <i class="lc lc-move-vertical"></i> <span id="tap-zone-direction-label" data-i18n="viewer.tap_zone_horizontal">좌/우</span>
                         </button>
 
                     </div>
@@ -190,7 +190,7 @@
                             </select>
                             <button data-role="viewer-action" data-action="font-size" data-value="-1" class="btn-overlay-fit" data-i18n-title="viewer.font_smaller" title="글자 작게">A-</button>
                             <button data-role="viewer-action" data-action="font-size" data-value="1" class="btn-overlay-fit" data-i18n-title="viewer.font_larger" title="글자 크게">A+</button>
-                            <button data-role="viewer-action" data-action="toggle-theme-cycle" class="btn-overlay-fit" data-i18n-title="viewer.toggle_theme" title="배경 테마 순환 전환"><i class="fa-solid fa-circle-half-stroke"></i> <span id="viewer-theme-label">다크</span></button>
+                            <button data-role="viewer-action" data-action="toggle-theme-cycle" class="btn-overlay-fit" data-i18n-title="viewer.toggle_theme" title="배경 테마 순환 전환"><i class="lc lc-contrast"></i> <span id="viewer-theme-label">다크</span></button>
                         </div>
                     </div>
                 </div>
@@ -222,7 +222,7 @@
                 <!-- 시크바 네비게이션 행 -->
                 <div class="seekbar-nav-row">
                     <button class="seekbar-btn" id="seekbar-btn-first" data-role="viewer-action" data-action="jump-first" data-i18n-title="viewer.from_beginning" title="처음으로">
-                        <i class="fa-solid fa-backward-step"></i>
+                        <i class="lc lc-skip-back"></i>
                     </button>
                     <div class="seekbar-track-wrap">
                         <span class="seekbar-page-num" id="seekbar-start-label">1</span>
@@ -240,7 +240,7 @@
                         <span class="seekbar-page-num" id="seekbar-end-label">1</span>
                     </div>
                     <button class="seekbar-btn" id="seekbar-btn-last" data-role="viewer-action" data-action="jump-last" data-i18n-title="viewer.to_last_page" title="마지막으로">
-                        <i class="fa-solid fa-forward-step"></i>
+                        <i class="lc lc-skip-forward"></i>
                     </button>
                 </div>
 
@@ -255,7 +255,7 @@
         <div id="viewer-padding-overlay-panel" class="viewer-padding-panel" style="display: none; z-index: 10004;">
             <div class="padding-panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
                 <h4 style="margin: 0; color: var(--app-text-primary); font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
-                    <i class="fa-solid fa-arrows-up-down-left-right" style="color: var(--app-accent);"></i>
+                    <i class="lc lc-move" style="color: var(--app-accent);"></i>
                     <span data-i18n="viewer.spacing_settings">뷰어 여백 상세 설정</span>
                 </h4>
                 <span class="padding-panel-close" data-role="viewer-action" data-action="toggle-padding-panel" style="cursor: pointer; color: var(--app-text-muted); font-size: 1.2rem; font-weight: bold;">&times;</span>

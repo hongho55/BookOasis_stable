@@ -50,7 +50,7 @@ export function diagnosisHtml(result) {
     : '';
   const checks = (result?.checks || []).map(check => `
       <li class="diagnose-check is-${attr(check.status)}">
-        <i class="fa-solid ${CHECK_ICONS[check.status] || CHECK_ICONS.skip}" aria-hidden="true"></i>
+        <i class="${window.boIcon(CHECK_ICONS[check.status] || CHECK_ICONS.skip)}" aria-hidden="true"></i>
         <span>${escapeActivityText(diagnosisCheckText(check))}</span>
       </li>`).join('');
   const conclusion = result?.conclusion

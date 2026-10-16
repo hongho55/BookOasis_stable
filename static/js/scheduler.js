@@ -7,7 +7,7 @@ import { parseServerDateTime, formatRelativeTime } from './utils/time.js';
 
 function buildStatusBadge(scanStatus) {
   if (scanStatus === 'scanning') {
-    return `<span class="badge-scan-status scanning"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('settings.status_scanning')}</span>`;
+    return `<span class="badge-scan-status scanning"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('settings.status_scanning')}</span>`;
   }
   if (scanStatus === 'failed') {
     return `<span class="badge-scan-status failed">${i18n.t('settings.status_failed')}</span>`;
@@ -90,12 +90,12 @@ function buildScheduleRow(lib) {
       <td data-role="schedule-scan-info" style="padding: 1rem; text-align: center;">${buildLastScanInfo(lastScannedAt, lib.cron_schedule)}</td>
       <td style="padding: 1rem; text-align: center;">
         <button class="btn-toggle" data-role="schedule-config" data-library-id="${lib.id}" data-library-name="${safeNameAttr}" data-is-remote="${lib.is_remote || 0}" data-rclone-rc-url="${safeRcloneRcUrlAttr}" data-cron-schedule="${safeCronScheduleAttr}" data-vfs-refresh="${lib.vfs_refresh_before_scan || 0}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="상세 설정">
-          <i class="fa-solid fa-gear"></i> ${i18n.t('settings.col_config') || '설정'}
+          <i class="lc lc-settings"></i> ${i18n.t('settings.col_config') || '설정'}
         </button>
       </td>
       <td style="padding: 1rem; text-align: center;">
         <button class="btn-toggle active" data-role="schedule-action" data-library-id="${lib.id}" data-library-name="${escapeHtml(lib.name)}" data-last-scanned-at="${lastScannedAt}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="작업 메뉴 열기">
-          ${i18n.t('settings.col_action') || '작업'} <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem;"></i>
+          ${i18n.t('settings.col_action') || '작업'} <i class="lc lc-chevron-down" style="font-size: 0.65rem;"></i>
         </button>
       </td>
     </tr>
@@ -247,7 +247,7 @@ export async function loadLibrarySchedules() {
   initScheduleActionDelegation();
   const container = document.getElementById('settings-libraries-list');
   if (!container) return;
-  container.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--app-accent);"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><span style="display:inline-block; margin-top:0.5rem;">${i18n.t('settings.loading_schedules')}</span></td></tr>`;
+  container.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--app-accent);"><i class="lc lc-loader-circle lc-spin lc-2x"></i><br><span style="display:inline-block; margin-top:0.5rem;">${i18n.t('settings.loading_schedules')}</span></td></tr>`;
   
   try {
     const data = await api.fetchLibrarySchedules(state.currentLibraryType);
@@ -451,7 +451,7 @@ export function openScanSettingsModal(libraryId, name, isRemote, rcloneRcUrl, cr
   }
   hydrateCronHelperFromCron(cronSchedule);
   
-  document.getElementById('scan-settings-modal-title').innerHTML = `<i class="fa-solid fa-gears" style="color: var(--app-accent); margin-right: 0.5rem;"></i> [${name}] 스캔 설정`;
+  document.getElementById('scan-settings-modal-title').innerHTML = `<i class="lc lc-cog" style="color: var(--app-accent); margin-right: 0.5rem;"></i> [${name}] 스캔 설정`;
 
   const rcloneContainer = document.getElementById('scan-settings-rclone-container');
   if (isRemote === 1) {
@@ -460,7 +460,7 @@ export function openScanSettingsModal(libraryId, name, isRemote, rcloneRcUrl, cr
     `;
   } else {
     rcloneContainer.innerHTML = `
-      <span style="font-size: 0.88rem; color: var(--app-text-muted);"><i class="fa-solid fa-ban"></i> ${i18n.t('settings.not_required_local') || '불필요 (로컬스토리지)'}</span>
+      <span style="font-size: 0.88rem; color: var(--app-text-muted);"><i class="lc lc-ban"></i> ${i18n.t('settings.not_required_local') || '불필요 (로컬스토리지)'}</span>
     `;
   }
 
@@ -476,7 +476,7 @@ export function openScanSettingsModal(libraryId, name, isRemote, rcloneRcUrl, cr
   } else {
     vfsContainer.innerHTML = `
       <div style="font-size: 0.85rem; color: var(--app-text-muted); margin-top: 0.5rem;">
-        <i class="fa-solid fa-hard-drive"></i> ${i18n.t('settings.local_storage') || '로컬 스토리지'}
+        <i class="lc lc-hard-drive"></i> ${i18n.t('settings.local_storage') || '로컬 스토리지'}
       </div>
     `;
   }

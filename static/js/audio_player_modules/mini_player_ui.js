@@ -462,7 +462,7 @@ export function createMiniPlayerUiController(deps) {
 
     if (getCurrentViewMode() !== 'mini') {
       miniBar.style.transform = 'translateX(0)';
-      if (peekIcon) peekIcon.className = 'fa-solid fa-eye-slash';
+      if (peekIcon) peekIcon.className = 'lc lc-eye-off';
       if (sheetBackdrop) {
         sheetBackdrop.style.display = 'none';
         sheetBackdrop.style.pointerEvents = '';
@@ -474,25 +474,25 @@ export function createMiniPlayerUiController(deps) {
     if (rightDockMode) {
       if (miniBarCollapsed) {
         miniBar.style.transform = 'translateX(calc(100% + 28px))';
-        if (peekIcon) peekIcon.className = 'fa-solid fa-eye';
-        if (rightExpandIcon) rightExpandIcon.className = 'fa-solid fa-angle-left';
+        if (peekIcon) peekIcon.className = 'lc lc-eye';
+        if (rightExpandIcon) rightExpandIcon.className = 'lc lc-chevron-left';
         if (rightExpandButton) rightExpandButton.style.display = 'inline-flex';
       } else {
         miniBar.style.transform = 'translateX(0)';
-        if (peekIcon) peekIcon.className = 'fa-solid fa-eye-slash';
+        if (peekIcon) peekIcon.className = 'lc lc-eye-off';
         if (rightExpandButton) rightExpandButton.style.display = 'none';
       }
-      if (rightExpandIcon) rightExpandIcon.className = 'fa-solid fa-angle-left';
+      if (rightExpandIcon) rightExpandIcon.className = 'lc lc-chevron-left';
       return;
     }
 
     if (rightExpandButton) rightExpandButton.style.display = 'none';
     if (miniBarCollapsed) {
       miniBar.style.transform = 'translateX(calc(-100% + 74px))';
-      if (peekIcon) peekIcon.className = 'fa-solid fa-eye';
+      if (peekIcon) peekIcon.className = 'lc lc-eye';
     } else {
       miniBar.style.transform = 'translateX(0)';
-      if (peekIcon) peekIcon.className = 'fa-solid fa-eye-slash';
+      if (peekIcon) peekIcon.className = 'lc lc-eye-off';
     }
   }
 

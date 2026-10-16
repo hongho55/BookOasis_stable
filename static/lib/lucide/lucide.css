@@ -1,0 +1,203 @@
+/* Lucide 0.469.0 아이콘 (ISC, https://lucide.dev) - tools/build_lucide_icons.py가 생성. 직접 고치지 말 것. */
+@font-face {
+    font-family: 'bo-lucide';
+    src: url('lucide-subset.woff2?v=6e38598d0fa4') format('woff2');
+    font-display: block;
+}
+
+/* Font Awesome의 .fa-solid와 같은 자리에 들어가도록 같은 기본값을 쓴다 */
+.lc {
+    font-family: 'bo-lucide' !important;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.lc-fw { width: 1.25em; text-align: center; }
+.lc-lg { font-size: 1.25em; line-height: 0.05em; vertical-align: -0.075em; }
+.lc-2x { font-size: 2em; }
+.lc-spin { animation: lc-spin 2s linear infinite; }
+@keyframes lc-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .lc-spin { animation-duration: 0s; } }
+
+.lc-align-center:before { content: "\e03c"; }
+.lc-align-left:before { content: "\e041"; }
+.lc-align-right:before { content: "\e042"; }
+.lc-archive-restore:before { content: "\e2cc"; }
+.lc-arrow-down-1-0:before { content: "\e418"; }
+.lc-arrow-down-a-z:before { content: "\e419"; }
+.lc-arrow-down-to-line:before { content: "\e459"; }
+.lc-arrow-down-wide-narrow:before { content: "\e04b"; }
+.lc-arrow-left:before { content: "\e04c"; }
+.lc-arrow-left-right:before { content: "\e249"; }
+.lc-arrow-right:before { content: "\e04d"; }
+.lc-arrow-up:before { content: "\e04e"; }
+.lc-arrow-up-0-1:before { content: "\e41c"; }
+.lc-arrow-up-a-z:before { content: "\e41e"; }
+.lc-arrow-up-narrow-wide:before { content: "\e050"; }
+.lc-arrow-up-to-line:before { content: "\e45f"; }
+.lc-arrow-up-z-a:before { content: "\e420"; }
+.lc-audio-waveform:before { content: "\e55f"; }
+.lc-ban:before { content: "\e055"; }
+.lc-barcode:before { content: "\e537"; }
+.lc-bell:before { content: "\e05d"; }
+.lc-book:before { content: "\e062"; }
+.lc-book-lock:before { content: "\e3f4"; }
+.lc-book-marked:before { content: "\e3f5"; }
+.lc-book-open:before { content: "\e063"; }
+.lc-book-open-text:before { content: "\e54e"; }
+.lc-bookmark:before { content: "\e064"; }
+.lc-bot:before { content: "\e1ba"; }
+.lc-building:before { content: "\e1cb"; }
+.lc-calendar:before { content: "\e067"; }
+.lc-calendar-days:before { content: "\e2b8"; }
+.lc-camera:before { content: "\e068"; }
+.lc-case-sensitive:before { content: "\e3dc"; }
+.lc-chart-column:before { content: "\e2a2"; }
+.lc-chart-line:before { content: "\e2a4"; }
+.lc-check:before { content: "\e070"; }
+.lc-chevron-down:before { content: "\e071"; }
+.lc-chevron-left:before { content: "\e072"; }
+.lc-chevron-right:before { content: "\e073"; }
+.lc-chevron-up:before { content: "\e074"; }
+.lc-circle:before { content: "\e07a"; }
+.lc-circle-alert:before { content: "\e07b"; }
+.lc-circle-arrow-left:before { content: "\e07d"; }
+.lc-circle-arrow-right:before { content: "\e07e"; }
+.lc-circle-check:before { content: "\e225"; }
+.lc-circle-minus:before { content: "\e083"; }
+.lc-circle-plus:before { content: "\e086"; }
+.lc-circle-stop:before { content: "\e087"; }
+.lc-circle-user:before { content: "\e465"; }
+.lc-circle-x:before { content: "\e088"; }
+.lc-clapperboard:before { content: "\e29a"; }
+.lc-clock:before { content: "\e08b"; }
+.lc-cloud-download:before { content: "\e08d"; }
+.lc-cog:before { content: "\e30a"; }
+.lc-columns-2:before { content: "\e09c"; }
+.lc-columns-3:before { content: "\e09d"; }
+.lc-compass:before { content: "\e09f"; }
+.lc-contrast:before { content: "\e0a1"; }
+.lc-copy:before { content: "\e0a2"; }
+.lc-copyright:before { content: "\e0a4"; }
+.lc-database:before { content: "\e0b1"; }
+.lc-download:before { content: "\e0b6"; }
+.lc-drama:before { content: "\e525"; }
+.lc-earth:before { content: "\e1f2"; }
+.lc-ellipsis:before { content: "\e0ba"; }
+.lc-expand:before { content: "\e219"; }
+.lc-external-link:before { content: "\e0bd"; }
+.lc-eye:before { content: "\e0be"; }
+.lc-eye-off:before { content: "\e0bf"; }
+.lc-feather:before { content: "\e0c2"; }
+.lc-file:before { content: "\e0c4"; }
+.lc-file-text:before { content: "\e0d0"; }
+.lc-film:before { content: "\e0d4"; }
+.lc-filter:before { content: "\e0d5"; }
+.lc-filter-x:before { content: "\e3b8"; }
+.lc-flame:before { content: "\e0d7"; }
+.lc-folder:before { content: "\e0dc"; }
+.lc-folder-open:before { content: "\e246"; }
+.lc-folder-plus:before { content: "\e0de"; }
+.lc-folder-tree:before { content: "\e33f"; }
+.lc-gauge:before { content: "\e1be"; }
+.lc-globe:before { content: "\e0eb"; }
+.lc-grip-horizontal:before { content: "\e0ed"; }
+.lc-grip-vertical:before { content: "\e0ee"; }
+.lc-hard-drive:before { content: "\e0f0"; }
+.lc-hash:before { content: "\e0f2"; }
+.lc-headphones:before { content: "\e0f4"; }
+.lc-history:before { content: "\e1f4"; }
+.lc-hourglass:before { content: "\e295"; }
+.lc-house:before { content: "\e0f8"; }
+.lc-image:before { content: "\e0f9"; }
+.lc-images:before { content: "\e5c8"; }
+.lc-info:before { content: "\e0fe"; }
+.lc-key:before { content: "\e102"; }
+.lc-keyboard:before { content: "\e283"; }
+.lc-layers:before { content: "\e52d"; }
+.lc-layout-grid:before { content: "\e104"; }
+.lc-list:before { content: "\e10b"; }
+.lc-list-check:before { content: "\e5fe"; }
+.lc-list-ordered:before { content: "\e1d0"; }
+.lc-loader:before { content: "\e10c"; }
+.lc-loader-circle:before { content: "\e10d"; }
+.lc-lock:before { content: "\e10e"; }
+.lc-lock-open:before { content: "\e10f"; }
+.lc-log-in:before { content: "\e110"; }
+.lc-log-out:before { content: "\e111"; }
+.lc-memory-stick:before { content: "\e449"; }
+.lc-menu:before { content: "\e118"; }
+.lc-message-circle-more:before { content: "\e569"; }
+.lc-mic:before { content: "\e11b"; }
+.lc-microchip:before { content: "\e61e"; }
+.lc-minimize:before { content: "\e11d"; }
+.lc-monitor:before { content: "\e120"; }
+.lc-monitor-play:before { content: "\e489"; }
+.lc-moon:before { content: "\e121"; }
+.lc-move:before { content: "\e124"; }
+.lc-move-horizontal:before { content: "\e1c5"; }
+.lc-move-vertical:before { content: "\e1c6"; }
+.lc-music:before { content: "\e125"; }
+.lc-network:before { content: "\e128"; }
+.lc-newspaper:before { content: "\e34b"; }
+.lc-palette:before { content: "\e1dc"; }
+.lc-pause:before { content: "\e131"; }
+.lc-pen:before { content: "\e132"; }
+.lc-pen-tool:before { content: "\e134"; }
+.lc-pin:before { content: "\e258"; }
+.lc-play:before { content: "\e13f"; }
+.lc-plug:before { content: "\e382"; }
+.lc-plus:before { content: "\e140"; }
+.lc-power:before { content: "\e143"; }
+.lc-puzzle:before { content: "\e29b"; }
+.lc-refresh-cw:before { content: "\e148"; }
+.lc-repeat:before { content: "\e149"; }
+.lc-rotate-ccw:before { content: "\e14b"; }
+.lc-rotate-cw:before { content: "\e14c"; }
+.lc-save:before { content: "\e150"; }
+.lc-scale:before { content: "\e211"; }
+.lc-search:before { content: "\e154"; }
+.lc-server:before { content: "\e156"; }
+.lc-settings:before { content: "\e157"; }
+.lc-shield-check:before { content: "\e1fe"; }
+.lc-shield-half:before { content: "\e51b"; }
+.lc-shuffle:before { content: "\e161"; }
+.lc-skip-back:before { content: "\e162"; }
+.lc-skip-forward:before { content: "\e163"; }
+.lc-sliders-horizontal:before { content: "\e299"; }
+.lc-square:before { content: "\e16a"; }
+.lc-square-pen:before { content: "\e175"; }
+.lc-square-plus:before { content: "\e176"; }
+.lc-star:before { content: "\e179"; }
+.lc-star-half:before { content: "\e20a"; }
+.lc-stethoscope:before { content: "\e2f0"; }
+.lc-sticky-note:before { content: "\e302"; }
+.lc-table-properties:before { content: "\e4df"; }
+.lc-tag:before { content: "\e182"; }
+.lc-tags:before { content: "\e35f"; }
+.lc-target:before { content: "\e183"; }
+.lc-terminal:before { content: "\e184"; }
+.lc-trash:before { content: "\e18c"; }
+.lc-trash-2:before { content: "\e18d"; }
+.lc-tree-palm:before { content: "\e280"; }
+.lc-triangle-alert:before { content: "\e192"; }
+.lc-truck:before { content: "\e193"; }
+.lc-type:before { content: "\e197"; }
+.lc-unlink:before { content: "\e19b"; }
+.lc-user:before { content: "\e19e"; }
+.lc-user-cog:before { content: "\e345"; }
+.lc-user-plus:before { content: "\e1a1"; }
+.lc-users:before { content: "\e1a3"; }
+.lc-volume-1:before { content: "\e1a9"; }
+.lc-volume-2:before { content: "\e1aa"; }
+.lc-volume-x:before { content: "\e1ab"; }
+.lc-wand-sparkles:before { content: "\e35a"; }
+.lc-weight:before { content: "\e534"; }
+.lc-wrench:before { content: "\e1b0"; }
+.lc-x:before { content: "\e1b1"; }
+.lc-zap:before { content: "\e1b3"; }

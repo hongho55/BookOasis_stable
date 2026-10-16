@@ -104,11 +104,11 @@ function renderVideoCourseCards(videos, libraryId, emptyMessage) {
         <div class="book-badge-count">${v.total_episodes || 0}편</div>
         <button class="btn-card-fav-toggle" data-role="video-course-add-collection" title="컬렉션에 추가"
                 style="position:absolute; top:8px; left:8px; background: rgba(var(--app-panel-rgb), 0.75); border:none; color:var(--app-accent-hover); width:1.9rem; height:1.9rem; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2;">
-          <i class="fa-solid fa-folder-plus"></i>
+          <i class="lc lc-folder-plus"></i>
         </button>
         <button class="btn-card-fav-toggle ${isFav ? 'active' : ''}" data-role="video-course-favorite" data-next-status="${isFav ? 0 : 1}" title="즐겨찾기 토글"
                 style="position:absolute; top:8px; right:8px; background: rgba(var(--app-panel-rgb), 0.75); border:none; color:${isFav ? '#eab308' : '#94a3b8'}; width:1.9rem; height:1.9rem; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2;">
-          <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+          <i class="${isFav ? 'fa-solid fa-star' : 'lc lc-star'}"></i>
         </button>
       </div>
       <div class="book-card-info">
@@ -147,7 +147,7 @@ function renderVideoCourseCards(videos, libraryId, emptyMessage) {
       el.classList.toggle('active', nextStatus);
       el.setAttribute('data-next-status', nextStatus ? 0 : 1);
       el.style.color = nextStatus ? '#eab308' : '#94a3b8';
-      if (icon) icon.className = nextStatus ? 'fa-solid fa-star' : 'fa-regular fa-star';
+      if (icon) icon.className = nextStatus ? 'fa-solid fa-star' : 'lc lc-star';
 
       try {
         const res = await fetch('/api/media/series/favorite', {
@@ -166,7 +166,7 @@ function renderVideoCourseCards(videos, libraryId, emptyMessage) {
         el.classList.toggle('active', !nextStatus);
         el.setAttribute('data-next-status', nextStatus ? 1 : 0);
         el.style.color = !nextStatus ? '#eab308' : '#94a3b8';
-        if (icon) icon.className = !nextStatus ? 'fa-solid fa-star' : 'fa-regular fa-star';
+        if (icon) icon.className = !nextStatus ? 'fa-solid fa-star' : 'lc lc-star';
       }
     });
   });

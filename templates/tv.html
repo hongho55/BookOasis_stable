@@ -17,6 +17,10 @@
     <title>BookOasis TV</title>
     <link rel="icon" type="image/png" href="{{ static_asset_url('images/icon-192.png', sig='boe-favicon-b28e4d1') }}">
     <link rel="stylesheet" href="{{ static_asset_url('lib/font-awesome/css/all.min.css') }}">
+    <!-- 코어 UI 아이콘: Lucide 선 아이콘(FA는 플러그인·브랜드·채움 상태 아이콘용으로 계속 로드) -->
+    <link rel="stylesheet" href="{{ static_asset_url('lib/lucide/lucide.css') }}">
+    <script src="{{ static_asset_url('lib/lucide/fa_map.js') }}"></script>
+    <script src="{{ static_asset_url('js/bo_icon.js') }}"></script>
     <link rel="stylesheet" href="{{ static_asset_url('css/tv.css') }}">
     <script>
         window.__tvUser = {{ ({'username': tv_username, 'role': tv_role} if tv_username else None) | tojson }};
@@ -25,24 +29,24 @@
 <body>
 
 <button type="button" id="tv-drawer-toggle" class="tv-drawer-toggle" title="카테고리">
-    <i class="fa-solid fa-bars"></i>
+    <i class="lc lc-menu"></i>
 </button>
 
 <button type="button" id="tv-account-badge" class="tv-account-badge" title="계정">
-    <i class="fa-solid fa-user"></i>
+    <i class="lc lc-user"></i>
     <span id="tv-account-name">로그인</span>
 </button>
 
 <div id="tv-account-popup" class="tv-account-popup" style="display:none;">
     <div id="tv-account-popup-user" style="display:none;">
         <div class="tv-account-popup-row"><span id="tv-account-popup-username"></span></div>
-        <button type="button" id="tv-account-logout-btn" class="tv-popup-btn"><i class="fa-solid fa-right-from-bracket"></i> 로그아웃</button>
+        <button type="button" id="tv-account-logout-btn" class="tv-popup-btn"><i class="lc lc-log-out"></i> 로그아웃</button>
     </div>
     <form id="tv-login-form" class="tv-login-form" style="display:none;">
         <input type="text" id="tv-login-username" class="tv-login-input" placeholder="아이디" autocomplete="username" required>
         <input type="password" id="tv-login-password" class="tv-login-input" placeholder="비밀번호" autocomplete="current-password" required>
         <div id="tv-login-error" class="tv-login-error" style="display:none;"></div>
-        <button type="submit" class="tv-popup-btn tv-popup-btn-primary"><i class="fa-solid fa-right-to-bracket"></i> 로그인</button>
+        <button type="submit" class="tv-popup-btn tv-popup-btn-primary"><i class="lc lc-log-in"></i> 로그인</button>
     </form>
 </div>
 
@@ -50,14 +54,14 @@
 
 <div id="tv-drawer" class="tv-drawer">
     <div class="tv-drawer-header">
-        <span class="tv-drawer-header-title"><i class="fa-solid fa-book"></i> 카테고리</span>
+        <span class="tv-drawer-header-title"><i class="lc lc-book"></i> 카테고리</span>
         <button type="button" id="tv-drawer-close" class="tv-drawer-close" title="닫기">
-            <i class="fa-solid fa-xmark"></i>
+            <i class="lc lc-x"></i>
         </button>
     </div>
     <div class="tv-drawer-body">
         <button type="button" id="tv-drawer-home" class="tv-drawer-item active">
-            <i class="fa-solid fa-house"></i><span>홈</span>
+            <i class="lc lc-house"></i><span>홈</span>
         </button>
         <div id="tv-drawer-list" class="tv-drawer-list"></div>
     </div>
@@ -79,7 +83,7 @@
         <div class="tv-category-header">
             <h2 id="tv-category-title" class="tv-row-title"></h2>
             <button type="button" id="tv-sort-toggle" class="tv-sort-toggle">
-                <i class="fa-solid fa-sort-alpha-down"></i>
+                <i class="lc lc-arrow-down-a-z"></i>
                 <span id="tv-sort-label">가나다 오름차순</span>
             </button>
         </div>

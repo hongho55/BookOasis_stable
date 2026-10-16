@@ -335,7 +335,7 @@ function createSelectedChipElement(type, value) {
     const chip = document.createElement('div');
     chip.className = 'filter-chip-selected';
     chip.title = `[${type === 'genres' ? '장르' : '태그'}] ${value}`;
-    chip.innerHTML = `<span>[${type === 'genres' ? '장르' : '태그'}] ${escapeHtml(value)}</span> <i class="fa-solid fa-xmark" style="font-size: 0.7rem;"></i>`;
+    chip.innerHTML = `<span>[${type === 'genres' ? '장르' : '태그'}] ${escapeHtml(value)}</span> <i class="lc lc-x" style="font-size: 0.7rem;"></i>`;
     chip.addEventListener('click', () => {
         if (type === 'genres') {
             selectedGenres.delete(value);
@@ -481,20 +481,20 @@ export function updateActiveFilterBar() {
     if (readFilter) {
         const readLabel = i18n.t(readFilter === 'only_read' ? 'filter.read_only' : 'filter.read_exclude');
         html += `<span class="active-filter-item is-read">
-            <i class="fa-solid fa-book-open-reader"></i> ${escapeHtml(readLabel)}
-            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="read" data-filter-value=""><i class="fa-solid fa-xmark"></i></span>
+            <i class="lc lc-book-open-text"></i> ${escapeHtml(readLabel)}
+            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="read" data-filter-value=""><i class="lc lc-x"></i></span>
         </span>`;
     }
     selectedGenres.forEach(genre => {
         html += `<span class="active-filter-item is-genre">
-            <i class="fa-solid fa-list-ul"></i> ${escapeHtml(genre)}
-            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="genre" data-filter-value="${escapeHtml(genre)}"><i class="fa-solid fa-xmark"></i></span>
+            <i class="lc lc-list"></i> ${escapeHtml(genre)}
+            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="genre" data-filter-value="${escapeHtml(genre)}"><i class="lc lc-x"></i></span>
         </span>`;
     });
     selectedTags.forEach(tag => {
         html += `<span class="active-filter-item is-tag">
-            <i class="fa-solid fa-tag"></i> ${escapeHtml(tag)}
-            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="tag" data-filter-value="${escapeHtml(tag)}"><i class="fa-solid fa-xmark"></i></span>
+            <i class="lc lc-tag"></i> ${escapeHtml(tag)}
+            <span class="filter-remove-btn" data-role="active-filter-remove" data-filter-type="tag" data-filter-value="${escapeHtml(tag)}"><i class="lc lc-x"></i></span>
         </span>`;
     });
 

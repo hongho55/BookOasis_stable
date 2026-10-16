@@ -48,7 +48,7 @@ export function renderAudiobookVolumes(orderedBooks, detailMeta = null) {
 
     chapterRowsHtml += isMusic ? `
       <tr data-role="detail-audio-open" data-audiobook-id="${audiobookId}" data-track-id="${book.id}">
-        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="fa-solid fa-play"></i></button></td>
+        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="lc lc-play"></i></button></td>
         <td class="ab-col-id">${idx + 1}</td>
         <td class="ab-col-title"><span class="ab-track-title-text">${rawTitle}</span></td>
         <td class="ab-col-artist">${escapeHtml(book.artist || '')}</td>
@@ -56,7 +56,7 @@ export function renderAudiobookVolumes(orderedBooks, detailMeta = null) {
       </tr>
     ` : `
       <tr data-role="detail-audio-open" data-audiobook-id="${audiobookId}" data-track-id="${book.id}">
-        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="fa-solid fa-play"></i></button></td>
+        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="lc lc-play"></i></button></td>
         <td class="ab-col-id">${idx}</td>
         <td class="ab-col-title"><span class="ab-track-title-text">${cleanTitle}</span>${trackCompletedDotHtml}</td>
         <td class="ab-col-time">${startText}</td>
@@ -66,7 +66,7 @@ export function renderAudiobookVolumes(orderedBooks, detailMeta = null) {
 
     trackRowsHtml += `
       <tr data-role="detail-audio-open" data-audiobook-id="${audiobookId}" data-track-id="${book.id}">
-        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="fa-solid fa-play"></i></button></td>
+        <td class="ab-col-play"><button class="ab-play-mini" data-role="detail-audio-play" data-audiobook-id="${audiobookId}" data-track-id="${book.id}"><i class="lc lc-play"></i></button></td>
         <td class="ab-col-id">${idx + 1}</td>
         <td class="ab-col-title"><span class="ab-track-title-text">${rawTitle}</span>${trackCompletedDotHtml}</td>
         <td class="ab-col-codec">${codec}</td>
@@ -81,7 +81,7 @@ export function renderAudiobookVolumes(orderedBooks, detailMeta = null) {
   const isCompleted = Number(detailMeta?.is_completed) === 1;
   const completedBadgeHtml = isMusic ? '' : `
     <span class="audiobook-completed-badge audiobook-completed-badge-compact${isCompleted ? ' is-visible' : ''}" data-audiobook-completed="${audiobookId || ''}">
-      <i class="fa-solid fa-headphones"></i> ${i18n.t('detail.audiobook_completed')}
+      <i class="lc lc-headphones"></i> ${i18n.t('detail.audiobook_completed')}
     </span>
   `;
 

@@ -60,7 +60,7 @@ function renderPopoverContent(item) {
   if (!isCustomCategory) {
     const label = item ? String(item.textContent || '').replace(/\s+/g, ' ').trim() : '';
     popover.innerHTML = `
-      <div class="category-info-popover-title"><i class="fa-solid fa-circle-info"></i> ${escapeHtml(label || '카테고리 정보')}</div>
+      <div class="category-info-popover-title"><i class="lc lc-info"></i> ${escapeHtml(label || '카테고리 정보')}</div>
       <div class="category-info-popover-empty">경로/시리즈·도서 수 정보가 없는 항목입니다.</div>
     `;
     return;
@@ -70,7 +70,7 @@ function renderPopoverContent(item) {
   const name = item.dataset.name || '';
   const path = item.dataset.path || '';
   popover.innerHTML = `
-    <div class="category-info-popover-title"><i class="fa-solid ${escapeHtml(item.dataset.icon || 'fa-book')}" style="color: ${escapeHtml(item.dataset.color || 'var(--app-accent)')};"></i> ${escapeHtml(name)}</div>
+    <div class="category-info-popover-title"><i class="${window.boIcon(escapeHtml(item.dataset.icon || 'fa-book'))}" style="color: ${escapeHtml(item.dataset.color || 'var(--app-accent)')};"></i> ${escapeHtml(name)}</div>
     <dl style="margin: 0;">
       <div class="category-info-popover-row"><dt>ID</dt><dd>${escapeHtml(id)}</dd></div>
       <div class="category-info-popover-row"><dt>카테고리 명</dt><dd>${escapeHtml(name)}</dd></div>

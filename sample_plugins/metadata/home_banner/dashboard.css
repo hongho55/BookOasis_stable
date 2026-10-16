@@ -1,0 +1,50 @@
+/* 위젯 전용 Shadow DOM 안에서만 적용된다. 글꼴/글자색 같은 상속 속성은 앱에서 그대로 이어받는다. */
+:host {
+  display: block;
+}
+
+.banner {
+  position: relative;
+  height: clamp(150px, 18vw, 240px);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #2b2f33;
+  background-size: cover;
+  background-position: center 50%;
+}
+
+/* 문구가 읽히도록 왼쪽 아래만 옅게 어둡게 (그림 전체는 밝게 둔다) */
+.banner__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 45%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0) 50%);
+}
+
+.banner__message {
+  position: absolute;
+  left: clamp(1.1rem, 3vw, 2.2rem);
+  bottom: clamp(1rem, 2.6vw, 1.8rem);
+  max-width: min(32rem, 70%);
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.05rem, 1.8vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.banner__credit {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.55rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.68rem;
+}
+
+.banner__credit:empty {
+  display: none;
+}

@@ -167,8 +167,9 @@ export function triggerAddLibrary() {
   if (coverRatio43El) coverRatio43El.checked = true;
   updateCoverRatioRowVisibility();
 
+  // 새 카테고리는 제목 감추기(표지만, 마우스를 올리면 제목)가 기본 - 기존 카테고리 설정은 그대로
   const hideTitleEl = document.getElementById('library-form-hide-title');
-  if (hideTitleEl) hideTitleEl.checked = false;
+  if (hideTitleEl) hideTitleEl.checked = true;
   updateHideTitleRowVisibility();
 
   const gdriveViewMirrorEl = document.getElementById('library-form-gdrive-view-mirror-path');
@@ -757,7 +758,7 @@ function updateAdvancedStatusDot(isRemoteChecked) {
 
 function updateAppearancePreview(iconVal, colorVal) {
   const previewIconEl = document.getElementById('library-form-appearance-preview-icon');
-  if (previewIconEl) previewIconEl.innerHTML = `<i class="fa-solid ${iconVal}"></i>`;
+  if (previewIconEl) previewIconEl.innerHTML = `<i class="${window.boIcon(iconVal)}"></i>`;
   const previewColorEl = document.getElementById('library-form-appearance-preview-color');
   if (previewColorEl) previewColorEl.style.backgroundColor = colorVal;
 }

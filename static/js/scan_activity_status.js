@@ -73,7 +73,7 @@ function renderScanActivity(data) {
   if (items.length === 0) {
     list.innerHTML = `
       <div class="scan-activity-empty">
-        <i class="fa-regular fa-bell" aria-hidden="true"></i>
+        <i class="lc lc-bell" aria-hidden="true"></i>
         <span>${escapeActivityText(tr('notify.empty', {}, '새 알림이 없습니다.'))}</span>
       </div>`;
     return;

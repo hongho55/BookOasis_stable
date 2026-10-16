@@ -33,8 +33,8 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
       ? `${pagesRead}p / ${book.total_pages}p (${progressPercent}%)`
       : '미독';
     const readBtnText = pagesRead > 0
-      ? `<i class="fa-solid fa-play"></i> ${i18n.t('detail.btn_resume')}`
-      : `<i class="fa-solid fa-play"></i> ${i18n.t('detail.btn_start')}`;
+      ? `<i class="lc lc-play"></i> ${i18n.t('detail.btn_resume')}`
+      : `<i class="lc lc-play"></i> ${i18n.t('detail.btn_start')}`;
     const volumeFallbackCoverSrc = buildFallbackCoverUrl({
       title: imageDisplayTitle,
       format: book.file_format,
@@ -51,7 +51,7 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
       : '';
 
     const isFav = book.is_favorite === 1;
-    const favIconClass = isFav ? 'fa-solid fa-star' : 'fa-regular fa-star';
+    const favIconClass = isFav ? 'fa-solid fa-star' : 'lc lc-star';
     const favIconColor = isFav ? '#eab308' : '#64748b';
     const favBtnHtml = `
       <button class="btn-fav-toggle" data-role="detail-book-favorite" data-book-id="${book.id}" data-next-status="${isFav ? 0 : 1}" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" style="background:none; border:none; color:${favIconColor}; cursor:pointer; font-size:1.1rem; padding:0 0.5rem; display:inline-flex; align-items:center;" title="${i18n.t('detail.toggle_fav_book')}">
@@ -75,17 +75,17 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
     if (noOffsets) warnTexts.push(i18n.t('detail.warn_no_offset'));
     const warnBannerHtml = needsWarn ? `
       <div class="vol-warn-banner">
-        <i class="fa-solid fa-triangle-exclamation"></i>
+        <i class="lc lc-triangle-alert"></i>
         <span>${warnTexts.join(' · ')}</span>
         <button class="btn-rescan-book" data-role="detail-rescan-book" data-book-id="${book.id}" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}">
-          <i class="fa-solid fa-rotate"></i> ${i18n.t('detail.btn_rescan')}
+          <i class="lc lc-rotate-cw"></i> ${i18n.t('detail.btn_rescan')}
         </button>
       </div>
     ` : '';
 
     const infoBannerHtml = (noCoverInfo && state.showTxtNoCoverInfoBanner !== false) ? `
       <div class="vol-warn-banner" style="border-color: rgba(59, 130, 246, 0.35); background: rgba(30, 58, 138, 0.22); color: #93c5fd;">
-        <i class="fa-solid fa-circle-info"></i>
+        <i class="lc lc-info"></i>
         <span>기본 커버 사용 중 (TXT)</span>
       </div>
     ` : '';
@@ -96,12 +96,12 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
     const readBtn = `<button class="btn-read" data-role="detail-continue" data-continue-action="reader" data-book-id="${book.id}" data-file-format="${(book.file_format || '').replace(/"/g, '&quot;')}" data-book-title="${(rawDisplayTitle || '').replace(/"/g, '&quot;')}" data-pages-read="${book.pages_read}" data-total-pages="${book.total_pages}">${readBtnText}</button>`;
     const listenBtn = isListenable
       ? `<button class="btn-listen" data-role="detail-listen" data-book-id="${book.id}" data-db-type="${dbType}" title="${i18n.t('context_menu.tts_listen')}">
-           <i class="fa-solid fa-headphones"></i> ${i18n.t('tts.viewer_listen')}
+           <i class="lc lc-headphones"></i> ${i18n.t('tts.viewer_listen')}
          </button>`
       : '';
     const downloadBtn = isDownloadable
       ? `<a class="btn-download" href="/api/media/books/${book.id}/download?type=${dbType}" download title="${i18n.t('detail.btn_download')}" data-role="detail-download-link">
-           <i class="fa-solid fa-download"></i> ${i18n.t('detail.btn_download')}
+           <i class="lc lc-download"></i> ${i18n.t('detail.btn_download')}
          </a>`
       : '';
     const readBtnHtml = (listenBtn || downloadBtn)
@@ -122,8 +122,8 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
           </div>
           <span class="volume-path" style="font-size: 0.72rem; color: var(--app-text-muted); word-break: break-all; margin-top: 0.15rem; display: block;">(${pathDisplay})</span>
           <div class="volume-meta-row">
-            <span class="vol-meta"><i class="fa-regular fa-file"></i> ${book.total_pages}p</span>
-            <span class="vol-meta"><i class="fa-regular fa-clock"></i> ${i18n.t('detail.time_est', { minutes: Math.max(1, Math.ceil(book.total_pages / 40)) })}</span>
+            <span class="vol-meta"><i class="lc lc-file"></i> ${book.total_pages}p</span>
+            <span class="vol-meta"><i class="lc lc-clock"></i> ${i18n.t('detail.time_est', { minutes: Math.max(1, Math.ceil(book.total_pages / 40)) })}</span>
           </div>
           <div class="volume-progress-bar-wrap">
             <div class="volume-progress-bar" style="width: ${progressPercent}%"></div>
@@ -139,7 +139,7 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
   <div class="volumes-section">
     <div class="volumes-section-toolbar">
       <h4 class="volumes-section-title">
-        <i class="fa-solid fa-layer-group"></i> ${i18n.t('dashboard.single_book_list')}
+        <i class="lc lc-layers"></i> ${i18n.t('dashboard.single_book_list')}
         <span class="vol-count-badge">${i18n.t('dashboard.book_unit', { count: books.length })}</span>
       </h4>
       <div class="volume-list-controls" aria-label="${i18n.t('detail.list_controls')}">

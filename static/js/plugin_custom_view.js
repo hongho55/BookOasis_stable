@@ -30,7 +30,7 @@ export async function mountCategoryPluginUI(pluginId) {
   if (requestToken !== pluginViewLoadToken) return;
   container.innerHTML = `
     <div class="loading-spinner" style="padding: 4rem 1rem; text-align: center; color: var(--app-text-muted); width: 100%;">
-      <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color: var(--app-accent-hover);"></i>
+      <i class="lc lc-loader-circle lc-spin lc-2x" style="color: var(--app-accent-hover);"></i>
       <div style="margin-top: 1rem; font-size: 0.95rem;">플러그인 전용 화면을 불러오는 중...</div>
     </div>
   `;
@@ -79,7 +79,7 @@ export async function mountCategoryPluginUI(pluginId) {
     if (requestToken !== pluginViewLoadToken) return;
     const pluginInfo = (catData.category_plugins || []).find(p => p.id === pluginId) || {};
     const title = escapeHtml(pluginInfo.title || pluginInfo.name || pluginId);
-    const icon = escapeHtml(pluginInfo.icon || 'fa-solid fa-puzzle-piece');
+    const icon = escapeHtml(window.boIcon(pluginInfo.icon || 'lc lc-puzzle'));
 
     // 카테고리 헤더 지시자 동기화
     updateCurrentCategoryIndicator(`plugin_${pluginId}`);
@@ -130,7 +130,7 @@ function renderStatsDashboardCustomView(container, stats) {
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; margin-bottom: 2rem;">
       <div style="background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
         <div style="width: 50px; height: 50px; border-radius: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-          <i class="fa-solid fa-book-open"></i>
+          <i class="lc lc-book-open"></i>
         </div>
         <div>
           <div style="color: var(--app-text-muted); font-size: 0.85rem; font-weight: 500;">총 보유 시리즈 / 도서</div>
@@ -140,7 +140,7 @@ function renderStatsDashboardCustomView(container, stats) {
 
       <div style="background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
         <div style="width: 50px; height: 50px; border-radius: 10px; background: color-mix(in srgb, var(--app-accent) 15%, transparent); color: var(--app-accent); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-          <i class="fa-solid fa-chart-line"></i>
+          <i class="lc lc-chart-line"></i>
         </div>
         <div>
           <div style="color: var(--app-text-muted); font-size: 0.85rem; font-weight: 500;">주간 완독 현황</div>
@@ -150,7 +150,7 @@ function renderStatsDashboardCustomView(container, stats) {
 
       <div style="background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
         <div style="width: 50px; height: 50px; border-radius: 10px; background: rgba(34, 197, 94, 0.15); color: #4ade80; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-          <i class="fa-solid fa-circle-check"></i>
+          <i class="lc lc-circle-check"></i>
         </div>
         <div>
           <div style="color: var(--app-text-muted); font-size: 0.85rem; font-weight: 500;">월간 완독 도서</div>
@@ -160,7 +160,7 @@ function renderStatsDashboardCustomView(container, stats) {
 
       <div style="background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); border-radius: 12px; padding: 1.2rem; display: flex; align-items: center; gap: 1rem;">
         <div style="width: 50px; height: 50px; border-radius: 10px; background: rgba(251, 146, 60, 0.15); color: #fb923c; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-          <i class="fa-solid fa-file-lines"></i>
+          <i class="lc lc-file-text"></i>
         </div>
         <div>
           <div style="color: var(--app-text-muted); font-size: 0.85rem; font-weight: 500;">주간 읽은 페이지 수</div>

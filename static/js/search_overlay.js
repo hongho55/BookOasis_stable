@@ -39,7 +39,7 @@ function buildSection(section, items, query) {
   const heading = document.createElement('div');
   heading.className = 'search-overlay-section-head';
   heading.innerHTML = `
-    <h3 class="search-overlay-section-title"><i class="fa-solid ${section.icon}"></i>
+    <h3 class="search-overlay-section-title"><i class="${window.boIcon(section.icon)}"></i>
       <span data-role="title"></span> <span class="search-overlay-count"></span></h3>
     ${items.length ? buildRowNavButtonsHtml(rowId, t('common.prev'), t('common.next')) : ''}
   `;
@@ -76,7 +76,7 @@ export async function openSearchOverlay(rawQuery) {
   overlay.innerHTML = `
     <div class="search-overlay-panel" role="dialog" aria-modal="true">
       <div class="search-overlay-header">
-        <h2 class="search-overlay-title"><i class="fa-solid fa-magnifying-glass"></i> <span data-role="search-overlay-query"></span></h2>
+        <h2 class="search-overlay-title"><i class="lc lc-search"></i> <span data-role="search-overlay-query"></span></h2>
         <button type="button" class="search-overlay-close" data-role="search-overlay-close" aria-label="close">&times;</button>
       </div>
       <div class="search-overlay-body" data-role="search-overlay-body">

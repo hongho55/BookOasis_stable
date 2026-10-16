@@ -60,17 +60,17 @@ export async function loadQueueStatus() {
         console.error("Failed to fetch queue status", error);
         const tbody = document.getElementById('queue-table-body');
         if (tbody) {
-            tbody.innerHTML = `<tr data-queue-error="true"><td colspan="5" style="padding: 2rem; text-align: center; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ${window.i18n ? window.i18n.t('queue.load_error') : '대기열 정보를 불러오지 못했습니다.'}</td></tr>`;
+            tbody.innerHTML = `<tr data-queue-error="true"><td colspan="5" style="padding: 2rem; text-align: center; color: #ef4444;"><i class="lc lc-triangle-alert"></i> ${window.i18n ? window.i18n.t('queue.load_error') : '대기열 정보를 불러오지 못했습니다.'}</td></tr>`;
         }
     }
 }
 window.loadQueueStatus = loadQueueStatus;
 
 function getQueueTaskTypeName(type, t) {
-    if (type === 'library_scan') return `<span style="color: #60a5fa;"><i class="fa-solid fa-folder-tree"></i> ${t('queue.type_lib')}</span>`;
-    if (type === 'cover_scan') return `<span style="color: #4ade80;"><i class="fa-solid fa-image"></i> ${t('queue.type_cover')}</span>`;
-    if (type === 'lazy_scan') return `<span style="color: var(--app-accent-hover);"><i class="fa-solid fa-moon"></i> ${t('queue.type_lazy')}</span>`;
-    if (type === 'batch_book_scan') return `<span style="color: #fbbf24;"><i class="fa-solid fa-book-open"></i> ${t('queue.type_batch_book_scan')}</span>`;
+    if (type === 'library_scan') return `<span style="color: #60a5fa;"><i class="lc lc-folder-tree"></i> ${t('queue.type_lib')}</span>`;
+    if (type === 'cover_scan') return `<span style="color: #4ade80;"><i class="lc lc-image"></i> ${t('queue.type_cover')}</span>`;
+    if (type === 'lazy_scan') return `<span style="color: var(--app-accent-hover);"><i class="lc lc-moon"></i> ${t('queue.type_lazy')}</span>`;
+    if (type === 'batch_book_scan') return `<span style="color: #fbbf24;"><i class="lc lc-book-open"></i> ${t('queue.type_batch_book_scan')}</span>`;
     return type;
 }
 
@@ -78,7 +78,7 @@ function getQueueStageBadge(task, t) {
     if (task.role === 'pending') {
         return `
             <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; background-color: rgba(255, 255, 255, 0.1); color: var(--app-text-muted); font-size: 0.85rem;">
-                <i class="fa-solid fa-hourglass-half"></i> ${t('queue.status_pending')}
+                <i class="lc lc-hourglass"></i> ${t('queue.status_pending')}
             </span>
         `;
     }
@@ -86,7 +86,7 @@ function getQueueStageBadge(task, t) {
     if (task.stage === 'vfs_refresh') {
         return `
             <span style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; border-radius: 6px; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 0.82rem; font-weight: 600; line-height: 1.3; text-align: center; width: 100%; box-sizing: border-box;">
-                <span><i class="fa-solid fa-spinner fa-spin"></i> ${t('queue.status_running')}</span>
+                <span><i class="lc lc-loader lc-spin"></i> ${t('queue.status_running')}</span>
                 <span style="font-size: 0.72rem; opacity: 0.85;">(${t('queue.status_vfs') || 'VFS 갱신'})</span>
             </span>
         `;
@@ -95,7 +95,7 @@ function getQueueStageBadge(task, t) {
     if (task.stage === 'book_scan' || task.stage === 'db_scan') {
         return `
             <span style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 12px; border-radius: 6px; background-color: color-mix(in srgb, var(--app-accent) 15%, transparent); color: var(--app-accent-hover); font-size: 0.82rem; font-weight: 600; line-height: 1.3; text-align: center; width: 100%; box-sizing: border-box;">
-                <span><i class="fa-solid fa-spinner fa-spin"></i> ${t('queue.status_running')}</span>
+                <span><i class="lc lc-loader lc-spin"></i> ${t('queue.status_running')}</span>
                 <span style="font-size: 0.72rem; opacity: 0.85;">(${t('queue.status_books') || t('queue.status_scan') || '도서 스캔'})</span>
             </span>
         `;
@@ -103,7 +103,7 @@ function getQueueStageBadge(task, t) {
 
     return `
         <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 0.82rem; font-weight: 600; justify-content: center; width: 100%; box-sizing: border-box;">
-            <i class="fa-solid fa-spinner fa-spin"></i> ${t('queue.status_running')}
+            <i class="lc lc-loader lc-spin"></i> ${t('queue.status_running')}
         </span>
     `;
 }
@@ -114,7 +114,7 @@ function getQueueCancelButton(task, t) {
         const dbType = task.kwargs.db_type || 'general';
         return `
             <button class="action-btn" data-role="queue-cancel-running" data-library-id="${libId}" data-db-type="${dbType}" style="margin-left: 8px; padding: 2px 6px; background-color: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; color: #fca5a5; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
-                <i class="fa-solid fa-circle-stop"></i> ${t('queue.btn_cancel') || '취소'}
+                <i class="lc lc-circle-stop"></i> ${t('queue.btn_cancel') || '취소'}
             </button>
         `;
     }
@@ -122,7 +122,7 @@ function getQueueCancelButton(task, t) {
     if (task.role === 'running' && task.type === 'lazy_scan' && task.key) {
         return `
             <button class="action-btn" data-role="queue-cancel-running-task" data-task-id="${String(task.key).replace(/"/g, '&quot;')}" style="margin-left: 8px; padding: 2px 6px; background-color: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 4px; color: #fca5a5; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
-                <i class="fa-solid fa-circle-stop"></i> ${t('queue.btn_cancel') || '중지'}
+                <i class="lc lc-circle-stop"></i> ${t('queue.btn_cancel') || '중지'}
             </button>
         `;
     }
@@ -193,7 +193,7 @@ function renderQueueTable(queueData) {
 
     const rows = normalizeQueueRows(queueData);
     if (rows.length === 0) {
-        tbody.innerHTML = `<tr data-queue-empty="true"><td colspan="5" style="padding: 3rem; text-align: center; color: var(--app-text-muted);"><i class="fa-solid fa-check-circle" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #22c55e;"></i>${t('queue.empty')}</td></tr>`;
+        tbody.innerHTML = `<tr data-queue-empty="true"><td colspan="5" style="padding: 3rem; text-align: center; color: var(--app-text-muted);"><i class="lc lc-circle-check" style="font-size: 2rem; margin-bottom: 1rem; display: block; color: #22c55e;"></i>${t('queue.empty')}</td></tr>`;
         return;
     }
 

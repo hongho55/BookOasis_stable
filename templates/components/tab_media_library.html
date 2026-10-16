@@ -1,4 +1,5 @@
 <!-- CSS 및 외부 라이브러리 로드 -->
+<link rel="stylesheet" href="{{ static_asset_url('fonts/pretendard/pretendardvariable-dynamic-subset.css') }}">
 <link rel="stylesheet" href="{{ static_asset_url('css/style.css') }}">
 <link rel="stylesheet" href="{{ static_asset_url('css/tab_media_library_viewer.css') }}">
 <link rel="stylesheet" href="{{ static_asset_url('css/mobile.css') }}" media="screen and (max-width: 1200px)">
@@ -15,7 +16,7 @@
     <div class="library-sidebar"
         style="display: flex; flex-direction: column; justify-content: space-between; min-height: auto;">
         <div class="sidebar-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            <h3 class="sidebar-title" data-role="mobile-brand-home" style="margin: 0; display: flex; align-items: center; gap: 0.6rem; font-size: 1.4rem;"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="" aria-hidden="true" style="width: 40px; height: 40px; object-fit: contain;"> <span>BookOasis</span></h3>
+            <h3 class="sidebar-title" data-role="mobile-brand-home"><i class="lc lc-tree-palm sidebar-brand-mark" aria-hidden="true"></i><span class="sidebar-brand-word">Book<span class="sidebar-brand-accent">Oasis</span></span></h3>
         </div>
 
         <!-- 모바일 전용 세션 전환 팝업: 헤더의 세션 선택 버튼(#btn-mobile-session-select)을 누르면 뜬다 (2026-10-01).
@@ -31,11 +32,11 @@
             <div class="sidebar-drawer-head mobile-drawer-only">
                 <span class="sidebar-drawer-brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="" aria-hidden="true"> <span>BookOasis</span></span>
                 <button type="button" class="sidebar-drawer-close" data-role="sidebar-drawer-close" data-i18n-title="common.close" title="닫기">
-                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    <i class="lc lc-x" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="sidebar-menu-search mobile-drawer-only">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <i class="lc lc-search" aria-hidden="true"></i>
                 <input type="search" data-role="sidebar-menu-search" enterkeyhint="search" autocomplete="off"
                     data-i18n-placeholder="sidebar.menu_search_placeholder" placeholder="메뉴 / 보관함 검색">
             </div>
@@ -43,36 +44,36 @@
                 <div class="sidebar-section-label mobile-drawer-only" data-i18n="sidebar.section_explore">탐색</div>
                 <ul class="sidebar-menu" id="sidebar-categories">
                         <li class="menu-item active" id="category-home" data-role="sidebar-category-static" data-category-id="home"><i
-                            class="fa-solid fa-house"></i> <span data-i18n="sidebar.home">Home</span></li>
+                            class="lc lc-house"></i> <span data-i18n="sidebar.home">Home</span></li>
                         <li class="menu-item" id="category-history" data-role="sidebar-category-static" data-category-id="history"><i
-                            class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="sidebar.recent_books">최근 읽은 도서</span></li>
+                            class="lc lc-history"></i> <span data-i18n="sidebar.recent_books">최근 읽은 도서</span></li>
                         <li class="menu-item" id="category-favorite" data-role="sidebar-category-static" data-category-id="favorite"><i
                             class="fa-solid fa-star"></i> <span data-i18n="sidebar.favorite">즐겨찾기</span></li>
                         <li class="menu-item" id="category-collection" data-role="sidebar-category-static" data-category-id="collection"><i
                             class="fa-solid fa-bookmark"></i> <span data-i18n="sidebar.collection">컬렉션</span></li>
                         <li class="menu-item" id="category-smart-rec" data-role="sidebar-category-static" data-category-id="smart_rec"><i
-                            class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="sidebar.smart_recommend">스마트 추천</span></li>
+                            class="lc lc-wand-sparkles"></i> <span data-i18n="sidebar.smart_recommend">스마트 추천</span></li>
                         <li class="menu-item" id="category-plugins" data-role="sidebar-category-static" data-category-id="plugins"><i
-                            class="fa-solid fa-puzzle-piece"></i> <span data-i18n="sidebar.plugins">플러그인</span></li>
+                            class="lc lc-puzzle"></i> <span data-i18n="sidebar.plugins">플러그인</span></li>
                         <li class="menu-item" id="category-all" data-role="sidebar-category-static" data-category-id="all"><i
-                            class="fa-solid fa-layer-group"></i> <span data-i18n="sidebar.view_all">전체보기</span></li>
+                            class="lc lc-layers"></i> <span data-i18n="sidebar.view_all">전체보기</span></li>
                 </ul>
                 <!-- 관리자 전용 도구(핀 고정/그룹·카테고리 추가 등): category/index.js loadLibraries()가 채움 -->
-                <div id="sidebar-admin-tools" class="sidebar-admin-tools mobile-drawer-only" hidden></div>
+                <div id="sidebar-admin-tools" class="sidebar-admin-tools" hidden></div>
             </div>
             <!-- 환경설정/계정 메뉴는 상단 헤더 우측 아이콘으로 이동됨 (library-controls 참고).
                  모바일 드로어에선 아래 푸터 버튼이 원래 버튼을 대신 눌러준다 (sidebar_manager.js initSidebarDrawerChrome) -->
             <nav class="sidebar-drawer-footer mobile-drawer-only">
                 <button type="button" data-role="drawer-proxy" data-target="btn-scan-activity">
-                    <span class="drawer-footer-icon"><i class="fa-solid fa-bell" aria-hidden="true"></i><span class="drawer-scan-dot" data-role="scan-activity-mirror" aria-hidden="true"></span></span>
+                    <span class="drawer-footer-icon"><i class="lc lc-bell" aria-hidden="true"></i><span class="drawer-scan-dot" data-role="scan-activity-mirror" aria-hidden="true"></span></span>
                     <span data-i18n="sidebar.scan_activity">알림</span>
                 </button>
                 <button type="button" data-role="drawer-proxy" data-target="category-settings">
-                    <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    <i class="lc lc-settings" aria-hidden="true"></i>
                     <span data-i18n="sidebar.settings">환경설정</span>
                 </button>
                 <button type="button" data-role="drawer-proxy" data-target="btn-account-menu">
-                    <i class="fa-solid fa-circle-user" aria-hidden="true"></i>
+                    <i class="lc lc-circle-user" aria-hidden="true"></i>
                     <span data-i18n="sidebar.account">계정</span>
                 </button>
             </nav>
@@ -94,14 +95,14 @@
         <!-- 필터 활성 알림 바 (초기 숨김) -->
         <div id="active-filter-bar" class="active-filter-bar" style="display: none;">
             <div class="active-filter-info">
-                <i class="fa-solid fa-filter" style="color: #ffffff;"></i> <span data-i18n="filter.active_filters" style="font-size: 0.85rem; color: #ffffff; font-weight: 700;">필터 적용 중</span>
+                <i class="lc lc-filter" style="color: #ffffff;"></i> <span data-i18n="filter.active_filters" style="font-size: 0.85rem; color: #ffffff; font-weight: 700;">필터 적용 중</span>
                 <button type="button" id="btn-active-filter-mode" class="btn-filter-mode" data-role="active-filter-mode" data-i18n-title="filter.mode_toggle_title" title="클릭하여 AND/OR 전환" style="display: none;">(AND)</button><span style="font-size: 0.85rem; color: #ffffff; font-weight: 700;">:</span>
             </div>
             <div id="active-filter-badges" class="active-filter-badges">
                 <!-- JS에서 동적으로 뱃지 렌더링 -->
             </div>
             <button id="btn-active-filter-reset" data-role="library-filter-reset" class="btn-active-filter-reset" title="모든 필터 해제">
-                <i class="fa-solid fa-rotate-left"></i> <span data-i18n="filter.reset_all">전체 해제</span>
+                <i class="lc lc-rotate-ccw"></i> <span data-i18n="filter.reset_all">전체 해제</span>
             </button>
         </div>
 
@@ -129,10 +130,10 @@
     <!-- 플로팅 장르/태그 필터 모달 -->
     <div id="floating-filter-modal" class="floating-filter-modal" style="display: none;">
         <div class="filter-modal-header" id="filter-modal-header">
-            <span class="filter-modal-title"><i class="fa-solid fa-filter" style="color: var(--app-accent-hover);"></i> <span data-i18n="filter.modal_title">상세 필터</span></span>
+            <span class="filter-modal-title"><i class="lc lc-filter" style="color: var(--app-accent-hover);"></i> <span data-i18n="filter.modal_title">상세 필터</span></span>
             <div class="filter-modal-header-actions">
-                <button class="btn-filter-icon" id="btn-filter-reset" data-i18n-title="filter.reset_all" title="필터 전체 초기화"><i class="fa-solid fa-rotate-left"></i></button>
-                <button class="btn-filter-icon" id="btn-filter-close" data-i18n-title="common.close" title="닫기"><i class="fa-solid fa-xmark"></i></button>
+                <button class="btn-filter-icon" id="btn-filter-reset" data-i18n-title="filter.reset_all" title="필터 전체 초기화"><i class="lc lc-rotate-ccw"></i></button>
+                <button class="btn-filter-icon" id="btn-filter-close" data-i18n-title="common.close" title="닫기"><i class="lc lc-x"></i></button>
             </div>
         </div>
         <div class="filter-modal-body">
@@ -153,7 +154,7 @@
             
             <!-- 실시간 검색 인풋창 -->
             <div class="filter-search-wrap">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <i class="lc lc-search search-icon"></i>
                 <input type="text" id="filter-search-input" data-i18n-placeholder="filter.search_placeholder" placeholder="장르 또는 태그 검색...">
             </div>
 
@@ -185,7 +186,7 @@
     <div id="migration-dimmer-modal" class="library-modal" style="display: none; z-index: 10005; background: rgba(9, 13, 22, 0.7); backdrop-filter: blur(8px); align-items: center; justify-content: center; flex-direction: column;">
         <div style="background: rgba(var(--app-panel-rgb), 0.9); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); padding: 2.5rem 3rem; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); text-align: center; color: var(--app-text-primary); max-width: 450px; width: 90%;">
             <div style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 1.5rem;">
-                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <i class="lc lc-loader-circle lc-spin"></i>
             </div>
             <h3 style="margin: 0 0 0.8rem 0; font-size: 1.25rem; font-weight: 700;">카테고리 데이터 이동 중</h3>
             <p style="margin: 0; color: var(--app-text-muted); font-size: 0.9rem; line-height: 1.5; word-break: keep-all;">
@@ -199,14 +200,14 @@
     <div id="trash-loading-overlay" style="display: none; position: fixed; inset: 0; z-index: 10010; background: rgba(9, 13, 22, 0.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); align-items: center; justify-content: center; flex-direction: column;">
         <div style="background: rgba(var(--app-panel-rgb), 0.92); border: 1px solid rgba(239, 68, 68, 0.25); padding: 2.5rem 3rem; border-radius: 14px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.1); text-align: center; color: var(--app-text-primary); max-width: 460px; width: 90%;">
             <div style="font-size: 2.8rem; color: #f87171; margin-bottom: 1.4rem;">
-                <i class="fa-solid fa-trash-can fa-beat-fade"></i>
+                <i class="lc lc-trash-2"></i>
             </div>
             <h3 style="margin: 0 0 0.7rem 0; font-size: 1.2rem; font-weight: 700; color: var(--app-text-primary);">도서 데이터 삭제 중</h3>
             <p id="trash-loading-overlay-msg" style="margin: 0 0 1.2rem 0; color: var(--app-text-muted); font-size: 0.875rem; line-height: 1.6; word-break: keep-all;">
                 잠시만 기다려 주세요.
             </p>
             <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--app-text-muted); font-size: 0.78rem;">
-                <i class="fa-solid fa-circle-notch fa-spin" style="color: #f87171;"></i>
+                <i class="lc lc-loader-circle lc-spin" style="color: #f87171;"></i>
                 <span>완료될 때까지 다른 작업을 진행하지 마십시오.</span>
             </div>
         </div>

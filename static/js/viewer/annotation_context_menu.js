@@ -45,14 +45,14 @@ function ensureMenu() {
   menu.innerHTML = `
     <div class="context-menu-header">
       <span class="context-menu-header-left">
-        <span class="context-menu-drag-handle" data-role="annotation-context-drag" title="메뉴 위치 이동" aria-hidden="true"><i class="fa-solid fa-grip-lines"></i></span>
+        <span class="context-menu-drag-handle" data-role="annotation-context-drag" title="메뉴 위치 이동" aria-hidden="true"><i class="lc lc-grip-horizontal"></i></span>
         <span class="context-menu-title">하이라이트 메뉴</span>
       </span>
       <button type="button" class="context-menu-close-btn" data-role="annotation-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text">닫기</span></button>
     </div>
     <ul class="context-menu-list">
-      <li class="context-menu-item" data-role="annotation-context-delete"><i class="fa-solid fa-trash" style="color: #f87171;"></i> <span>하이라이트 삭제</span></li>
-      <li class="context-menu-item context-menu-close-item" data-role="annotation-context-close"><i class="fa-solid fa-xmark" style="color: #f87171;"></i> <span>닫기</span></li>
+      <li class="context-menu-item" data-role="annotation-context-delete"><i class="lc lc-trash" style="color: #f87171;"></i> <span>하이라이트 삭제</span></li>
+      <li class="context-menu-item context-menu-close-item" data-role="annotation-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span>닫기</span></li>
     </ul>
   `;
   getModalRoot().appendChild(menu);
@@ -115,7 +115,7 @@ function renderPluginItems(items) {
       const pluginId = String(item.plugin_id || '').trim();
       const actionId = String(item.id || '').trim();
       const label = String(item.label || '').trim();
-      const iconClass = String(item.icon || 'fa-solid fa-puzzle-piece').trim();
+      const iconClass = window.boIcon(String(item.icon || 'lc lc-puzzle').trim());
       if (!pluginId || !actionId || !label) return;
 
       const li = document.createElement('li');

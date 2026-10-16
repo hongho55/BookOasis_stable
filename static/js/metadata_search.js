@@ -151,7 +151,7 @@ export async function performMetadataSearch() {
   }
   
   const selectedSourceName = sourceSelect.options[sourceSelect.selectedIndex]?.text || i18n.t('metadata_search.default_source');
-  container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="fa-solid fa-circle-notch fa-spin fa-2x"></i><br><br>${i18n.t('metadata_search.searching', {source: selectedSourceName})}</div>`;
+  container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="lc lc-loader-circle lc-spin lc-2x"></i><br><br>${i18n.t('metadata_search.searching', {source: selectedSourceName})}</div>`;
   
   try {
     const data = await api.searchMetadata(state.currentLibraryType, query, source);

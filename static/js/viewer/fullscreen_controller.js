@@ -78,13 +78,13 @@ export function syncViewerFullscreenState() {
   const inFullscreen = isViewerInFullscreen();
   if (inFullscreen) {
     modal.classList.add('fullscreen-mode');
-    if (icon) icon.className = 'fa-solid fa-compress';
-    if (overlayIcon) overlayIcon.className = 'fa-solid fa-compress';
+    if (icon) icon.className = 'lc lc-minimize';
+    if (overlayIcon) overlayIcon.className = 'lc lc-minimize';
     if (overlayBtn) overlayBtn.setAttribute('data-i18n-title', 'viewer.exit_fullscreen');
   } else {
     modal.classList.remove('fullscreen-mode');
-    if (icon) icon.className = 'fa-solid fa-expand';
-    if (overlayIcon) overlayIcon.className = 'fa-solid fa-expand';
+    if (icon) icon.className = 'lc lc-expand';
+    if (overlayIcon) overlayIcon.className = 'lc lc-expand';
     if (overlayBtn) overlayBtn.setAttribute('data-i18n-title', 'viewer.fullscreen');
   }
 
@@ -109,7 +109,7 @@ export function toggleFullscreenViewer() {
   if (isViewerInFullscreen()) {
     exitFullscreenIfNeeded();
     modal.classList.remove('fullscreen-mode');
-    if (icon) icon.className = 'fa-solid fa-expand';
+    if (icon) icon.className = 'lc lc-expand';
     return;
   }
 
@@ -121,11 +121,11 @@ export function toggleFullscreenViewer() {
         ret.catch(() => {
           // Fallback to CSS-only fullscreen class when API fails.
           modal.classList.add('fullscreen-mode');
-          if (icon) icon.className = 'fa-solid fa-compress';
+          if (icon) icon.className = 'lc lc-minimize';
         });
       }
       modal.classList.add('fullscreen-mode');
-      if (icon) icon.className = 'fa-solid fa-compress';
+      if (icon) icon.className = 'lc lc-minimize';
       return;
     } catch (e) {
       // Continue to CSS fallback below.
@@ -133,5 +133,5 @@ export function toggleFullscreenViewer() {
   }
 
   modal.classList.add('fullscreen-mode');
-  if (icon) icon.className = 'fa-solid fa-compress';
+  if (icon) icon.className = 'lc lc-minimize';
 }

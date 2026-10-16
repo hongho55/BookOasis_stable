@@ -205,11 +205,11 @@ export function showToast(message, type = 'success', options = {}) {
   }
 
   // 아이콘 결정
-  let iconHtml = '<i class="fa-solid fa-circle-check" style="color: #eab308; font-size: 1.05rem;"></i>';
+  let iconHtml = '<i class="lc lc-circle-check" style="color: #eab308; font-size: 1.05rem;"></i>';
   if (type === 'error') {
-    iconHtml = '<i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 1.05rem;"></i>';
+    iconHtml = '<i class="lc lc-circle-x" style="color: #ef4444; font-size: 1.05rem;"></i>';
   } else if (type === 'info') {
-    iconHtml = '<i class="fa-solid fa-circle-info" style="color: #3b82f6; font-size: 1.05rem;"></i>';
+    iconHtml = '<i class="lc lc-info" style="color: #3b82f6; font-size: 1.05rem;"></i>';
   }
 
   // 이전 타이머 및 스타일 즉시 리셋 (토스트 중복/재호출 시 고착 방지)

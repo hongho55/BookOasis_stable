@@ -260,7 +260,8 @@ export function createBookCard(item, options = {}) {
 
   // 제목 감추기(넷플릭스 스타일)는 일반/성인 도서 카드 전용 기능
   const isBookCard = !isVideo && !isAudiobook;
-  const shouldHideTitle = isBookCard && !!state.currentLibraryHideTitles;
+  // 홈 대시보드 줄(최근 읽은/신규 추가)은 options.hideTitle로 형식과 상관없이 표지만 (마우스를 올리면 제목)
+  const shouldHideTitle = !!options.hideTitle || (isBookCard && !!state.currentLibraryHideTitles);
   if (shouldHideTitle) {
     card.classList.add('book-card--hide-title');
     card.title = displayTitle;
@@ -326,20 +327,35 @@ export function createBookCard(item, options = {}) {
       ? Number(item.total_tracks)
       : ((item.book_count !== undefined && Number(item.book_count) > 0) ? Number(item.book_count) : 0);
     subTextHtml = episodes > 0
-      ? `<p class="book-card-sub-video"><i class="fa-solid fa-clapperboard"></i> ${episodes}편</p>`
+      ? `<p class="book-card-sub-video"><i class="lc lc-clapperboard"></i> ${episodes}편</p>`
       : '';
   } else if (isAudiobook) {
     const chapters = (item.total_tracks !== undefined && Number(item.total_tracks) > 0)
       ? Number(item.total_tracks)
       : ((item.book_count !== undefined && Number(item.book_count) > 0) ? Number(item.book_count) : (Number(item.total_pages) || 1));
-    subTextHtml = `<p class="book-card-sub-audio"><i class="fa-solid fa-headphones"></i> ${chapters}</p>`;
+    subTextHtml = `<p class="book-card-sub-audio"><i class="lc lc-headphones"></i> ${chapters}</p>`;
   } else if (item.pages_read > 0 && options.showProgress && (!readingIsComplete || hasUnfinishedSiblings)) {
     subTextHtml = `<p class="book-card-sub-progress">${i18n.t('dashboard.continue_reading', { pages: item.pages_read })}</p>`;
   }
 
+  // 표지 아래쪽 진행 막대 (제목을 감춘 카드에서 "얼마나 읽었나"를 보여준다). 퍼센트를 알 수 있을 때만:
+  // EPUB은 pages_read가 퍼센트, 페이지 수를 아는 형식(만화/PDF)은 비율, 완독은 100.
+  // TXT(전체 페이지 모름)·오디오북·영상은 퍼센트를 알 수 없어 그리지 않는다 - 마우스를 올리면 이어읽기 정보가 나온다.
+  let progressBarHtml = '';
+  if (options.showProgress && !isVideo && !isAudiobook) {
+    let pct = null;
+    if (readingIsComplete && !hasUnfinishedSiblings) pct = 100;
+    else if (String(fmt) === 'epub' && pagesRead > 0) pct = pagesRead;
+    else if (totalPages > 0 && pagesRead > 0) pct = (pagesRead / totalPages) * 100;
+    if (pct !== null) {
+      const width = Math.max(2, Math.min(100, Math.round(pct)));
+      progressBarHtml = `<div class="book-card-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${width}"><span style="width: ${width}%;"></span></div>`;
+    }
+  }
+
   // 4. 즐겨찾기 버튼 구성
   const isFav = item.is_favorite === 1;
-  const favIconClass = isFav ? 'fa-solid fa-star' : 'fa-regular fa-star';
+  const favIconClass = isFav ? 'fa-solid fa-star' : 'lc lc-star';
   const favoriteTargetName = rawSeriesName || displayTitle;
   const favBtnHtml = `
     <button class="btn-card-fav-toggle ${isFav ? 'active' : ''}" title="즐겨찾기 토글" data-role="card-favorite-toggle" data-favorite-name="${favoriteTargetName.replace(/"/g, '&quot;')}" data-book-id="${item.id || ''}" data-next-status="${isFav ? 0 : 1}">
@@ -352,7 +368,7 @@ export function createBookCard(item, options = {}) {
   const currentUser = state.currentUser || window.currentUser || {};
   const isAdminUser = String(currentUser.role || '').trim().toLowerCase() === 'admin';
   const infoBtnHtml = (isAdminUser && isBookCard && !item.is_author_group && card.dataset.bookId)
-    ? `<button type="button" class="btn-card-info-toggle" data-role="card-info-toggle" title="정보" aria-label="정보"><i class="fa-solid fa-ellipsis"></i></button>`
+    ? `<button type="button" class="btn-card-info-toggle" data-role="card-info-toggle" title="정보" aria-label="정보"><i class="lc lc-ellipsis"></i></button>`
     : '';
 
   const lazyPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
@@ -369,7 +385,7 @@ export function createBookCard(item, options = {}) {
   if (item.metadata_locked === 1 || item.metadata_locked === '1') {
     lockedBadgeHtml = `
       <div class="book-card-locked-badge" title="메타데이터 잠김 (수동 편집됨)">
-        <i class="fa-solid fa-lock"></i>
+        <i class="lc lc-lock"></i>
       </div>
     `;
   }
@@ -399,10 +415,10 @@ export function createBookCard(item, options = {}) {
   const isSelectableCard = options.allowSelection && !item.is_author_group;
   if (isSelectableCard) card.classList.add('book-card--selectable');
   const selectionToggleHtml = isSelectableCard
-    ? `<button type="button" class="book-card-select-toggle" data-role="book-card-select-toggle" aria-pressed="false" aria-label="작품 선택" title="작품 선택"><i class="fa-solid fa-check" aria-hidden="true"></i></button>`
+    ? `<button type="button" class="book-card-select-toggle" data-role="book-card-select-toggle" aria-pressed="false" aria-label="작품 선택" title="작품 선택"><i class="lc lc-check" aria-hidden="true"></i></button>`
     : '';
   const resumeButtonHtml = showResumeAction
-    ? `<button class="btn-resume-series" title="${options.actionTitle || '읽기'}"><i class="fa-solid fa-book-open"></i></button>`
+    ? `<button class="btn-resume-series" title="${options.actionTitle || '읽기'}"><i class="lc lc-book-open"></i></button>`
     : '';
 
   card.innerHTML = `
@@ -417,6 +433,7 @@ export function createBookCard(item, options = {}) {
       ${infoBtnHtml}
       ${audiobookCompletedDotHtml}
       ${resumeButtonHtml}
+      ${progressBarHtml}
     </div>
     <div class="book-card-info">
       <h4 class="book-card-title" title="${displayTitle}">${displayTitle}</h4>
@@ -700,6 +717,7 @@ export function renderDashboardHistory(booksList) {
 
     const card = createBookCard(item, {
       showProgress: true,
+      hideTitle: true,
       markUnreadScope: 'series',
       lazyLoad: false,
       actionTitle: '이어읽기',
@@ -743,6 +761,7 @@ export function renderDashboardRecentlyAdded(booksList) {
     const normalizedTitle = stripLeadingBracketTags(normalizeBookTitle(item));
     const card = createBookCard(item, {
       isNew: true,
+      hideTitle: true,
       lazyLoad: false,
       actionTitle: '바로읽기',
       onPrimaryClick: (e) => openBookDetail(e, item.series_name || normalizedTitle, item.library_id, item.id),

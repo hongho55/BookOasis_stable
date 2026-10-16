@@ -111,15 +111,15 @@ export function notificationItemHtml(item) {
     ? ` data-expand-key="${escapeActivityAttribute(multiCards ? item.id : item.card.group_key)}" data-card="${escapeActivityAttribute(JSON.stringify(cardData))}"`
     : '';
   const toggle = expandable
-    ? `<button type="button" class="notify-card-toggle" data-notify-action="toggle_card" aria-expanded="false" title="${escapeActivityAttribute(tr('problems.action.more', {}, '더 보기'))}"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>`
+    ? `<button type="button" class="notify-card-toggle" data-notify-action="toggle_card" aria-expanded="false" title="${escapeActivityAttribute(tr('problems.action.more', {}, '더 보기'))}"><i class="lc lc-chevron-down" aria-hidden="true"></i></button>`
     : '';
   return `
       <div class="scan-activity-item notify-tone-${tone}${unread ? ' is-unread' : ''}${expandable ? ' is-expandable' : ''}" data-notify-id="${escapeActivityAttribute(item?.id)}" data-kind="${escapeActivityAttribute(item?.kind)}"${expandAttrs}>
         <span class="scan-activity-item-icon">
-          <i class="fa-solid ${NOTIFY_TONE_ICONS[tone] || NOTIFY_TONE_ICONS.done}" aria-hidden="true"></i>
+          <i class="${window.boIcon(NOTIFY_TONE_ICONS[tone] || NOTIFY_TONE_ICONS.done)}" aria-hidden="true"></i>
         </span>
         <div class="scan-activity-item-copy">
-          <div class="scan-activity-item-title" title="${escapeActivityAttribute(title)}">${sourceIcon ? `<i class="fa-solid ${sourceIcon} notify-source-icon" aria-hidden="true"></i>` : ''}${escapeActivityText(title)}</div>
+          <div class="scan-activity-item-title" title="${escapeActivityAttribute(title)}">${sourceIcon ? `<i class="${window.boIcon(sourceIcon)} notify-source-icon" aria-hidden="true"></i>` : ''}${escapeActivityText(title)}</div>
           <div class="scan-activity-item-detail" title="${escapeActivityAttribute(detail)}">${escapeActivityText(detail)}</div>
         </div>
         <span class="scan-activity-item-side">

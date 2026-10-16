@@ -94,15 +94,15 @@ export function computeBookMenuState(target, env = {}) {
   const isSeries = target?.markUnreadScope === 'series';
   if (!isMulti && !env.isVideoLibrary && target?.hasProgress === false) {
     items['ctx-unread-book'] = {
-      action: 'mark-read', iconClass: 'fa-solid fa-eye', iconColor: '#22c55e',
+      action: 'mark-read', iconClass: 'lc lc-eye', iconColor: '#22c55e',
       labelKey: isSeries ? 'context_menu.mark_series_as_read' : 'context_menu.mark_as_read',
       labelFallback: isSeries ? '이 시리즈 전체를 읽은 상태로 변경 (완독)' : '읽은 상태로 변경 (완독)',
     };
   } else {
     items['ctx-unread-book'] = isMulti
-      ? { action: 'mark-unread', iconClass: 'fa-solid fa-eye-slash', iconColor: '#ef4444',
+      ? { action: 'mark-unread', iconClass: 'lc lc-eye-off', iconColor: '#ef4444',
           labelText: `선택한 ${count}개 작품을 읽지 않은 상태로 변경 (0%)` }
-      : { action: 'mark-unread', iconClass: 'fa-solid fa-eye-slash', iconColor: '#ef4444',
+      : { action: 'mark-unread', iconClass: 'lc lc-eye-off', iconColor: '#ef4444',
           labelKey: isSeries ? 'context_menu.mark_series_as_unread' : 'context_menu.mark_as_unread',
           labelFallback: isSeries ? '이 시리즈 전체를 읽지 않은 상태로 변경 (0%)' : '읽지 않은 상태로 변경 (0%)' };
   }

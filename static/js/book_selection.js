@@ -69,7 +69,7 @@ function ensureToolbar() {
   clearButton.type = 'button';
   clearButton.className = 'book-selection-clear';
   clearButton.dataset.role = 'book-selection-clear';
-  clearButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i><span>선택 해제</span>';
+  clearButton.innerHTML = '<i class="lc lc-x" aria-hidden="true"></i><span>선택 해제</span>';
 
   toolbar.append(summary, hint, clearButton);
   document.body.append(toolbar);

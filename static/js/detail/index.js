@@ -58,9 +58,9 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
   // 로딩 표시
   detailView.innerHTML = `
     <button class="btn-back-to-list" data-role="detail-back-to-list">
-      <i class="fa-solid fa-arrow-left"></i> ${i18n.t('modal.go_back')}
+      <i class="lc lc-arrow-left"></i> ${i18n.t('modal.go_back')}
     </button>
-    <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('modal.loading_detail')}</div>
+    <div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('modal.loading_detail')}</div>
   `;
   switchActiveView('detail');
 
@@ -121,7 +121,7 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
 
       detailView.innerHTML = `
         <button class="btn-back-to-list" data-role="detail-back-to-list">
-          <i class="fa-solid fa-arrow-left"></i> ${i18n.t('modal.go_back')}
+          <i class="lc lc-arrow-left"></i> ${i18n.t('modal.go_back')}
         </button>
         <div class="detail-page-layout">
           <div class="detail-page-main" id="detail-page-main-content">
@@ -217,7 +217,7 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
         const recList = document.getElementById('recommend-candidates-list');
         if (recSection && recList) {
           recSection.style.display = 'block';
-          recList.innerHTML = `<div style="font-size:0.75rem; color: var(--app-text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> 추천 후보를 찾는 중...</div>`;
+          recList.innerHTML = `<div style="font-size:0.75rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> 추천 후보를 찾는 중...</div>`;
           api.fetchMetaRecommend(state.currentLibraryType, seriesName).then(res => {
             if (res.success && res.recommends && res.recommends.length > 0) {
               recList.innerHTML = renderRecommendList(res.recommends, seriesName);
@@ -330,7 +330,7 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
     } else {
       detailView.innerHTML = `
         <button class="btn-back-to-list" data-role="detail-back-to-list">
-          <i class="fa-solid fa-arrow-left"></i> ${i18n.t('modal.go_back')}
+          <i class="lc lc-arrow-left"></i> ${i18n.t('modal.go_back')}
         </button>
         <div class="loading-spinner">${i18n.t('modal.load_detail_fail', {error: data.error || ''})}</div>
       `;
@@ -339,7 +339,7 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
     console.error('[detail] openBookDetail 에러:', e);
     detailView.innerHTML = `
       <button class="btn-back-to-list" data-role="detail-back-to-list">
-        <i class="fa-solid fa-arrow-left"></i> ${i18n.t('modal.go_back')}
+        <i class="lc lc-arrow-left"></i> ${i18n.t('modal.go_back')}
       </button>
       <div class="loading-spinner">${i18n.t('modal.load_detail_error')}</div>
     `;
@@ -368,8 +368,8 @@ function renderInteractiveRatingStars(root, libType, ratingContext, widgetData) 
 
   const starClass = (state) => {
     if (state === 'full') return 'fa-solid fa-star is-filled';
-    if (state === 'half') return 'fa-solid fa-star-half-stroke is-filled';
-    return 'fa-regular fa-star';
+    if (state === 'half') return 'lc lc-star-half is-filled';
+    return 'lc lc-star';
   };
 
   const draw = (data, disabled) => {

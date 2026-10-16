@@ -2,13 +2,13 @@
     <div class="section-header" style="margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h3 class="section-title" style="margin: 0; color: var(--app-text-primary); font-size: 1.2rem; font-weight: 700;">
-                <i class="fa-solid fa-gears" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span data-i18n="settings.schedule_title">라이브러리 자동 스캔 &amp; 스케줄 설정</span>
+                <i class="lc lc-cog" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span data-i18n="settings.schedule_title">라이브러리 자동 스캔 &amp; 스케줄 설정</span>
             </h3>
             <p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.schedule_subtitle">각 카테고리의 동기화 스캔 스케줄(Cron) 주기를 일괄 관리하고 즉시 실행할 수 있습니다.</p>
             <p style="font-size: 0.76rem; color: var(--app-text-muted); margin: 0.3rem 0 0 0;" data-i18n="settings.schedule_rclone_tip">💡 Tip! : Rclone RC 통신에 ID/비밀번호가 필요한 경우 http://id:password@localhost:5572 형식으로 등록하면 됩니다.</p>
         </div>
         <button type="button" data-role="schedule-scan-all" class="btn-toggle" style="background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 70%, black) 100%); color: var(--app-accent-contrast); border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; height: 36px; font-size: 0.85rem; box-shadow: 0 4px 12px color-mix(in srgb, var(--app-accent) 25%, transparent);">
-            <i class="fa-solid fa-play"></i> <span data-i18n="settings.btn_scan_all">일괄 스캔</span>
+            <i class="lc lc-play"></i> <span data-i18n="settings.btn_scan_all">일괄 스캔</span>
         </button>
     </div>
     
@@ -36,7 +36,7 @@
 <div id="library-scan-settings-modal" class="library-modal" style="display: none; z-index: 10005;">
     <div class="library-modal-content" style="max-width: 480px;">
         <div class="library-modal-header">
-            <h3 id="scan-settings-modal-title" style="margin: 0; color: var(--app-text-primary); font-size: 1.25rem;"><i class="fa-solid fa-gears" style="color: var(--app-accent); margin-right: 0.5rem;"></i> 카테고리 설정</h3>
+            <h3 id="scan-settings-modal-title" style="margin: 0; color: var(--app-text-primary); font-size: 1.25rem;"><i class="lc lc-cog" style="color: var(--app-accent); margin-right: 0.5rem;"></i> 카테고리 설정</h3>
             <span class="library-modal-close" data-role="schedule-modal-close">&times;</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 1.2rem; color: var(--app-text-muted);">
@@ -53,7 +53,7 @@
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--app-text-primary);">스케줄 주기 (Cron식)</label>
                 <div style="background: rgba(var(--app-panel-rgb), 0.38); border: 1px solid rgba(var(--app-panel-border-rgb), 0.08); border-radius: 8px; padding: 0.8rem; margin-bottom: 0.7rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.55rem; flex-wrap: wrap;">
-                        <span style="font-size: 0.82rem; color: #c4b5fd; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles"></i> 스케줄 도우미</span>
+                        <span style="font-size: 0.82rem; color: #c4b5fd; font-weight: 700;"><i class="lc lc-wand-sparkles"></i> 스케줄 도우미</span>
                         <span style="font-size: 0.74rem; color: var(--app-text-muted);">쉬운 설정을 Cron식으로 자동 변환</span>
                     </div>
 
@@ -97,7 +97,7 @@
 
                     <div style="display:flex; justify-content:flex-end; margin-top: 0.6rem;">
                         <button type="button" class="btn-toggle" data-role="schedule-apply-helper" style="padding: 0.33rem 0.75rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Cron에 적용
+                            <i class="lc lc-wand-sparkles"></i> Cron에 적용
                         </button>
                     </div>
                 </div>
