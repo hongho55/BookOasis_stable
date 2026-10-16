@@ -286,13 +286,13 @@ graph TD
 * **스킵 정책**: `force=True`가 아닌 한, `AudiobookRepository.get_folder_paths()`로 조회한 **이미 등록된 폴더 경로 전체 목록**과 정확히 일치하면 내부를 열어보지 않고 통째로 스킵합니다. 일반 스캐너의 파일별 mtime/size 비교([⑮](#-mtime-기반의-2단계-초고속-스킵ultra-fast-skip-알고리즘))보다 훨씬 거친(coarse) 단위이며, 트랙이 일부만 추가/변경된 경우 이를 감지하려면 `force=True` 전체 재스캔이 필요합니다.
 
 ### ㉒ 메타데이터 소스: `metadata.json` 우선, `audio.json` 레거시 폴백
-* **`metadata.json`** (우선 사용, 더 풍부한 스키마): `title`, `publisher`, `description`, `publishedDate`/`publishedYear`, `isbn`, `web_id`, `authors[]`(배열), `narrators[]`(배열, 3명 초과 시 "N명 등"으로 축약해 저자 필드에 병기), `chapters[{start, end}]`(챕터별 시작/종료 초 — 오디오 파일 개수와 1:1로 맞으면 트랙 재생시간을 파일 프로빙 없이 이 값으로 대체), `images.cover` + `image_blobs`(내장 표지, [㉓](#-포스터표지-탐색) 참고). 인코딩은 UTF-8(BOM 포함)/UTF-16/UTF-32를 자동 판별하고, 그래도 안 되면 cp949(한글 윈도우 ANSI)로 다시 읽습니다(`load_json_any_encoding`, audio.json도 동일). cp949로 읽은 경우 로그에 남깁니다. 그 밖의 ANSI(cp1252, Shift-JIS 등)는 지원하지 않아 파싱 실패로 처리됩니다. `files`/`title_sort`/`genres`/`tags`/`series` 등 나머지 필드는 읽지 않습니다.
+* **`metadata.json`** (우선 사용, 더 풍부한 스키마): `title`, `publisher`, `description`, `publishedDate`/`publishedYear`, `isbn`, `web_id`, `authors[]`(배열), `narrators[]`(배열, 3명 초과 시 "N명 등"으로 축약해 저자 필드에 병기), `chapters[{start, end}]`(챕터별 시작/종료 초 — 오디오 파일 개수와 1:1로 맞으면 트랙 재생시간을 파일 프로빙 없이 이 값으로 대체), `images.cover|poster` + `image_blobs`(내장 표지, [㉓](#-포스터표지-탐색) 참고). 인코딩은 UTF-8(BOM 포함)/UTF-16/UTF-32를 자동 판별하고, 그래도 안 되면 cp949(한글 윈도우 ANSI)로 다시 읽습니다(`load_json_any_encoding`, audio.json도 동일). cp949로 읽은 경우 로그에 남깁니다. 그 밖의 ANSI(cp1252, Shift-JIS 등)는 지원하지 않아 파싱 실패로 처리됩니다. `files`/`title_sort`/`genres`/`tags`/`series` 등 나머지 필드는 읽지 않습니다.
 * **`audio.json`** (레거시, `metadata.json`이 없거나 문법 오류·최상위가 객체가 아니어서 파싱에 실패했을 때 사용): 평탄한 구조로 `title`, `author`, `publisher`, `code`, `web_id`, `poster`, `premiered`, `author_intro`, `desc`/`description`, `ratings`.
 * 이 두 파서는 [⑧](#-메타데이터-파싱-및-병합-플러그인-확장형-파서-로더)의 `tools/scanner/metadata/` 플러그인 로더와는 **완전히 별개의 독립 파서**이며 `merge_local_metadata()`를 거치지 않습니다.
 * **제목/저자 폴백**: `metadata.json`/`audio.json` 어느 쪽에도 제목/저자가 없으면 폴더명을 `" - "` 기준으로 분리해 `"저자 - 제목"` 패턴으로 추정합니다.
 
 ### ㉓ 포스터(표지) 탐색
-* 후보 파일명 순서대로 탐색: `poster.jpg` → `cover.jpg` → `folder.jpg` (및 `.png`/`.jpeg` 변형) → 어느 것도 없으면 폴더 내 첫 번째 `.jpg`/`.jpeg`/`.png`/`.webp` 파일 → 그래도 없고 `metadata.json`에 `images.cover`가 가리키는 `image_blobs` 항목(base64)이 있으면 **`metadata.json` 경로 자체**를 포스터 소스로 저장합니다(base64는 DB에 넣지 않음). 디코딩은 첫 표지 요청 때 `utils/cover_helper.py`가 하며, 표지가 없으면 `.none` 표시를 남겨 반복 파싱을 막습니다.
+* 후보 파일명 순서대로 탐색: `poster.jpg` → `cover.jpg` → `folder.jpg` (및 `.png`/`.jpeg` 변형) → 어느 것도 없으면 폴더 내 첫 번째 `.jpg`/`.jpeg`/`.png`/`.webp` 파일 → 그래도 없고 `metadata.json`에 `images.cover`(없으면 `images.poster`, 둘 다 없고 blob이 하나뿐이면 그 blob)가 가리키는 `image_blobs` 항목(base64)이 있으면 **`metadata.json` 경로 자체**를 포스터 소스로 저장합니다(base64는 DB에 넣지 않음). 디코딩은 첫 표지 요청 때 `utils/cover_helper.py`가 하며, 표지가 없으면 `.none` 표시를 남겨 반복 파싱을 막습니다.
 * 일반 스캐너의 [⑨](#-단계별-표지-이미지-추출-및-매핑-전략) 파이프라인과 달리 WebP 변환이나 해시 파일명 재저장을 거치지 않고, 원본 파일 경로를 그대로 DB에 저장합니다.
 
 ### ㉔ 트랙 길이(Duration) 분석: 다단계 폴백과 원격 고속 경로

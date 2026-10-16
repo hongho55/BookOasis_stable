@@ -254,7 +254,9 @@ export async function rescanSeries(event, seriesName, libraryId) {
   btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> ${i18n.t('modal.scanning')}`;
 
   try {
-    const bookIds = collectDetailBookIds();
+    // 오디오북 상세에는 권 카드가 없다 - 상세에 떠 있는 오디오북 한 권(폴더)을 재스캔한다
+    const audiobookId = state.currentLibraryType === 'audiobook' ? collectDetailAudiobookContext().audiobookId : null;
+    const bookIds = audiobookId ? [audiobookId] : collectDetailBookIds();
 
     if (bookIds.length === 0) {
       if (typeof window.showToast === 'function') {

@@ -392,19 +392,34 @@ def _extract_xing_frames(buf):
     return None
 
 
-def metadata_json_cover_blob(data):
-    """metadata.json의 images.cover → image_blobs[hash] 내장 표지(base64 문자열)를 돌려준다. 없으면 None."""
-    if not isinstance(data, dict):
-        return None
-    images = data.get('images')
-    blobs = data.get('image_blobs')
-    if not isinstance(images, dict) or not isinstance(blobs, dict):
-        return None
-    blob = blobs.get(images.get('cover'))
+METADATA_JSON_COVER_KEYS = ('cover', 'poster')
+
+
+def _base64_blob_payload(blob):
     if not isinstance(blob, dict) or str(blob.get('encoding', 'base64')).lower() != 'base64':
         return None
     payload = blob.get('data')
     return payload if isinstance(payload, str) and payload else None
+
+
+def metadata_json_cover_blob(data):
+    """metadata.json의 images.cover|poster → image_blobs[hash] 내장 표지(base64 문자열)를 돌려준다. 없으면 None.
+    다운로더 버전에 따라 키가 cover/poster로 갈리고, 키가 없더라도 blob이 하나뿐이면 그것을 표지로 본다."""
+    if not isinstance(data, dict):
+        return None
+    blobs = data.get('image_blobs')
+    if not isinstance(blobs, dict):
+        return None
+    images = data.get('images')
+    if isinstance(images, dict):
+        for key in METADATA_JSON_COVER_KEYS:
+            ref = images.get(key)
+            payload = _base64_blob_payload(blobs.get(ref)) if isinstance(ref, str) else None
+            if payload:
+                return payload
+    if len(blobs) == 1:
+        return _base64_blob_payload(next(iter(blobs.values())))
+    return None
 
 
 def load_json_any_encoding(json_path):

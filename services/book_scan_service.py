@@ -146,9 +146,28 @@ class BookScanService:
         return successful_count == len(ids), message, outcomes
 
     @staticmethod
+    def scan_single_audiobook(audiobook_id):
+        """오디오북 한 권(폴더)을 즉시 재스캔한다. 일반 스캔은 음원 구성이 그대로인 폴더를 건너뛰므로
+        metadata.json·표지만 바뀐 책은 이 경로로 갱신한다."""
+        from repositories.audiobook_repository import AudiobookRepository
+        from services.audiobook_scanner import scan_and_save_audiobook_folder
+        audiobook = AudiobookRepository.get_audiobook_by_id(audiobook_id)
+        if not audiobook:
+            return False, "존재하지 않는 오디오북입니다.", None
+        folder_path = audiobook.get('folder_path') or ''
+        if not os.path.isdir(folder_path):
+            return False, f"서버에 오디오북 폴더가 존재하지 않습니다: {folder_path}", None
+        saved_id = scan_and_save_audiobook_folder(folder_path, audiobook.get('library_id'))
+        if not saved_id:
+            return False, "오디오북 스캔에 실패했습니다. 알림센터에서 원인을 확인하세요.", None
+        return True, f"'{audiobook.get('title') or os.path.basename(folder_path)}' 오디오북 스캔 완료", None
+
+    @staticmethod
     def scan_single_book(db_type, book_id):
         """지정된 단일 도서(book_id)의 메타데이터와 표지 이미지를 즉시 재스캔하여 동기화합니다."""
         print(f"[BookScanService] 단일 도서 스캔 요청 시작: DB={db_type}, ID={book_id}")
+        if db_type == 'audiobook':
+            return BookScanService.scan_single_audiobook(book_id)
         # 방금 폴더에 넣은 cover.jpg 등을 이번 즉시 스캔이 바로 보도록 폴더 표지 조회 캐시를 비운다.
         from tools.scanner.folder_image import clear_folder_listing_cache
         clear_folder_listing_cache()

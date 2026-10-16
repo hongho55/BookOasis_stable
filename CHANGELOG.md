@@ -1,5 +1,9 @@
 # CHANGELOG
-## 2.9.2
+## v2.9.3
+- (fix) 오디오북 metadata.json 내장 표지가 images.poster 키로 지정된 경우 표지가 생성되지 않던 이슈 수정 | fix audiobook covers not being created when metadata.json references its embedded cover via images.poster
+- (fix) 오디오북 상세의 '이 시리즈 재스캔'과 도서 메뉴의 '즉시 스캔'이 동작하지 않던 이슈 수정 (해당 오디오북 폴더를 다시 스캔) | fix 'Rescan this series' on audiobook details and 'Scan now' in the audiobook card menu not working (they now rescan that audiobook's folder)
+
+## v2.9.2
 - (fix) 오디오북·도서 파일 이름을 바꾸면 이어 듣기·읽기 기록을 잃던 이슈 수정 | fix renamed audiobook/book files losing listening/reading progress
 - (fix) 오디오북 폴더 안의 파일 변경(이름 변경, 회차 추가)이 일반 스캔에 반영되지 않던 이슈 수정 | fix file changes inside an audiobook folder (renames, new episodes) not being picked up by normal scans
 - (fix) 오디오북 폴더 이름을 바꾸면 새 책으로 중복 등록되던 이슈 수정(같은 책으로 옮겨 이어 듣기 유지, 폴더가 사라진 책은 숨김) | fix renamed audiobook folders being registered as duplicate books (the book moves with its progress; books whose folder disappeared are hidden)

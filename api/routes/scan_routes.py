@@ -152,8 +152,8 @@ def enqueue_batch_book_scan():
     if not isinstance(payload, dict):
         payload = {}
     db_type = str(payload.get('type') or 'general').strip().lower()
-    if db_type not in ('general', 'adult'):
-        return jsonify({'success': False, 'error': '일반/성인 도서만 다중 스캔할 수 있습니다.'}), 400
+    if db_type not in ('general', 'adult', 'audiobook'):
+        return jsonify({'success': False, 'error': '일반/성인 도서와 오디오북만 다중 스캔할 수 있습니다.'}), 400
     # scope는 요청이 명시한다(기본 book) - 시리즈 카드는 대표 권 ID만 보내므로 서버가 같은 시리즈의
     # 모든 권으로 확장한다. ID 개수로 스코프를 추정하지 않는다(상세 화면의 단일 권과 구분이 안 됨).
     scan_scope = str(payload.get('scope') or 'book').strip().lower()
@@ -181,6 +181,12 @@ def enqueue_batch_book_scan():
 
     conn = None
     try:
+        if db_type == 'audiobook':
+            # 오디오북은 카드 하나가 폴더 한 권이라 시리즈 확장이 없다 - 넘긴 ID만 스캔한다
+            rows = _resolve_audiobook_scan_targets(book_ids)
+            if isinstance(rows, str):
+                return jsonify({'success': False, 'error': rows}), 404
+            return _enqueue_batch_book_scan(db_type, rows, scan_scope)
         conn = database.get_connection(db_type)
         cursor = conn.cursor()
         try:
@@ -189,37 +195,54 @@ def enqueue_batch_book_scan():
             return jsonify({'success': False, 'error': str(error)}), 404
         if len(rows) > 500:
             return jsonify({'success': False, 'error': '시리즈 스캔은 한 번에 최대 500권까지 가능합니다.'}), 400
-        book_ids = [int(row['id']) for row in rows]
-
-        library_ids = {row['library_id'] for row in rows if row['library_id'] is not None}
-        task_kwargs = {'db_type': db_type, 'book_ids': book_ids, 'scope': scan_scope, 'trigger_type': 'manual'}
-        if len(rows) == len(book_ids) and len(library_ids) == 1:
-            task_kwargs['library_id'] = next(iter(library_ids))
-        if len(book_ids) == 1:
-            task_kwargs['book_title'] = str(rows[0]['title'] or '').strip()
-
-        from services.scanner_queue import scanner_queue
-        if not scanner_queue.enqueue('batch_book_scan', **task_kwargs):
-            return jsonify({
-                'success': False,
-                'error': '같은 다중 도서 스캔 작업이 이미 실행 중이거나 대기 중입니다.',
-            }), 409
-
-        if scan_scope == 'series':
-            message = f'시리즈 전체 {len(book_ids)}권의 스캔을 대기열에 추가했습니다.'
-        elif len(book_ids) == 1:
-            message = '도서 스캔을 대기열에 추가했습니다.'
-        else:
-            message = f'선택한 {len(book_ids)}개 작품의 스캔을 대기열에 추가했습니다.'
-        return jsonify({
-            'success': True,
-            'message': message + ' 스캔 활동에서 진행 상황을 확인할 수 있습니다.',
-        }), 202
+        return _enqueue_batch_book_scan(db_type, rows, scan_scope)
     except Exception as error:
         return jsonify({'success': False, 'error': str(error)}), 500
     finally:
         if conn:
             conn.close()
+
+
+def _resolve_audiobook_scan_targets(audiobook_ids):
+    """오디오북 ID → [{'id','library_id','title'}]. 없는 ID가 있으면 오류 문구(str)를 돌려준다."""
+    from repositories.audiobook_repository import AudiobookRepository
+    rows = []
+    for audiobook_id in audiobook_ids:
+        row = AudiobookRepository.get_audiobook_by_id(audiobook_id)
+        if not row:
+            return f'오디오북을 찾을 수 없습니다: ID {audiobook_id}'
+        rows.append({'id': row['id'], 'library_id': row.get('library_id'), 'title': row.get('title')})
+    return rows
+
+
+def _enqueue_batch_book_scan(db_type, rows, scan_scope):
+    book_ids = [int(row['id']) for row in rows]
+    library_ids = {row['library_id'] for row in rows if row['library_id'] is not None}
+    task_kwargs = {'db_type': db_type, 'book_ids': book_ids, 'scope': scan_scope, 'trigger_type': 'manual'}
+    if len(rows) == len(book_ids) and len(library_ids) == 1:
+        task_kwargs['library_id'] = next(iter(library_ids))
+    if len(book_ids) == 1:
+        task_kwargs['book_title'] = str(rows[0]['title'] or '').strip()
+
+    from services.scanner_queue import scanner_queue
+    if not scanner_queue.enqueue('batch_book_scan', **task_kwargs):
+        return jsonify({
+            'success': False,
+            'error': '같은 다중 도서 스캔 작업이 이미 실행 중이거나 대기 중입니다.',
+        }), 409
+
+    if db_type == 'audiobook':
+        message = '오디오북 스캔을 대기열에 추가했습니다.' if len(book_ids) == 1 else f'선택한 오디오북 {len(book_ids)}권의 스캔을 대기열에 추가했습니다.'
+    elif scan_scope == 'series':
+        message = f'시리즈 전체 {len(book_ids)}권의 스캔을 대기열에 추가했습니다.'
+    elif len(book_ids) == 1:
+        message = '도서 스캔을 대기열에 추가했습니다.'
+    else:
+        message = f'선택한 {len(book_ids)}개 작품의 스캔을 대기열에 추가했습니다.'
+    return jsonify({
+        'success': True,
+        'message': message + ' 스캔 활동에서 진행 상황을 확인할 수 있습니다.',
+    }), 202
 
 @scan_bp.route('/api/media/libraries/<int:library_id>/scan', methods=['POST'])
 @admin_required
