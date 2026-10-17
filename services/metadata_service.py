@@ -55,11 +55,3 @@ class MetadataService:
             print(f"[MetadataService] Plugin apply_metadata error (source: {source}): {e}")
             return False, f"메타데이터 반영 실패: {str(e)}"
 
-    @staticmethod
-    def search_aladin(db_type, query):
-        """하위 호환성 유지용"""
-        from services.metadata_factory import MetadataFactory
-        provider = MetadataFactory.get_provider_by_id('aladin')
-        if provider:
-            return provider.search(db_type, query)
-        return []

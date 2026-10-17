@@ -67,11 +67,10 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
     if not poster_source:
         return None
 
-    from tools.scanner.cover import save_as_thumbnail_webp
     cache_dir, cache_path, none_marker, sig_path = _poster_cache_paths(poster_source, category, library_id)
     os.makedirs(cache_dir, exist_ok=True)
 
-    is_remote = str(poster_source).startswith(('http://', 'https://'))
+    is_remote =str(poster_source).startswith(('http://', 'https://'))
     signature = None if is_remote else _source_signature(poster_source)
 
     if os.path.exists(cache_path) and os.path.getsize(cache_path) > 0:
@@ -126,6 +125,12 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
     if not img_data:
         return None
 
+    return _write_poster_cache(poster_source, img_data, cache_path, sig_path, none_marker, signature)
+
+
+def _write_poster_cache(poster_source, img_data, cache_path, sig_path, none_marker, signature):
+    """이미지 바이트를 표지 캐시(WebP)로 저장하고 원본 서명(.sig)을 남긴다. 실패 시 None."""
+    from tools.scanner.cover import save_as_thumbnail_webp
     try:
         import io
         from PIL import Image
@@ -142,6 +147,42 @@ def get_or_cache_remote_poster_webp(poster_source, category, library_id=None, ti
     except Exception as e:
         print(f"[Cover-Cache] Poster WebP conversion failed ({poster_source}): {e}")
         return None
+
+
+def cache_poster_at_scan(poster_source, category, library_id=None, preloaded_bytes=None):
+    """스캔 때 표지 캐시를 미리 만든다(일반 도서처럼 스캔이 끝나면 표지가 준비된 상태, 2.9.6).
+    결과: 'made'(새로 만듦) / 'kept'(캐시가 원본과 같아 아무것도 읽지 않음) / 'none'(원본에 표지 없음) /
+          'skipped'(URL 포스터 - 외부 네트워크라 첫 요청 때) / 'failed'.
+
+    preloaded_bytes: 스캐너가 이미 읽은 metadata.json의 내장 표지 바이트. 넘기면 원본을 다시 읽지 않는다.
+    없으면 기존 지연 생성 함수(get_or_cache_remote_poster_webp)로 폴더 이미지·로컬 곡 내장 아트를 읽어 만든다.
+    원격 곡 파일은 호출부(스캐너)가 넘기지 않는다(태그만 읽어도 곡 전체를 받게 됨)."""
+    if not poster_source:
+        return 'skipped'
+    if str(poster_source).startswith(('http://', 'https://')):
+        return 'skipped'
+    try:
+        cache_dir, cache_path, none_marker, sig_path = _poster_cache_paths(poster_source, category, library_id)
+        signature = _source_signature(poster_source)
+        if signature is None:
+            return 'failed'
+        if os.path.exists(cache_path) and os.path.getsize(cache_path) > 0:
+            saved = _read_text(sig_path)
+            if not saved:
+                _write_text(sig_path, signature)  # 예전 캐시: 다시 만들지 않고 서명만 기록(지연 생성과 같은 규칙)
+                return 'kept'
+            if saved == signature:
+                return 'kept'
+        os.makedirs(cache_dir, exist_ok=True)
+        if preloaded_bytes:
+            made = _write_poster_cache(poster_source, preloaded_bytes, cache_path, sig_path, none_marker, signature)
+            return 'made' if made else 'failed'
+        if get_or_cache_remote_poster_webp(poster_source, category, library_id=library_id):
+            return 'made'
+        return 'none' if os.path.exists(none_marker) else 'failed'
+    except Exception as e:
+        print(f"[Cover-Cache] scan-time poster cache failed ({poster_source}): {e}")
+        return 'failed'
 
 def get_or_cache_external_image_webp(url, category, max_bytes=2 * 1024 * 1024, timeout=5):
     """플러그인이 클라이언트 요청마다 넘기는 임의의 외부 이미지 URL(방송사 로고 등)을

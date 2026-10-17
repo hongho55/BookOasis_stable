@@ -608,13 +608,7 @@ export async function applyMetadata(type, bookId, itemData, source) {
   return res.json();
 }
 
-export async function searchAladinMetadata(type, query) {
-  return searchMetadata(type, query, 'aladin');
-}
 
-export async function applyAladinMetadata(type, bookId, aladinItem) {
-  return applyMetadata(type, bookId, aladinItem, 'aladin');
-}
 
 export async function updateSystemSetting(key, value) {
   const formData = new FormData();

@@ -256,9 +256,9 @@ class MetadataFactory:
     @classmethod
     def _build_expected_class_names(cls, provider_name):
         names = []
-        # Backward-compatible naming (e.g. aladin_new -> Aladin_newMetadataProvider)
+        # Backward-compatible naming (e.g. naver_book -> Naver_bookMetadataProvider)
         names.append(f"{provider_name.capitalize()}MetadataProvider")
-        # CamelCase naming (e.g. aladin_new -> AladinNewMetadataProvider)
+        # CamelCase naming (e.g. naver_book -> NaverBookMetadataProvider)
         camel = ''.join(part.capitalize() for part in provider_name.split('_') if part)
         if camel:
             names.append(f"{camel}MetadataProvider")
@@ -479,9 +479,11 @@ class MetadataFactory:
         .env 설정에 지정된 METADATA_PROVIDER를 읽어와 동적으로 플러그인을 로드 및 인스턴스화하여 반환합니다.
         싱글톤 패턴으로 구현하여 매 호출마다 임포트가 새로 일어나지 않도록 합니다.
         """
-        # 1. 설정값 읽기
+        # 1. 설정값 읽기 (기본 공급자는 없다 - .env METADATA_PROVIDER를 지정한 경우만)
         provider_name = cls._get_provider_name_from_env()
-        
+        if not provider_name:
+            raise ValueError("기본 메타데이터 플러그인이 지정되지 않았습니다(.env METADATA_PROVIDER). 검색할 플러그인을 직접 고르세요.")
+
         # 2. 캐시된 Provider가 있고, Provider 설정이 바뀌지 않았다면 캐시 반환
         if cls._cached_provider and cls._loaded_provider_name == provider_name:
             return cls._cached_provider
@@ -501,24 +503,15 @@ class MetadataFactory:
             return cls._cached_provider
 
         except Exception as e:
+            # 다른 플러그인으로 조용히 넘어가지 않는다 - 엉뚱한 출처의 메타데이터가 적용되는 것을 막는다
+            # (예전엔 알라딘으로 폴백했다. 알라딘 Open API 지원 종료로 2.9.6에서 제거)
             print(f"[MetadataFactory ERROR] Provider '{provider_name}' load failed: {e}")
-            # 폴백(Fallback): 기본 알라딘 Provider 로드 시도
-            if provider_name != "aladin":
-                print("[MetadataFactory] 알라딘 Provider로 폴백을 시도합니다.")
-                try:
-                    _, fallback_class = cls._import_provider_module_and_class("aladin")
-                    cls._cached_provider = fallback_class()
-                    cls._loaded_provider_name = "aladin"
-                    return cls._cached_provider
-                except Exception as ex:
-                    print(f"[MetadataFactory FATAL ERROR] Aladin fallback failed: {ex}")
-            
-            raise e
+            raise ValueError(f"'{provider_name}' 메타데이터 플러그인을 불러오지 못했습니다: {e}") from e
 
     @classmethod
     def _get_provider_name_from_env(cls) -> str:
-        """.env 설정 파일에서 METADATA_PROVIDER 값을 읽어옵니다. (디폴트는 aladin)"""
-        provider_name = "aladin"
+        """.env 설정 파일에서 METADATA_PROVIDER 값을 읽어옵니다. 없으면 None(기본 공급자 없음 - 검색할 플러그인을 직접 고른다)."""
+        provider_name = None
         try:
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             env_path = os.path.join(base_dir, '.env')
@@ -532,7 +525,7 @@ class MetadataFactory:
                                 break
         except Exception as e:
             print(f"[MetadataFactory] Failed to read .env, using default: {e}")
-        return provider_name.lower()
+        return provider_name.lower() if provider_name else None
 
     @classmethod
     def get_all_searchable_providers(cls):
@@ -698,12 +691,14 @@ class MetadataFactory:
     @classmethod
     def get_provider_by_id(cls, provider_id) -> BaseMetadataProvider:
         """
-        특정 provider_id (예: 'aladin')에 부합하는 메타데이터 Provider 인스턴스를 동적으로 로드하여 반환합니다.
+        특정 provider_id (예: 'naver_book')에 부합하는 메타데이터 Provider 인스턴스를 동적으로 로드하여 반환합니다.
         단, 해당 플러그인이 비활성화(PLUGIN_ENABLED_{provider_id} == '0')된 경우 예외를 발생시킵니다.
         """
         if not provider_id:
             provider_id = cls._get_provider_name_from_env()
-            
+        if not provider_id:
+            raise ValueError("검색에 쓸 메타데이터 플러그인을 선택하세요. (설치된 검색용 플러그인이 없으면 먼저 설치해 주세요)")
+
         is_enabled = True
         try:
             from repositories.metadata_repository import MetadataRepository
@@ -719,13 +714,13 @@ class MetadataFactory:
             
         try:
             _, target_class = cls._import_provider_module_and_class(provider_id)
-
-            if target_class:
-                return target_class()
         except Exception as e:
             print(f"[MetadataFactory] provider_id '{provider_id}' load failed: {e}")
-
-        return cls.get_provider()
+            raise ValueError(f"'{provider_id}' 메타데이터 플러그인을 찾을 수 없습니다.") from e
+        if not target_class:
+            raise ValueError(f"'{provider_id}' 플러그인에 메타데이터 검색 기능이 없습니다.")
+        # 요청한 플러그인을 못 쓰면 다른 플러그인(예전엔 기본 공급자)으로 넘어가지 않는다 - 엉뚱한 출처의 메타 적용 방지(2.9.6)
+        return target_class()
 
     @classmethod
     def start_all_plugin_background_services(cls):

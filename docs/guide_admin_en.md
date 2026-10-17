@@ -86,8 +86,8 @@ You can exclude specific files or directories from being scanned, such as Synolo
 
 ## 5. System and Plugin Setup
 
-### ① Metadata Plugins (Aladin, etc.)
-* **Dynamic API Key Registration**: Through the latest plugin architecture, you can easily turn on/off various external book info integration plugins like Aladin (TTBKey), Google Books, Amazon, etc., and manage API keys dynamically from the settings tab.
+### ① Metadata Plugins (Naver Book, etc.)
+* **Dynamic API Key Registration**: Through the latest plugin architecture, you can easily turn on/off various external book info integration plugins like Naver Book, Google Books, etc., and manage API keys dynamically from the settings tab.
 * Activated plugins will appear as selection options during manual metadata searches on individual book detail modals, allowing you to merge accurate metadata (author, publisher, description, high-quality cover, etc.) with a single click.
 
 ### ② System Scroll and Thumbnail Specification Settings

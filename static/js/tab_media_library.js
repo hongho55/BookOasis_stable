@@ -23,7 +23,7 @@ import { loadLibrarySchedules, saveLibrarySchedule, runLibraryScanNow } from './
 import { loadDashboardData, loadDashboardPlugins, switchPluginsViewTab } from './dashboard.js?v=20260917-home-widget-plugin-ui-v1';
 import { initScrollableRowNavDelegation } from './scrollable_row_nav.js';
 import { initInfiniteScrollObserver } from './infinite_scroll.js';
-import { showBookContextMenu, triggerScanSingleBookAction, triggerSearchAladinMetadataAction, triggerMarkAsUnreadAction } from './book_context_menu.js';
+import { showBookContextMenu, triggerScanSingleBookAction, triggerSearchMetadataAction, triggerMarkAsUnreadAction } from './book_context_menu.js';
 
 // book_list.js 임포트
 import {

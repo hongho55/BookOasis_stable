@@ -119,8 +119,6 @@ function searchMeta(target) {
 
   if (typeof window.openMetadataSearchModal === 'function') {
     window.openMetadataSearchModal(id, title);
-  } else if (typeof window.openAladinSearchModal === 'function') {
-    window.openAladinSearchModal(id, title);
   } else {
     console.error('[Global Trigger ERROR] window.openMetadataSearchModal 함수가 바인딩되지 않았습니다.');
   }

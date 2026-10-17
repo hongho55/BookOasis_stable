@@ -141,17 +141,17 @@ class ScannerQueueRepository:
     @staticmethod
     def get_task_by_key(task_key):
         """특정 작업 키에 대응하는 태스크 정보 조회 (동일 키 중 최신 행 우선 반환)"""
-        conn = database.get_connection('general')
-        cursor = conn.cursor()
-        # [버그픽스] ORDER BY id DESC LIMIT 1: 동일 task_key 레코드가 여러 개 쌓인 경우
-        # 과거의 completed/failed 행이 먼저 반환되어 중복 판정이 오염되는 것을 방지.
-        cursor.execute(
-            "SELECT id, status FROM scanner_tasks WHERE task_key = ? ORDER BY id DESC LIMIT 1",
-            (task_key,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+        with database.connection('general') as conn:
+            cursor = conn.cursor()
+            # [버그픽스] ORDER BY id DESC LIMIT 1: 동일 task_key 레코드가 여러 개 쌓인 경우
+            # 과거의 completed/failed 행이 먼저 반환되어 중복 판정이 오염되는 것을 방지.
+            cursor.execute(
+                "SELECT id, status FROM scanner_tasks WHERE task_key = ? ORDER BY id DESC LIMIT 1",
+                (task_key,)
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return dict(row) if row else None
 
     @staticmethod
     def insert_task(task_type, task_key, kwargs_json, now_str):
@@ -250,49 +250,49 @@ class ScannerQueueRepository:
         import time
         for attempt in range(1, 6):
             try:
-                conn = database.get_connection('general')
-                cursor = conn.cursor()
-                cursor.execute("PRAGMA busy_timeout = 10000;")
+                with database.connection('general') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("PRAGMA busy_timeout = 10000;")
                 
-                # running 또는 exit_pending 작업 조회
-                cursor.execute(
-                    """
-                    SELECT id, task_type, task_key, kwargs, enqueue_at, started_at, stage, status 
-                    FROM scanner_tasks 
-                    WHERE status IN ('running', 'exit_pending') 
-                    ORDER BY CASE WHEN status = 'running' THEN 1 ELSE 2 END, started_at ASC 
-                    LIMIT 1
-                    """
-                )
-                row_run = cursor.fetchone()
-                running_task = dict(row_run) if row_run else None
-                running_id = running_task['id'] if running_task else None
+                    # running 또는 exit_pending 작업 조회
+                    cursor.execute(
+                        """
+                        SELECT id, task_type, task_key, kwargs, enqueue_at, started_at, stage, status 
+                        FROM scanner_tasks 
+                        WHERE status IN ('running', 'exit_pending') 
+                        ORDER BY CASE WHEN status = 'running' THEN 1 ELSE 2 END, started_at ASC 
+                        LIMIT 1
+                        """
+                    )
+                    row_run = cursor.fetchone()
+                    running_task = dict(row_run) if row_run else None
+                    running_id = running_task['id'] if running_task else None
 
-                # pending 작업 조회
-                if running_id:
-                    cursor.execute(
-                        """
-                        SELECT id, task_type, task_key, kwargs, enqueue_at, stage 
-                        FROM scanner_tasks 
-                        WHERE status = 'pending' AND id != ?
-                        ORDER BY CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
-                        """,
-                        (running_id,)
-                    )
-                else:
-                    cursor.execute(
-                        """
-                        SELECT id, task_type, task_key, kwargs, enqueue_at, stage 
-                        FROM scanner_tasks 
-                        WHERE status = 'pending' 
-                        ORDER BY CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
-                        """
-                    )
-                rows_pending = cursor.fetchall()
-                pending_tasks = [dict(row) for row in rows_pending]
+                    # pending 작업 조회
+                    if running_id:
+                        cursor.execute(
+                            """
+                            SELECT id, task_type, task_key, kwargs, enqueue_at, stage 
+                            FROM scanner_tasks 
+                            WHERE status = 'pending' AND id != ?
+                            ORDER BY CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
+                            """,
+                            (running_id,)
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            SELECT id, task_type, task_key, kwargs, enqueue_at, stage 
+                            FROM scanner_tasks 
+                            WHERE status = 'pending' 
+                            ORDER BY CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
+                            """
+                        )
+                    rows_pending = cursor.fetchall()
+                    pending_tasks = [dict(row) for row in rows_pending]
                 
-                conn.close()
-                return running_task, pending_tasks
+                    conn.close()
+                    return running_task, pending_tasks
             except Exception as e:
                 if attempt < 5:
                     time.sleep(0.2 * attempt)
@@ -459,39 +459,39 @@ class ScannerQueueRepository:
     @staticmethod
     def get_pending_task_by_key(task_key):
         """특정 작업 키의 pending/exit_pending 태스크 상세 조회"""
-        conn = database.get_connection('general')
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, task_type, task_key, kwargs 
-            FROM scanner_tasks 
-            WHERE task_key = ? AND status IN ('pending', 'exit_pending')
-            ORDER BY id DESC LIMIT 1
-            """,
-            (task_key,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+        with database.connection('general') as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, task_type, task_key, kwargs 
+                FROM scanner_tasks 
+                WHERE task_key = ? AND status IN ('pending', 'exit_pending')
+                ORDER BY id DESC LIMIT 1
+                """,
+                (task_key,)
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return dict(row) if row else None
 
     @staticmethod
     def get_next_pending_task():
         """우선순위에 맞추어 대기 중인 다음 첫 번째 태스크 가져오기"""
-        conn = database.get_connection('general')
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, task_type, task_key, kwargs 
-            FROM scanner_tasks 
-            WHERE status IN ('pending', 'exit_pending') 
-            ORDER BY CASE WHEN status = 'exit_pending' THEN 1 ELSE 2 END,
-                     CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
-            LIMIT 1
-            """
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+        with database.connection('general') as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, task_type, task_key, kwargs 
+                FROM scanner_tasks 
+                WHERE status IN ('pending', 'exit_pending') 
+                ORDER BY CASE WHEN status = 'exit_pending' THEN 1 ELSE 2 END,
+                         CASE WHEN task_type = 'lazy_scan' THEN 2 ELSE 1 END, id ASC
+                LIMIT 1
+                """
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return dict(row) if row else None
 
     @staticmethod
     def has_pending_priority_task():
@@ -500,14 +500,14 @@ class ScannerQueueRepository:
         라이브러리 스캔 같은 작업이 대기 중이면 lazy_scan이 즉시 양보할 수 있게 하기 위함
         (single-worker 큐라 실행 중인 작업을 가로챌 수는 없고, 다음 서브-배치로 넘어가기
         전에 스스로 확인해서 양보하는 방식)."""
-        conn = database.get_connection('general')
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT 1 FROM scanner_tasks WHERE status = 'pending' AND task_type != 'lazy_scan' LIMIT 1"
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return row is not None
+        with database.connection('general') as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT 1 FROM scanner_tasks WHERE status = 'pending' AND task_type != 'lazy_scan' LIMIT 1"
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return row is not None
 
     @staticmethod
     def try_acquire_task(task_id, now_str):
@@ -681,12 +681,12 @@ class ScannerQueueRepository:
             pass
 
         try:
-            conn_adult = database.get_connection('adult')
-            cursor_adult = conn_adult.cursor()
-            cursor_adult.execute("SELECT id, name FROM libraries")
-            for r in cursor_adult.fetchall():
-                lib_names[f"adult_{r['id']}"] = r['name']
-            conn_adult.close()
+            with database.connection('adult') as conn_adult:
+                cursor_adult = conn_adult.cursor()
+                cursor_adult.execute("SELECT id, name FROM libraries")
+                for r in cursor_adult.fetchall():
+                    lib_names[f"adult_{r['id']}"] = r['name']
+                conn_adult.close()
         except Exception:
             pass
 

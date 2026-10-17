@@ -204,13 +204,11 @@ export const triggerTtsAction = () => runBookMenuAction('tts');
 export const triggerTtsPregenAction = () => runBookMenuAction('tts-pregen');
 export const triggerMarkAsUnreadAction = () => runBookMenuAction('mark-unread');
 export const triggerMarkAsReadAction = () => runBookMenuAction('mark-read');
-export { triggerSearchMetadataAction as triggerSearchAladinMetadataAction };
 
 Object.assign(window, {
   triggerScanSingleBookAction,
   triggerLazyScanBookAction,
   triggerSearchMetadataAction,
-  triggerSearchAladinMetadataAction: triggerSearchMetadataAction,
   triggerAddToCollectionAction,
   triggerAddSeriesToCollectionAction,
   triggerPageTurnAction,

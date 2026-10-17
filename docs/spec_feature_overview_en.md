@@ -38,7 +38,7 @@ A rendering pipeline designed to maintain a smooth 60fps and eliminate loading l
 ## 3. Dynamic Metadata Plugin Architecture & Config Isolation
 
 ### 💡 Overview
-An extensible plugin framework designed to decouple the core application from third-party metadata providers (e.g., Aladin Open API).
+An extensible plugin framework designed to decouple the core application from third-party metadata providers (e.g., Naver Book).
 
 ### 🛠️ Implementation Mechanism
 * **Standardized `MetadataPlugin` Interface**:

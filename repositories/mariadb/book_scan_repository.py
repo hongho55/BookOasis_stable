@@ -8,18 +8,18 @@ from repositories.book_metadata_fill import empty_guard_sql, is_empty_value, san
 class BookScanRepository:
     @staticmethod
     def get_book_basic_info_raw(db_type, book_id):
-        conn = database.get_connection(db_type)
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, library_id, title, series_name, file_path, file_format, cover_image
-            FROM books WHERE id = %s
-            """,
-            (book_id,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+        with database.connection(db_type) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, library_id, title, series_name, file_path, file_format, cover_image
+                FROM books WHERE id = %s
+                """,
+                (book_id,)
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return dict(row) if row else None
 
     @staticmethod
     def update_book_scanned_metadata(db_type, book_id, series_name, cover_image, meta):

@@ -66,24 +66,28 @@ async function openMetadataSearchTarget(bookId, defaultQuery, seriesMode = false
     }
   }
 
-  // 드롭다운 채우기
-  if (cachedPlugins && cachedPlugins.length > 0) {
+  // 드롭다운 채우기 - 검색용 플러그인이 없으면 안내만 보여 주고 검색을 막는다
+  // (예전엔 가짜 '알라딘 (기본)' 항목을 넣었다. 알라딘 Open API 지원 종료로 기본 공급자 자체를 없앴다, 2.9.6)
+  const hasPlugins = Boolean(cachedPlugins && cachedPlugins.length > 0);
+  if (hasPlugins) {
     sourceSelect.innerHTML = cachedPlugins.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
   } else {
-    sourceSelect.innerHTML = `<option value="aladin">${i18n.t('metadata_search.default_plugin')}</option>`;
+    sourceSelect.innerHTML = `<option value="">${i18n.t('metadata_search.no_plugins_option')}</option>`;
   }
+  sourceSelect.disabled = !hasPlugins;
   
   // 2. 검색어 정제 (괄호나 대괄호에 든 불필요한 메타단어 제거로 검색 성공률 상승)
   let cleanQuery = defaultQuery || '';
   cleanQuery = cleanQuery.replace(/\[.*?\]|\(.*?\)/g, '').trim();
   
   input.value = cleanQuery;
-  container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--app-text-muted);">${i18n.t('metadata_search.init_message')}</div>`;
+  const initMessage = hasPlugins ? i18n.t('metadata_search.init_message') : i18n.t('metadata_search.no_plugins_message');
+  container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--app-text-muted);">${initMessage}</div>`;
   
   modal.style.display = 'flex';
   
   // 기본 검색어가 있으면 즉시 검색 가동
-  if (cleanQuery) {
+  if (cleanQuery && hasPlugins) {
     performMetadataSearch();
   }
 }
@@ -144,7 +148,12 @@ export async function performMetadataSearch() {
   
   const query = input.value.trim();
   const source = sourceSelect.value;
-  
+
+  if (!source) {
+    container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--app-text-muted);">${i18n.t('metadata_search.no_plugins_message')}</div>`;
+    return;
+  }
+
   if (!query) {
     alert(i18n.t('metadata_search.empty_query'));
     return;

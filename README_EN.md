@@ -29,7 +29,7 @@ The server provides a light and fast runtime environment by minimizing third-par
   * It supports Lazy Loading and Preloading for the next page, loading only the cards within the viewport, to ensure a seamless reading experience.
 
 * **Flexible Metadata Plugins**
-  * It supports the plugin architecture to control external information channels like the Aladin Open API, specialized for the domestic environment.
+  * It supports the plugin architecture to control external information channels such as Naver Book.
   * It allows integrating book descriptions, author information, and high-quality covers with a single click, and supports manual metadata editing and cover replacement.
 
 * **Mobile Viewer Compatibility**
@@ -393,7 +393,7 @@ your-domain.com { # <== Change this to your own domain
 
     # ------------------------------------------------------------------
     # Maximum Request Body Size Limit (Corresponds to Nginx's client_max_body_size 100M)
-    # Limits file uploads, considering cover image uploads from the Aladin metadata plugin, etc.
+    # Limits file uploads, considering cover image uploads from metadata plugins, etc.
     # ------------------------------------------------------------------
     request_body {
         max_size 100mb

@@ -1007,31 +1007,10 @@ def _create_indexes_and_cleanup_fts(conn, cursor, indexes_schema):
 
 
 def _seed_settings_and_admin(conn, cursor, db_type):
-    """설정 초기값(ALADIN 등) 주입, 최초 admin 계정 생성, 레거시 즐겨찾기 마이그레이션."""
+    """설정 초기값 주입, 최초 admin 계정 생성, 레거시 즐겨찾기 마이그레이션."""
     import database
-    # settings 테이블 초기값 주입 (ALADIN TTBKey)
+    # settings 테이블 초기값 주입 (알라딘 TTBKey 주입은 Open API 지원 종료로 2.9.6에서 제거)
     try:
-        cursor.execute("SELECT `value` FROM settings WHERE `key` = 'ALADIN'")
-        if not cursor.fetchone():
-            # os.getenv 등을 위해 .env 파싱도 대비
-            aladin_val = os.environ.get('ALADIN', '')
-            if not aladin_val:
-                # 간단하게 env 파일 읽기 헬퍼
-                try:
-                    env_path = os.path.join(database.BASE_DIR, '.env')
-                    if os.path.exists(env_path):
-                        with open(env_path, 'r', encoding='utf-8') as f:
-                            for line in f:
-                                if line.strip().startswith('ALADIN='):
-                                    aladin_val = line.split('=', 1)[1].strip()
-                                    break
-                except Exception as env_err:
-                    print(f"[DB-Migration] .env load error: {env_err}")
-            
-            cursor.execute("INSERT OR REPLACE INTO settings (`key`, `value`) VALUES ('ALADIN', ?)", (aladin_val,))
-            conn.commit()
-            print(f"[DB-Migration] {db_type} DB - Initial ALADIN setting migrated: {aladin_val}")
-        
         default_settings = [
             ('BOOK_THUMBNAIL_WIDTH', '160'),
             ('PAGE_LIMIT', '60'),
@@ -1620,22 +1599,23 @@ def run_full_migration():
         if conn is None:
             continue
 
-        _migrate_schema_and_dedupe_progress(conn, cursor, db_type, _SCHEMA_SQL)
-        _create_indexes_and_cleanup_fts(conn, cursor, _INDEXES_SQL)
-        _seed_settings_and_admin(conn, cursor, db_type)
-        _seed_category_permissions(conn, cursor)
-        _seed_library_kinds(conn, cursor, db_type)
-        _backfill_audiobook_last_listened_at(conn, cursor, db_type)
-        _backfill_library_group_default_color(conn, cursor)
-        if db_type == 'video' and not database.is_mariadb_mode():
-            _backfill_html_entities_video_titles_sqlite(conn)
-        _backfill_books_created_at(conn, cursor, db_type)
-        _migrate_system_health_settings(conn, cursor, db_type)
-        _purge_resolved_problems(db_type)
-        _purge_old_scan_history(db_type)
-        _rebuild_series_summary_if_needed(conn, db_type)
-
-        conn.close()
+        try:
+            _migrate_schema_and_dedupe_progress(conn, cursor, db_type, _SCHEMA_SQL)
+            _create_indexes_and_cleanup_fts(conn, cursor, _INDEXES_SQL)
+            _seed_settings_and_admin(conn, cursor, db_type)
+            _seed_category_permissions(conn, cursor)
+            _seed_library_kinds(conn, cursor, db_type)
+            _backfill_audiobook_last_listened_at(conn, cursor, db_type)
+            _backfill_library_group_default_color(conn, cursor)
+            if db_type == 'video' and not database.is_mariadb_mode():
+                _backfill_html_entities_video_titles_sqlite(conn)
+            _backfill_books_created_at(conn, cursor, db_type)
+            _migrate_system_health_settings(conn, cursor, db_type)
+            _purge_resolved_problems(db_type)
+            _purge_old_scan_history(db_type)
+            _rebuild_series_summary_if_needed(conn, db_type)
+        finally:
+            conn.close()  # 단계 하나가 예외로 끝나도 풀 슬롯이 남지 않게(2.9.6)
 
     if database.is_mariadb_mode():
         # MariaDB는 executescript 기반 범용 diff(_migrate_schema_and_dedupe_progress/

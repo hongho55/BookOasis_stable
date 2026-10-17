@@ -841,14 +841,14 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
                     raise RuntimeError('Scanner flush failed during memory emergency handling.')
                 try:
                     task_key = f"library_scan_{db_type}_{library_id}"
-                    _exit_conn = database.get_connection('general')
-                    _exit_cur = _exit_conn.cursor()
-                    _exit_cur.execute(
-                        "UPDATE scanner_tasks SET status = 'exit_pending', stage = 'Paused due to memory limit (Auto-Resuming...)' WHERE task_key = ? AND status = 'running'",
-                        (task_key,)
-                    )
-                    _exit_conn.commit()
-                    _exit_conn.close()
+                    with database.connection('general') as _exit_conn:
+                        _exit_cur = _exit_conn.cursor()
+                        _exit_cur.execute(
+                            "UPDATE scanner_tasks SET status = 'exit_pending', stage = 'Paused due to memory limit (Auto-Resuming...)' WHERE task_key = ? AND status = 'running'",
+                            (task_key,)
+                        )
+                        _exit_conn.commit()
+                        _exit_conn.close()
                 except Exception as _ex_err:
                     print(f"[Scanner-Memory Warning] Failed to update task exit status: {_ex_err}")
                 try:

@@ -517,6 +517,7 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
     audio_json_path = os.path.join(folder_path, 'audio.json')
     metadata_track_durations = []
     metadata_has_cover_blob = False
+    metadata_cover_b64 = None
     metadata_json_loaded = False
 
     if os.path.exists(metadata_json_path):
@@ -527,7 +528,8 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
             if not isinstance(data, dict):
                 raise ValueError('top-level JSON is not an object')
             metadata_json_loaded = True
-            metadata_has_cover_blob = metadata_json_cover_blob(data) is not None
+            metadata_cover_b64 = metadata_json_cover_blob(data)
+            metadata_has_cover_blob = metadata_cover_b64 is not None
             meta['title'] = str(data.get('title', '')).strip()
             meta['publisher'] = str(data.get('publisher', '')).strip()
             meta['description'] = str(data.get('description', '')).strip()
@@ -763,9 +765,15 @@ def parse_audiobook_folder(folder_path, existing_track_cache=None, remote_fast_p
     meta['total_duration'] = total_duration
     meta['total_tracks'] = len(tracks)
 
+    # 포스터가 metadata.json 내장 표지면, 이미 읽은 base64를 스캔 때 표지 캐시를 만드는 데 넘긴다(원본 재읽기 없음, 2.9.6)
+    poster_preloaded_b64 = None
+    if metadata_cover_b64 and meta.get('poster') == os.path.normpath(metadata_json_path):
+        poster_preloaded_b64 = metadata_cover_b64
+
     return {
         'meta': meta,
         'tracks': tracks,
+        'poster_preloaded_b64': poster_preloaded_b64,
         'duration_cache_hits': duration_cache_hits,
         'metadata_duration_hits': metadata_duration_hits,
         'metadata_duration_fallbacks': metadata_duration_fallbacks,
@@ -784,6 +792,30 @@ def _touch_if_poster_replaced(repo, row_id, poster, category, library_id):
             repo.touch_updated_at(row_id)
     except Exception as e:
         print(f"[CoverRefresh] poster change check failed ({poster}): {e}")
+
+
+def _cache_poster_for_scan(poster, library_id, folder_path, result, remote_fast_path):
+    """스캔 때 표지 캐시를 만든다(2.9.6 - 예전엔 화면에서 처음 볼 때 만들어 첫 목록이 느렸다). (상태, ms)
+    - metadata.json 내장 표지: 파싱 때 읽은 base64를 그대로 써서 원본을 다시 읽지 않는다
+    - 폴더 이미지(cover.jpg 등): 작은 파일 하나를 읽는다(원격 포함)
+    - 원격의 곡 파일 내장 아트: 건너뛴다(태그만 읽어도 곡 전체를 받게 됨 - 첫 요청 때 생성)
+    - URL 포스터: 건너뛴다(외부 네트워크 - 첫 요청 때 생성)"""
+    import base64
+    started = time.perf_counter()
+    if not poster or (remote_fast_path and str(poster).lower().endswith(AUDIO_EXTENSIONS)):
+        return 'skipped', 0
+    from utils.cover_helper import cache_poster_at_scan
+    preloaded = None
+    b64 = (result or {}).get('poster_preloaded_b64')
+    json_path = os.path.normpath(os.path.join(folder_path, 'metadata.json'))
+    if b64 and os.path.normpath(str(poster)) == json_path:
+        try:
+            if os.path.getsize(json_path) <= 20 * 1024 * 1024:  # read_metadata_json_cover와 같은 상한
+                preloaded = base64.b64decode(b64)
+        except Exception:
+            preloaded = None
+    state = cache_poster_at_scan(poster, 'audio', library_id, preloaded_bytes=preloaded)
+    return state, int((time.perf_counter() - started) * 1000)
 
 
 CODE_NESTED_AUDIO = 'audiobook_nested_audio'
@@ -905,6 +937,8 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
             track_updates += AudiobookRepository.update_track_tags(audiobook_id, tracks)
         _report_nested_audio(audiobook_id, library_id, normalized_folder_path, meta['title'], result.get('nested_audio'))
         _touch_if_poster_replaced(AudiobookRepository, audiobook_id, meta.get('poster'), 'audio', library_id)
+        cover_cache_state, cover_elapsed_ms = _cache_poster_for_scan(
+            meta.get('poster'), library_id, normalized_folder_path, result, remote_fast_path)
         from services.problem_service import ProblemService
         from services.scan_problem_service import _path_target_id
         ProblemService.resolve(CODE_SAVE_FAILED, 'book', _path_target_id(normalized_folder_path), db_type='audiobook')
@@ -955,6 +989,8 @@ def scan_and_save_audiobook_folder(folder_path, library_id=None, music=None):
             f"db_track_inserted={track_inserts} "
             f"db_track_updated={track_updates} "
             f"db_track_deleted={track_deletes} "
+            f"cover_cache={cover_cache_state} "
+            f"cover_elapsed_ms={cover_elapsed_ms} "
             f"duration_sec={meta['total_duration']:.1f} "
             f"parse_elapsed_sec={parse_elapsed_sec:.3f} "
             f"parse_elapsed_ms={parse_elapsed_ms} "

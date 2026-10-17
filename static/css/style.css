@@ -3528,7 +3528,7 @@ button, input, select, textarea {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     opacity: 0;
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
     z-index: 3;
 }
 

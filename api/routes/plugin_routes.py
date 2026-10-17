@@ -160,7 +160,7 @@ def apply_book_metadata_api(book_id):
     
     item_data = None
     if request.is_json:
-        item_data = request.json.get('item_data') or request.json.get('aladin_item')
+        item_data = request.json.get('item_data')
     else:
         item_data = request.form.to_dict()
         if 'type' in item_data:

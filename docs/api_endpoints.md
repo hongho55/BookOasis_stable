@@ -308,7 +308,7 @@
   ```json
   {
     "type": "general",
-    "source": "aladin",
+    "source": "naver_book",
     "item_data": {
       "title": "도서명",
       "author": "저자",
@@ -501,7 +501,7 @@ KOReader "진행 상황 동기화"의 사용자 지정 서버 주소는 `/kosync
     "success": true,
     "error_count": 1,
     "statuses": [
-      {"plugin_id": "aladin", "status": "success", "message": null, "occurred_at": "2026-08-13 05:27:49"},
+      {"plugin_id": "naver_book", "status": "success", "message": null, "occurred_at": "2026-08-13 05:27:49"},
       {"plugin_id": "stats_dashboard", "status": "error", "message": "No module named 'foo'", "occurred_at": "2026-08-13 05:27:49"}
     ],
     "recent_events": [ "... 최근 상태 변화 이력 최대 50건 (statuses와 동일한 필드 구조) ..." ]

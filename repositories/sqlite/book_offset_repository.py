@@ -19,19 +19,19 @@ class BookOffsetRepository:
         if cached is not None:
             return cached if cached != 'NOT_FOUND' else None
 
-        conn = database.get_connection(db_type)
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT filename, local_header_offset, compress_size, file_size, compress_type, data_offset
-            FROM book_offsets
-            WHERE book_id = ? AND page_idx = ?
-            """,
-            (book_id, page_idx),
-        )
-        row = cursor.fetchone()
-        conn.close()
+        with database.connection(db_type) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT filename, local_header_offset, compress_size, file_size, compress_type, data_offset
+                FROM book_offsets
+                WHERE book_id = ? AND page_idx = ?
+                """,
+                (book_id, page_idx),
+            )
+            row = cursor.fetchone()
+            conn.close()
 
-        res = dict(row) if row else 'NOT_FOUND'
-        _offset_cache.put(cache_key, res)
-        return dict(row) if row else None
+            res = dict(row) if row else 'NOT_FOUND'
+            _offset_cache.put(cache_key, res)
+            return dict(row) if row else None

@@ -195,7 +195,7 @@ export function showToast(message, type = 'success', options = {}) {
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(168, 85, 247, 0.25);
       z-index: 99999;
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
       pointer-events: none;
       display: flex;
       align-items: center;
@@ -240,22 +240,27 @@ export function showToast(message, type = 'success', options = {}) {
   }
   container.style.opacity = '0';
   container.style.transform = 'translateX(-50%) translateY(20px)';
-  
-  // 브라우저 repaint 후 활성화
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      container.style.opacity = '1';
-      container.style.transform = 'translateX(-50%) translateY(0)';
-    });
-  });
 
   // 3초 뒤 비활성화 (버튼이 있으면 누를 시간을 더 준다)
   const duration = Number(options && options.duration) || (hasAction ? 6000 : 3000);
-  window.toastTimer = setTimeout(() => {
-    container.style.opacity = '0';
-    container.style.transform = 'translateX(-50%) translateY(20px)';
-    container.style.pointerEvents = 'none';
-  }, duration);
+  // 탭이 가려지면 requestAnimationFrame은 멈추고 setTimeout은 돈다. 예전엔 숨기기 타이머를 먼저 걸어서
+  // 숨기기가 먼저 실행되고 탭으로 돌아온 뒤 보이기가 실행돼 토스트가 사라지지 않았다(연속 스캔 뒤 마지막 토스트, 2.9.6).
+  // 숨기기 타이머는 실제로 보인 뒤에 걸고, 늦게 도착한 옛 호출의 보이기는 세대 번호로 무시한다.
+  const generation = (window.__toastGeneration = (window.__toastGeneration || 0) + 1);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (generation !== window.__toastGeneration) return;
+      container.style.opacity = '1';
+      container.style.transform = 'translateX(-50%) translateY(0)';
+      if (window.toastTimer) clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        if (generation !== window.__toastGeneration) return;
+        container.style.opacity = '0';
+        container.style.transform = 'translateX(-50%) translateY(20px)';
+        container.style.pointerEvents = 'none';
+      }, duration);
+    });
+  });
 }
 
 // 글로벌 노출

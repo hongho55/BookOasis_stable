@@ -9,18 +9,18 @@ class BookScanRepository:
     @staticmethod
     def get_book_basic_info_raw(db_type, book_id):
         """도서 단일 행의 시리즈, 경로, 파일 포맷 조회"""
-        conn = database.get_connection(db_type)
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, library_id, title, series_name, file_path, file_format, cover_image
-            FROM books WHERE id = ?
-            """,
-            (book_id,)
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+        with database.connection(db_type) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, library_id, title, series_name, file_path, file_format, cover_image
+                FROM books WHERE id = ?
+                """,
+                (book_id,)
+            )
+            row = cursor.fetchone()
+            conn.close()
+            return dict(row) if row else None
 
     @staticmethod
     def update_book_scanned_metadata(db_type, book_id, series_name, cover_image, meta):

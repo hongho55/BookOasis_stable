@@ -7,7 +7,7 @@ tags: [cli, export, import, migration, backup, multi-path, batch, zip_stored, do
 
 # 📦 Category Export/Import CLI Tool Guide (`export_category.py` / `import_category.py`)
 
-This standalone CLI utility allows you to ultra-fast migrate all database metadata (`series`, `books`, `book_offsets`) and cover image files of a category to another system or backup repository without needing external metadata re-searches (Aladin/Naver) or viewer streaming offset recalculations.
+This standalone CLI utility allows you to ultra-fast migrate all database metadata (`series`, `books`, `book_offsets`) and cover image files of a category to another system or backup repository without needing external metadata re-searches (Naver Book, etc.) or viewer streaming offset recalculations.
 
 **Fully supports both Native environments and Docker (Docker / Docker-Compose) environments, along with multi-path (Multi-path) directory mappings and batch exports.**
 
