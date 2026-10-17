@@ -1,7 +1,7 @@
 // ui.js – UI 렌더링 및 그리드 함수들
 import { state } from './state.js';
 import { openBookDetail } from './modal.js';
-import { openReader } from './viewer.js';
+import { openReader } from './reader_loader.js';
 import { showToast } from './view_manager.js';
 import { buildFallbackCoverUrl, getBookCoverSrc, buildTextCoverDataUri, coverAlignToObjectPosition } from './cover_fallback.js';
 import { stripLeadingBracketTags, middleTruncateTitle } from './series_display.js';
@@ -659,7 +659,19 @@ export function renderBooksGrid(seriesList) {
   resetGridPruning();
   clearBookSelection();
   if (seriesList.length === 0) {
-    const tNoBooks = window.i18n ? window.i18n.t('common.no_library_books') : '보관함에 등록된 도서가 없습니다.';
+    const t = (key, fallback) => (window.i18n ? window.i18n.t(key, fallback) : fallback);
+    // 작가별 모드에선 작가 정보가 없는 책(TXT 등)이 하나도 안 보일 수 있다 - "도서가 없다"고 하면 책이 사라진 걸로 오해하므로
+    // 모드 때문이라는 걸 알리고 기본 보기로 바로 돌아갈 버튼을 둔다
+    if (state.groupMode === 'author') {
+      container.innerHTML = `<div class="loading-spinner library-empty-state">
+          <p>${t('common.no_author_group_books', '작가별 보기에 표시할 도서가 없습니다.')}</p>
+          <p class="library-empty-state__hint">${t('common.no_author_group_hint', '작가 정보가 있는 도서만 작가별로 모입니다.')}</p>
+          <button type="button" class="ridi-link-btn" data-role="empty-switch-default-view"><i class="lc lc-layout-grid"></i> ${t('common.switch_to_default_view', '기본 보기로 전환')}</button>
+        </div>`;
+      container.querySelector('[data-role="empty-switch-default-view"]')?.addEventListener('click', () => window.switchGroupMode?.('default'));
+      return;
+    }
+    const tNoBooks = t('common.no_library_books', '보관함에 등록된 도서가 없습니다.');
     container.innerHTML = `<div class="loading-spinner">${tNoBooks}</div>`;
     return;
   }

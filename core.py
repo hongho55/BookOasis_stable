@@ -35,6 +35,56 @@ def _static_asset_content_hash(asset_path, modified_ns, file_size):
     except OSError:
         return ''
 
+
+_js_tree_signature_cache = {'at': 0.0, 'root': None, 'sig': ''}
+
+
+def _static_js_tree_signature(js_root):
+    """static/js 아래 .js 전체의 (경로, 크기, 수정시각) 지문. 파일이 하나라도 바뀌면 값이 바뀐다.
+
+    ES 모듈의 상대 import는 진입 모듈 URL을 기준으로 풀리므로, 진입 모듈을 /static/m/<지문>/js/...로 불러오면
+    모듈 트리 전체가 같은 접두어를 쓰게 되어 1년 캐시를 걸 수 있다. 개발 중 파일 수정도 바로 반영되도록 2초만 메모한다.
+    """
+    now = time.monotonic()
+    cache = _js_tree_signature_cache
+    if cache['root'] == js_root and now - cache['at'] < 2.0:
+        return cache['sig']
+    digest = hashlib.sha256()
+    for dirpath, dirnames, filenames in os.walk(js_root):
+        dirnames.sort()
+        for name in sorted(filenames):
+            if not name.endswith('.js'):
+                continue
+            full_path = os.path.join(dirpath, name)
+            try:
+                st = os.stat(full_path)
+            except OSError:
+                continue
+            digest.update(f"{os.path.relpath(full_path, js_root)}|{st.st_size}|{st.st_mtime_ns}\n".encode('utf-8'))
+    cache.update(at=now, root=js_root, sig=digest.hexdigest()[:12])
+    return cache['sig']
+
+
+_LONG_CACHE_EXTS = ('.woff', '.woff2', '.ttf', '.eot', '.png', '.jpg', '.jpeg', '.svg', '.ico')
+
+
+def static_cache_policy(path, has_asset_fingerprint):
+    """정적 파일 응답의 캐시 정책. 'immutable'(1년, 재검증 없음) | 'revalidate'(매번 304 확인) | 'long'(1년, Flask no-cache 유지) | None.
+
+    - 주소에 내용 지문이 들어간 것은 바뀌면 주소가 바뀌므로 immutable:
+      /static/m/<트리 지문>/js/**(module_asset_url), /static/js|css/**?asset=<파일 지문>(static_asset_url), /static/lib/**, /static/fonts/**
+    - 지문 없는 우리 JS/CSS는 배포 반영을 위해 매번 재검증(2026-08-18/09-01 사례).
+    """
+    if path.startswith('/static/m/'):
+        return 'immutable'
+    if path.startswith(('/static/js/', '/static/css/')):
+        return 'immutable' if has_asset_fingerprint else 'revalidate'
+    if path.startswith(('/static/lib/', '/static/fonts/')):
+        return 'immutable'
+    if path.startswith('/static/') and path.endswith(_LONG_CACHE_EXTS):
+        return 'long'
+    return None
+
 def start_scanner_worker_process():
     """독립 스캐너 워커 프로세스를 기동합니다."""
     global _worker_process
@@ -343,6 +393,15 @@ if not IS_WORKER:
                     pass
             return url_for('static', filename=filename, **params)
 
+        def module_asset_url(filename):
+            # ES 모듈 진입점 전용('js/xxx.js'). 같은 페이지의 진입점은 모두 이 헬퍼를 써야 공용 모듈이 한 번만 평가된다.
+            from flask import url_for
+            asset_name = os.fspath(filename)
+            if not asset_name.startswith('js/'):
+                return url_for('static', filename=filename)
+            sig = _static_js_tree_signature(os.path.join(app.static_folder, 'js'))
+            return url_for('static_js_module', sig=sig, filename=asset_name[len('js/'):])
+
         def append_release_version(url):
             if not url:
                 return url
@@ -354,8 +413,15 @@ if not IS_WORKER:
         return {
             'release_version': app.config.get('RELEASE_VERSION', 'dev'),
             'static_asset_url': static_asset_url,
+            'module_asset_url': module_asset_url,
             'append_release_version': append_release_version,
         }
+
+    @app.route('/static/m/<sig>/js/<path:filename>')
+    def static_js_module(sig, filename):
+        # 지문(sig)이 옛 값이어도 현재 파일을 준다. 리다이렉트하면 모듈 기준 URL이 바뀌어 상대 import가 섞인다.
+        from flask import send_from_directory
+        return send_from_directory(os.path.join(app.static_folder, 'js'), filename)
 
     # 블루프린트 등록
     app.register_blueprint(api_bp)
@@ -475,6 +541,10 @@ if not IS_WORKER:
     from utils.request_failure_log import log_failed_write_request
     app.after_request(log_failed_write_request)
 
+    # 진단용: .env DEBUG_REQUEST_LOG=true일 때만 느린 요청(기본 500ms+)·5xx를 logs/request_debug.log에 남긴다(기본 꺼짐)
+    from utils.request_debug_log import init_app as init_request_debug_log
+    init_request_debug_log(app)
+
     @app.after_request
     def add_fingerprint_headers(response):
         response.headers['X-Powered-By'] = ENGINE_NAME
@@ -499,26 +569,18 @@ if not IS_WORKER:
             response.headers['Pragma'] = 'no-cache'
             response.headers['Expires'] = '0'
             return response
-        # 우리 앱 자체 JS(static/js/**)는 ES 모듈 중첩 import 경로 대부분(229개 중 224개)에
-        # 배포 버전 쿼리스트링(?v=...)이 안 붙어 있어(진입점 <script src>만 static_asset_url()로
-        # 자동 버저닝됨), 브라우저/중간 캐시가 예전 파일을 계속 재사용하면 배포해도 반영이
-        # 안 되는 문제가 있었다(2026-08-18, 사이드바 디버그 로그가 배포 후에도 안 없어지던 사례).
-        # 파일 하나하나 버전을 붙이는 대신, 이 경로 전체를 "매번 서버에 재검증"으로 바꿔서
-        # (Last-Modified/ETag 기반 조건부 GET → 변경 없으면 304, 변경됐으면 즉시 새 내용) 근본
-        # 해결한다. CSS(static/css/**)도 동일하게 <link>가 static_asset_url() 버전 쿼리스트링
-        # 없이 로드되는 경로가 있어 같은 문제가 재현됐다(2026-09-01, 상세페이지 레이아웃 CSS가
-        # 배포 후에도 브라우저에 반영 안 되던 사례) - 같은 이유로 같이 묶는다.
-        # /static/lib/**(서드파티 라이브러리)은 별도로 영구 캐시 대상이라 여기서 제외.
-        if request.path.startswith('/static/js/') or request.path.startswith('/static/css/'):
+        # 정적 파일 캐시 정책은 static_cache_policy() 참고(지문 있는 주소 = 1년 immutable, 지문 없는 우리 JS/CSS = 매번 재검증).
+        # Flask send_file이 기본으로 붙이는 no-cache가 남아 있으면 max-age가 무시되고 매번 재검증(304 왕복)하므로 immutable에선 지운다
+        # (2.9.5 측정: 글꼴 조각 12개·JS ~150개가 재방문마다 재검증되어 느린 회선에서 재방문 LCP 7초).
+        policy = static_cache_policy(request.path, bool(request.args.get('asset')))
+        if policy == 'revalidate':
             response.headers['Cache-Control'] = 'no-cache, must-revalidate'
-            return response
-
-        is_cacheable_path = request.path.startswith('/static/lib/') or request.path.startswith('/static/fonts/')
-        is_cacheable_ext = any(request.path.endswith(ext) for ext in ['.woff', '.woff2', '.ttf', '.eot', '.png', '.jpg', '.jpeg', '.svg', '.ico'])
-        if request.path.startswith('/static/') and (is_cacheable_path or is_cacheable_ext):
+        elif policy in ('immutable', 'long') and response.status_code in (200, 304):
             response.cache_control.max_age = 31536000
             response.cache_control.public = True
             response.cache_control.immutable = True
+            if policy == 'immutable':
+                response.cache_control.no_cache = None
         return response
 
     from utils.engine_signature import engine_banner_line

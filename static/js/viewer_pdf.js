@@ -4,6 +4,7 @@ import { showViewerLoading, hideViewerLoading, showViewerError } from './view_ma
 import { saveProgress } from './viewer_progress.js';
 import { getComicPageStep, getComicReadingDirection, getSpreadShiftOffset, resetSpreadShiftOffset } from './viewer_comic.js';
 import { initPageStep } from './viewer/reader_settings.js';
+import { ensurePdfJs } from './utils/script_loader.js';
 
 export let pdfDoc = null;
 export let pdfCurrentPage = 1;
@@ -63,6 +64,17 @@ export async function initPdfViewer(bookId, pagesRead, totalPages) {
 
   showViewerLoading(i18n.t("viewer.loading_pdf_title") || "PDF 준비 중", i18n.t("viewer.loading_pdf_sub") || "잠시만 기다려 주세요...");
   
+  // pdf.js는 홈에서 미리 받지 않고 PDF를 처음 열 때 불러온다(2.9.5)
+  let pdfjsLib;
+  try {
+    pdfjsLib = await ensurePdfJs();
+  } catch (err) {
+    console.error('[Viewer-Pdf] pdf.js 불러오기 실패:', err);
+    isInitializingPdfProgress = false;
+    showViewerError();
+    return;
+  }
+
   const url = `/api/media/pdf?db_type=${state.currentLibraryType}&book_id=${bookId}`;
   pdfjsLib.getDocument({
     url: url,

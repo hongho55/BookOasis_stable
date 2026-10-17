@@ -15,7 +15,10 @@ book_rating.py -- 도서 상세 페이지 헤더의 정적 점수 별을 커뮤�
 - 성인 서재/오디오북/영상 강좌에는 노출하지 않는다 - rating_widget.sessions를 'general'로만
   선언해 코어의 _resolve_plugin_sessions()가 자동으로 배제해준다.
 """
+import hashlib
+import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
@@ -23,9 +26,14 @@ from plugins.metadata.base import BaseMetadataProvider
 
 logger = logging.getLogger(__name__)
 
-REQUEST_TIMEOUT = 10
+# relay(fly.io)는 쉬면 머신이 꺼졌다가 첫 요청에 약 2초 걸려 깨어난다. 조회는 짧게 끊고(서버 스레드를 오래 잡지 않게)
+# 제출만 조금 여유를 둔다. (1.0.0은 10초 x 최대 3회 순차 호출이라 relay가 안 되는 날 상세 화면마다 스레드를 최대 30초 잡았다)
+REQUEST_TIMEOUT = 3
+SUBMIT_TIMEOUT = 5
 RELAY_PLUGIN_ID = "bookoasis_ratings"
 VERIFY_CACHE_TTL = 60 * 60 * 24  # 하루 - 인증이 여전히 유효한지 재확인하는 주기
+WIDGET_CACHE_TTL = 300           # 도서별 별점 결과 재사용(제출하면 즉시 갱신)
+FAILURE_BACKOFF_TTL = 120        # relay가 실패하면 이 시간 동안은 부르지 않고 바로 실패를 돌려준다(상세 화면마다 relay를 깨우지 않게)
 
 
 class BookRatingMetadataProvider(BaseMetadataProvider):
@@ -114,8 +122,10 @@ class BookRatingMetadataProvider(BaseMetadataProvider):
 
     def _ensure_verified(self, domain_url, user_id, secret_token):
         """relay에 이 설치(install)가 등록돼 있는지 확인/자동 등록한다. 매 요청마다 왕복하지
-        않도록 결과를 하루 동안 플러그인 전용 Redis 캐시에 남긴다."""
-        cache_key = f"verified:{user_id}"
+        않도록 결과를 하루 동안 플러그인 전용 Redis 캐시에 남긴다.
+        캐시 키에 relay 주소를 넣는다 - 1.0.0은 user_id만 써서, relay 주소를 바꿔도 예전 relay의
+        "인증됨"이 하루 동안 남아 새 relay에서 자동 등록을 건너뛰고 계속 실패했다."""
+        cache_key = f"verified:{self._scope_hash(domain_url, user_id)}"
         if self.cache_get(cache_key) == "1":
             return True
 
@@ -130,6 +140,42 @@ class BookRatingMetadataProvider(BaseMetadataProvider):
         return ok
 
     # ------------------------------------------------------------------
+    # 캐시 / 실패 백오프 헬퍼
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _scope_hash(*parts):
+        return hashlib.sha1("|".join(str(p) for p in parts).encode("utf-8")).hexdigest()[:20]
+
+    def _widget_cache_key(self, domain_url, user_id, book_key):
+        return f"widget:{self._scope_hash(domain_url, user_id, book_key)}"
+
+    def _backoff_key(self, domain_url):
+        return f"backoff:{self._scope_hash(domain_url)}"
+
+    def _in_backoff(self, domain_url):
+        cached = self.cache_get(self._backoff_key(domain_url))
+        return cached or None
+
+    def _enter_backoff(self, domain_url, error):
+        self.cache_set(self._backoff_key(domain_url), error, ttl=FAILURE_BACKOFF_TTL)
+
+    def _clear_backoff(self, domain_url):
+        self.cache_delete(self._backoff_key(domain_url))
+
+    def _load_widget_cache(self, domain_url, user_id, book_key):
+        raw = self.cache_get(self._widget_cache_key(domain_url, user_id, book_key))
+        if not raw:
+            return None
+        try:
+            return json.loads(raw)
+        except (TypeError, ValueError):
+            return None
+
+    def _store_widget_cache(self, domain_url, user_id, book_key, result):
+        self.cache_set(self._widget_cache_key(domain_url, user_id, book_key),
+                       json.dumps(result, ensure_ascii=False), ttl=WIDGET_CACHE_TTL)
+
+    # ------------------------------------------------------------------
     # rating_widget 계약 구현
     # ------------------------------------------------------------------
     def get_rating_widget_data(self, db_type, context):
@@ -140,33 +186,54 @@ class BookRatingMetadataProvider(BaseMetadataProvider):
         if not domain_url or not user_id or not secret_token:
             return {"success": False, "error": "커뮤니티 별점 플러그인 설정이 완료되지 않았습니다."}
 
+        book_key = self._book_key(context)
+        cached = self._load_widget_cache(domain_url, user_id, book_key)
+        if cached:
+            return cached
+        backoff_error = self._in_backoff(domain_url)
+        if backoff_error:
+            return {"success": False, "error": backoff_error}
+
         try:
             if not self._ensure_verified(domain_url, user_id, secret_token):
-                return {"success": False, "error": "relay 인증에 실패했습니다."}
+                error = "relay 인증에 실패했습니다."
+                self._enter_backoff(domain_url, error)
+                return {"success": False, "error": error}
 
-            book_key = self._book_key(context)
             auth = {"user_id": user_id, "secret_token": secret_token}
 
-            agg_resp = requests.get(
-                f"{domain_url}/api/{RELAY_PLUGIN_ID}/records/aggregate",
-                params={**auth, "agg_field": "rating", "filter_field": "book_key", "filter_value": book_key},
-                timeout=REQUEST_TIMEOUT,
-            )
+            # 집계와 내 별점 조회는 서로 기다릴 이유가 없어 동시에 보낸다(1.0.0은 차례로 보냈다)
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                agg_future = pool.submit(
+                    requests.get,
+                    f"{domain_url}/api/{RELAY_PLUGIN_ID}/records/aggregate",
+                    params={**auth, "agg_field": "rating", "filter_field": "book_key", "filter_value": book_key},
+                    timeout=REQUEST_TIMEOUT,
+                )
+                mine_future = pool.submit(self._find_my_rating, domain_url, auth, book_key, user_id)
+                agg_resp = agg_future.result()
+                my_rating = mine_future.result()
+
             agg = agg_resp.json() if agg_resp.ok else {}
             if not agg.get("success"):
-                return {"success": False, "error": agg.get("message") or "별점 집계 조회에 실패했습니다."}
+                error = agg.get("message") or f"별점 집계 조회에 실패했습니다. (relay 응답 {agg_resp.status_code})"
+                logger.warning("[book_rating] 별점 집계 실패: %s %s", agg_resp.status_code, domain_url)
+                self._enter_backoff(domain_url, error)
+                return {"success": False, "error": error}
 
-            my_rating = self._find_my_rating(domain_url, auth, book_key, user_id)
-
-            return {
+            result = {
                 "success": True,
                 "average": round(float(agg.get("avg") or 0), 1),
                 "count": int(agg.get("count") or 0),
                 "my_rating": my_rating,
             }
+            self._store_widget_cache(domain_url, user_id, book_key, result)
+            return result
         except requests.RequestException as e:
             logger.warning("[book_rating] 별점 조회 실패: %s", e)
-            return {"success": False, "error": "커뮤니티 별점 서버에 연결할 수 없습니다."}
+            error = "커뮤니티 별점 서버에 연결할 수 없습니다."
+            self._enter_backoff(domain_url, error)
+            return {"success": False, "error": error}
 
     def submit_rating(self, db_type, context, rating):
         if db_type != "general":
@@ -193,7 +260,7 @@ class BookRatingMetadataProvider(BaseMetadataProvider):
                     "values": {"book_key": book_key, "rating": rating, "submitter_domain": submitter_domain},
                     "unique_by": ["book_key"],
                 },
-                timeout=REQUEST_TIMEOUT,
+                timeout=SUBMIT_TIMEOUT,
             )
             body = resp.json() if resp.content else {}
             if not resp.ok or not body.get("success"):
@@ -207,12 +274,16 @@ class BookRatingMetadataProvider(BaseMetadataProvider):
             )
             agg = agg_resp.json() if agg_resp.ok else {}
 
-            return {
+            result = {
                 "success": True,
                 "average": round(float(agg.get("avg") or rating), 1),
                 "count": int(agg.get("count") or 1),
                 "my_rating": rating,
             }
+            # 제출이 됐으면 relay는 살아 있다 - 백오프를 풀고 이 도서의 캐시를 새 값으로 바꾼다
+            self._clear_backoff(domain_url)
+            self._store_widget_cache(domain_url, user_id, book_key, result)
+            return result
         except requests.RequestException as e:
             logger.warning("[book_rating] 별점 제출 실패: %s", e)
             return {"success": False, "error": "커뮤니티 별점 서버에 연결할 수 없습니다."}

@@ -4,6 +4,7 @@ import * as api from './api.js';
 import { renderDashboardHistory, renderDashboardRecentlyAdded } from './ui.js';
 import { updateLibraryTotalCount } from './book_list.js';
 import { loadPluginHealthPanel } from './plugin_health_panel.js';
+import { withPluginGlobals } from './utils/script_loader.js';
 
 let dashboardLoadToken = 0;
 let pluginsLoadToken = 0;
@@ -759,12 +760,14 @@ async function loadDashboardWidgetData(pluginId, limit, contentId, requestToken)
         shadow.appendChild(contentEl);
       }
       if (data.js) {
-        try {
-          const scriptFn = new Function('pluginId', 'shadowRoot', 'items', data.js);
-          scriptFn(pluginId, shadow, data.items || []);
-        } catch (err) {
-          console.error(`[Dashboard] 위젯 스크립트 실행 오류(${pluginId}):`, err);
-        }
+        withPluginGlobals(data.js, () => {
+          try {
+            const scriptFn = new Function('pluginId', 'shadowRoot', 'items', data.js);
+            scriptFn(pluginId, shadow, data.items || []);
+          } catch (err) {
+            console.error(`[Dashboard] 위젯 스크립트 실행 오류(${pluginId}):`, err);
+          }
+        });
       }
       return;
     }

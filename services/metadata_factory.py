@@ -80,6 +80,32 @@ def _find_forbidden_calls_in_source(source, filename):
     return hits
 
 
+# 파일별 검사 결과 캐시: 절대경로 -> ((크기, 수정시각ns), hits)
+# 관리자 대시보드의 플러그인 로드 상태 패널은 매 조회마다 탐색을 강제 갱신(force_refresh)하는데, 그때마다 모든 플러그인
+# 소스를 다시 읽어 AST 파싱해 집 서버(플러그인 29개, 소스 약 3MB)에서 load-status가 880ms였다(그중 검사 706ms, 2026-10-17 실측).
+# 크기·수정시각이 같으면 같은 결과를 재사용하고 바뀐 파일만 다시 검사한다 - SSH로 넣거나 고친 파일은 그대로 바로 반영된다.
+_forbidden_scan_cache = {}
+
+
+def _find_forbidden_calls_in_file(fpath):
+    try:
+        st = os.stat(fpath)
+    except OSError:
+        return []
+    key = (st.st_size, st.st_mtime_ns)
+    cached = _forbidden_scan_cache.get(fpath)
+    if cached and cached[0] == key:
+        return list(cached[1])
+    try:
+        with open(fpath, 'r', encoding='utf-8', errors='replace') as f:
+            source = f.read()
+    except Exception:
+        return []
+    hits = _find_forbidden_calls_in_source(source, fpath)
+    _forbidden_scan_cache[fpath] = (key, tuple(hits))
+    return hits
+
+
 def _scan_plugin_for_forbidden_subprocess_usage(plugin_dir, single_file=None, provider_name=None):
     """plugin_dir(폴더형) 또는 single_file(단일 파일형) 플러그인 소스에서 subprocess 사용을 찾는다.
 
@@ -97,20 +123,9 @@ def _scan_plugin_for_forbidden_subprocess_usage(plugin_dir, single_file=None, pr
             for fname in files:
                 if not fname.endswith('.py'):
                     continue
-                fpath = os.path.join(root, fname)
-                try:
-                    with open(fpath, 'r', encoding='utf-8', errors='replace') as f:
-                        source = f.read()
-                except Exception:
-                    continue
-                forbidden_hits.extend(_find_forbidden_calls_in_source(source, fpath))
+                forbidden_hits.extend(_find_forbidden_calls_in_file(os.path.join(root, fname)))
     elif single_file and os.path.isfile(single_file):
-        try:
-            with open(single_file, 'r', encoding='utf-8', errors='replace') as f:
-                source = f.read()
-            forbidden_hits.extend(_find_forbidden_calls_in_source(source, single_file))
-        except Exception:
-            pass
+        forbidden_hits.extend(_find_forbidden_calls_in_file(single_file))
 
     if not forbidden_hits:
         return

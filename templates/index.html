@@ -23,6 +23,21 @@
          작아 보인다는 실사용자 리포트로 확인, 2026-08-22) -->
     <link rel="manifest" href="{{ static_asset_url('manifest.json', sig='boe-manifest-a17f3c9') }}">
     <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png', sig='boe-apple-icon-a17f3c9') }}">
+    <!-- 앱 글꼴: Pretendard 가변 글꼴을 완성형 한글 2,350자 + 영문·기호로 자른 파일 하나(tools/fonts/build_app_font.py).
+         글자 범위별 조각(92개) 방식은 화면 글자에 따라 조각을 계속 받고 받을 때마다 다시 그려 2.9.4에서 느려졌다는 체감이 나왔다.
+         head에서 바로 받기 시작하고, font-display: optional로 다시 그리기가 없게 한다(첫 방문에 늦으면 그 화면만 기본 글꼴, 다음부터 캐시).
+         preload 주소와 @font-face 주소는 같아야 두 번 받지 않는다. -->
+    {% set app_font_url = url_for('static', filename='fonts/pretendard/BookOasisSans-Variable.woff2', v='ksx1') %}
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ app_font_url }}">
+    <style>
+        @font-face {
+            font-family: 'BookOasis Sans';
+            font-style: normal;
+            font-weight: 45 920;
+            font-display: optional;
+            src: url('{{ app_font_url }}') format('woff2-variations'), url('{{ app_font_url }}') format('woff2');
+        }
+    </style>
     <!-- FontAwesome 아이콘 패키지 추가 (Local) -->
     <link rel="stylesheet" href="{{ static_asset_url('lib/font-awesome/css/all.min.css') }}">
     <!-- 코어 UI 아이콘: Lucide 선 아이콘(FA는 플러그인·브랜드·채움 상태 아이콘용으로 계속 로드) -->
@@ -98,7 +113,7 @@
     {% include "components/modals/audio_player_modal.html" %}
 </div>
 
-<script type="module" src="{{ static_asset_url('js/dashboard_insights.js') }}"></script>
+<script type="module" src="{{ module_asset_url('js/dashboard_insights.js') }}"></script>
 <script src="{{ static_asset_url('js/easter_egg_boss_key.js') }}"></script>
 
 <script>

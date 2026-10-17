@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { getSortOption, normalizeSortValue, toggleLibrarySortMenu } from './library_sort_menu.js';
 import * as api from './api.js';
 import { renderHistoryGrid, renderBooksGrid, appendBooksGrid, prependBooksGrid } from './ui.js';
-import { openReader } from './viewer.js';
+import { openReader } from './reader_loader.js';
 import { initInfiniteScrollObserver } from './infinite_scroll.js';
 import { stripLeadingBracketTags } from './series_display.js';
 import { mountIndexScrollbar, unmountIndexScrollbar } from './index_scrollbar.js';

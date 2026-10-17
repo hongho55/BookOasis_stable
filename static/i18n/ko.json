@@ -16,6 +16,9 @@
     "reset": "초기화",
     "no_history_books": "최근에 읽은 도서 내역이 없습니다.",
     "no_library_books": "보관함에 등록된 도서가 없습니다.",
+    "no_author_group_books": "작가별 보기에 표시할 도서가 없습니다.",
+    "no_author_group_hint": "작가 정보가 있는 도서만 작가별로 모입니다.",
+    "switch_to_default_view": "기본 보기로 전환",
     "loading_books": "도서 목록을 불러오는 중..."
   },
 

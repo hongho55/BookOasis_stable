@@ -1,4 +1,17 @@
 # CHANGELOG
+## v2.9.5
+- (plugin) 커뮤니티 별점 1.1.0: 별점 결과 5분 캐시, 별점 서버 실패 시 2분간 재호출 안 함, 조회 동시 요청·제한 시간 3초, relay 주소를 바꾸면 인증을 다시 하도록 수정 | community rating 1.1.0: cache ratings for 5 minutes, skip the rating server for 2 minutes after a failure, query in parallel with a 3s timeout, and re-verify when the relay URL changes
+- (feature) 진단용 느린 요청·서버 오류 기록 추가(.env DEBUG_REQUEST_LOG=true일 때만, 기본 꺼짐) — logs/request_debug.log, 요약 도구 tools/summarize_request_debug_log.py와 MCP get_request_debug_summary | add an opt-in diagnostic log of slow requests and server errors (only when DEBUG_REQUEST_LOG=true in .env, off by default) — logs/request_debug.log, with a summary tool (tools/summarize_request_debug_log.py) and the MCP tool get_request_debug_summary
+- (improvement) 사이드바 가상 그룹 이름을 카테고리와 같은 크기로 맞추고 굵기로 구분, 관리 도구 항목은 차분한 색으로 | sidebar virtual group names now match the category size and stand out by weight; admin tool items use a muted color
+- (improvement) 작가별 보기에서 표시할 도서가 없을 때 '도서가 없다' 대신 이유를 알려주고 기본 보기로 바로 전환하는 버튼 표시 | when the by-author view has nothing to show, explain why instead of saying there are no books, with a button to switch back to the default view
+- (improvement) 작가별 보기가 켜져 있으면 상단 토글에 '작가별' 글자를 함께 표시 | show the 'By author' label on the top bar toggle while the by-author view is on
+- (performance) 앱 글꼴을 조각 92개에서 완성형 한글 2,350자를 담은 파일 하나(475KB)로 바꿔, 한 번만 받고 글꼴이 바뀌며 화면을 다시 그리지 않도록 함 | replace the 92-piece app font with a single file covering the 2,350 common Hangul syllables (475KB), downloaded once and without re-drawing the screen when it loads
+- (performance) 글꼴·라이브러리 파일이 1년 캐시 설정에도 매번 서버에 재확인하던 문제 수정 | fix fonts and library files being re-checked with the server on every visit despite their one-year cache setting
+- (performance) 앱 스크립트를 버전이 들어간 주소로 불러와 재방문 때 다시 받거나 확인하지 않도록 함 | load app scripts from versioned URLs so revisits no longer re-download or re-check them
+- (performance) 관리자 홈의 플러그인 상태 확인이 매번 모든 플러그인 소스를 다시 검사하던 것을 바뀐 파일만 검사하도록 개선 | the admin home's plugin status check now re-scans only changed plugin files instead of every plugin's source each time
+- (performance) PDF 라이브러리는 PDF를 열 때, 압축 라이브러리(JSZip)는 첫 화면 뒤에 불러오도록 변경(플러그인이 쓰는 경우 실행 전에 자동으로 불러옴) | load the PDF library when a PDF is opened and the zip library (JSZip) after the first screen, loading them automatically before any plugin code that uses them
+- (performance) 뷰어·상세·설정·플레이어 스크립트를 처음 쓸 때 불러와 홈 화면이 받는 스크립트를 절반 가까이 줄임 | load viewer, detail, settings and player scripts on first use, cutting the scripts the home screen loads nearly in half
+
 ## v2.9.4
 - (improvement) 앱 화면에 Pretendard 글꼴 적용(기기마다 다른 기본 글꼴 대신), 도서 카드 제목을 덜 굵게 하고 단어 단위로 줄바꿈 | use the bundled Pretendard font across the app (instead of each device's default font), with lighter book card titles that wrap between words
 - (improvement) 데스크톱 화면의 바깥 테두리 상자를 없애고, 사이드바 Home 줄의 관리 버튼들을 하단 '관리 도구'로 옮김(모바일과 동일) | remove the outer frame on desktop, and move the admin buttons from the sidebar Home row into the collapsible 'Admin tools' section at the bottom (same as mobile)

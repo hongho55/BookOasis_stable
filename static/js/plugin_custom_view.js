@@ -2,6 +2,7 @@
 import { state } from './state.js';
 import { switchActiveView } from './view_manager.js';
 import { updateCurrentCategoryIndicator } from './category_indicator.js';
+import { withPluginGlobals } from './utils/script_loader.js';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -52,12 +53,14 @@ export async function mountCategoryPluginUI(pluginId) {
         }
         container.innerHTML = html;
         if (bundle.js) {
-          try {
-            const scriptFn = new Function('pluginId', 'container', bundle.js);
-            scriptFn(pluginId, container);
-          } catch (err) {
-            console.error(`[PluginCustomView] Script execution error (${pluginId}):`, err);
-          }
+          withPluginGlobals(bundle.js, () => {
+            try {
+              const scriptFn = new Function('pluginId', 'container', bundle.js);
+              scriptFn(pluginId, container);
+            } catch (err) {
+              console.error(`[PluginCustomView] Script execution error (${pluginId}):`, err);
+            }
+          });
         }
         return;
       }

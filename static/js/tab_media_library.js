@@ -1,12 +1,14 @@
 // tab_media_library.js – 도서관 코어 엔트리 오케스트레이터 및 메인 라우터
 import { state } from './state.js';
 import * as api from './api.js';
-import { openBookDetail, goBackToList } from './modal.js';
+import { openBookDetail, goBackToList, loadDetail } from './modal.js';
 import { updateCurrentCategoryIndicator } from './category_indicator.js';
-import { readOpenViewerSession } from './viewer/lifecycle_controller.js';
-import { openReader, closeMediaViewer, toggleFullscreenViewer, setComicFitMode, changeFontSize, toggleReaderTheme, initKeyboardListener, nextComicPage, prevComicPage, nextPdfPage, prevPdfPage, epubPrevPage, epubNextPage, prevTxtPage, nextTxtPage } from './viewer.js';
+import { readOpenViewerSession } from './viewer/open_session.js';
+// 뷰어·설정·메타데이터 검색·영상/오디오 플레이어는 홈 첫 화면에 필요 없어 처음 쓸 때 불러온다(2.9.5, utils/lazy_module.js)
+import { openReader, closeMediaViewer, flushProgress, loadViewer } from './reader_loader.js';
+import { lazyModule, bindLazyGlobals, whenIdle } from './utils/lazy_module.js';
+import { ensureJSZip } from './utils/script_loader.js';
 import { switchActiveView } from './view_manager.js';
-import { flushProgress } from './viewer_progress.js';
 import './header_scroll_behavior.js';
 
 // category.js CRUD 임포트
@@ -22,7 +24,6 @@ import { loadDashboardData, loadDashboardPlugins, switchPluginsViewTab } from '.
 import { initScrollableRowNavDelegation } from './scrollable_row_nav.js';
 import { initInfiniteScrollObserver } from './infinite_scroll.js';
 import { showBookContextMenu, triggerScanSingleBookAction, triggerSearchAladinMetadataAction, triggerMarkAsUnreadAction } from './book_context_menu.js';
-import { openMetadataSearchModal, closeMetadataSearchModal, performMetadataSearch } from './metadata_search.js';
 
 // book_list.js 임포트
 import {
@@ -41,7 +42,8 @@ import { clearBookSelection } from './book_selection.js';
 
 // plugin_custom_view.js 임포트
 import { mountCategoryPluginUI } from './plugin_custom_view.js';
-import { switchSettingsTab, loadInitialSystemSettings, loadGeneralSettings, submitGeneralSettings, initReportsTab, loadReportList, loadReportDetail, loadViewerSettings, submitViewerSettings, applySettingsTabAccessControl } from './settings_tab.js';
+// 부팅 때 필요한 시스템 설정 적용만 바로 가져오고, 설정 화면(settings_tab.js 이하)은 들어갈 때 불러온다
+import { loadInitialSystemSettings } from './settings/general.js';
 
 // 장르/태그 및 사이드바 제어 모듈
 import { initFloatingFilter, toggleFilterModal } from './genre_tag_filter.js';
@@ -54,12 +56,21 @@ import { applyGroupModeButtonState, switchGroupMode, restoreGroupModeView } from
 import { openSearchOverlay } from './search_overlay.js';
 import { focusLibrarySearchInput, applySearchShortcutSetting, initLibrarySearchShortcut, handleLibrarySearchAction, handleLibrarySearchKeydown, initLibraryTypeHotkeys } from './search_shortcut_manager.js';
 
-import './viewer/viewer_padding.js';
-import './audio_player.js';
 import './video_library.js';
 import './author_group_context_menu.js';
-import './video_player.js';
 import './plugin_webview_api.js';
+
+const loadSettingsTab = lazyModule(() => import('./settings_tab.js'));
+const loadMetadataSearch = lazyModule(() => import('./metadata_search.js'));
+const loadVideoPlayer = lazyModule(() => import('./video_player.js'));
+// 오디오 플레이어는 부팅 부작용(미니 플레이어 드래그·단축키·생명주기 저장)이 있어 첫 화면을 그린 직후 불러온다
+const loadAudioPlayer = lazyModule(() => import('./audio_player.js'));
+
+bindLazyGlobals(loadMetadataSearch, ['openMetadataSearchModal', 'closeMetadataSearchModal', 'performMetadataSearch', 'openMetadataSearchQueue']);
+bindLazyGlobals(loadVideoPlayer, ['openVideoPlayer']);
+bindLazyGlobals(loadAudioPlayer, ['openAudioPlayer']);
+// 영상 플레이어를 안 불러왔으면 열린 플레이어도 없다(불러오면 video_player.js가 실제 함수로 덮어쓴다)
+if (typeof window.closeVideoPlayer !== 'function') window.closeVideoPlayer = () => {};
 
 // 새로고침/뒤로가기 시 브라우저가 이전 스크롤 위치(내부 스크롤 컨테이너 포함)를
 // 되살리면서 .library-main-content가 scrollTop 0이 아닌 채로 시작해 상단 검색창이
@@ -359,9 +370,7 @@ async function initTabMediaLibrary() {
     const usernameEl = document.getElementById('session-username-display');
     if (usernameEl) usernameEl.innerText = state.currentUser.username;
     
-    // 관리자 전용 설정 탭 버튼은 여기서 한 번에 노출/숨김을 결정한다
-    // (탭별 개별 onclick 분기 대신 data-settings-tab 기반 공용 함수 사용, settings_tab.js 참고)
-    applySettingsTabAccessControl();
+    // 관리자 전용 설정 탭 버튼 노출은 설정 화면에 들어갈 때 결정한다(selectCategory('settings'), 버튼 기본값은 숨김)
   }
 
   applyLibraryTypeToggleVisibility();
@@ -377,7 +386,6 @@ async function initTabMediaLibrary() {
   initSidebarInteractions();
   initFloatingFilter();
   initInfiniteScrollObserver();
-  initKeyboardListener();
   initLibrarySearchShortcut();
   initLibraryTypeHotkeys();
 
@@ -868,12 +876,15 @@ export async function selectCategory(id, skipHistory = false, options = {}) {
       mod.renderSmartRecommendView();
     });
   } else if (id === 'settings') {
+    const settingsTab = await loadSettingsTab();
+    // 관리자 전용 탭 버튼은 여기서 한 번에 노출/숨김을 결정한다 (data-settings-tab 기반 공용 함수, settings_tab.js 참고)
+    settingsTab.applySettingsTabAccessControl();
     switchActiveView('settings');
     if (state.currentUser && state.currentUser.role === 'admin') {
       loadLibrarySchedules();
-      switchSettingsTab('schedule');
+      settingsTab.switchSettingsTab('schedule');
     } else {
-      switchSettingsTab('about');
+      settingsTab.switchSettingsTab('about');
     }
   } else if (id === 'plugins') {
     switchActiveView('plugins');
@@ -913,22 +924,25 @@ window.refreshBooksListIfStale = refreshBooksListIfStale;
 window.openReader = openReader;
 window.openBookDetail = openBookDetail;
 window.goBackToList = goBackToList;
-window.setComicFitMode = setComicFitMode;
 window.closeMediaViewer = closeMediaViewer;
-window.toggleFullscreenViewer = toggleFullscreenViewer;
-window.changeFontSize = changeFontSize;
-window.toggleReaderTheme = toggleReaderTheme;
-window.nextComicPage = nextComicPage;
-window.prevComicPage = prevComicPage;
-window.nextPdfPage = nextPdfPage;
-window.prevPdfPage = prevPdfPage;
-window.epubPrevPage = epubPrevPage;
-window.epubNextPage = epubNextPage;
-window.prevTxtPage = prevTxtPage;
-window.nextTxtPage = nextTxtPage;
+bindLazyGlobals(loadViewer, [
+  'setComicFitMode', 'toggleFullscreenViewer', 'changeFontSize', 'toggleReaderTheme',
+  'nextComicPage', 'prevComicPage', 'nextPdfPage', 'prevPdfPage', 'epubPrevPage', 'epubNextPage', 'prevTxtPage', 'nextTxtPage',
+]);
 window.toggleLibrarySort = toggleLibrarySort;
 window.resumeSeries = resumeSeries;
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTabMediaLibrary();
+  initTabMediaLibrary().finally(() => {
+    // 첫 화면을 그린 뒤 한가할 때: 오디오 플레이어 부팅, 다음에 누를 가능성이 큰 상세·뷰어 미리 받기(첫 클릭 지연 방지)
+    whenIdle(() => {
+      loadAudioPlayer().catch(() => {});
+      // 코어는 jszip을 쓰지 않지만 window.JSZip을 기대하는 플러그인이 있을 수 있어 첫 화면 뒤에 채워 둔다
+      ensureJSZip().catch(() => {});
+      whenIdle(() => {
+        loadDetail().catch(() => {});
+        loadViewer().catch(() => {});
+      }, 4000);
+    });
+  });
 });

@@ -16,6 +16,9 @@
     "reset": "Reset",
     "no_history_books": "No recently read books history.",
     "no_library_books": "No registered books in library.",
+    "no_author_group_books": "No books to show in the by-author view.",
+    "no_author_group_hint": "Only books with author information are grouped by author.",
+    "switch_to_default_view": "Switch to default view",
     "loading_books": "Loading book list..."
   },
 

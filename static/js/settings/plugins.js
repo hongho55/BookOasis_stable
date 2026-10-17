@@ -1,6 +1,7 @@
 // plugins.js - 메타데이터 플러그인 설정 제어 모듈
 import { state } from '../state.js';
 import * as api from '../api.js';
+import { withPluginGlobals } from '../utils/script_loader.js';
 
 // 플러그인 목록 조회 및 동적 UI 생성
 export async function loadPluginsSettings() {
@@ -312,14 +313,18 @@ function initPluginSettingsScripts(container, plugins) {
   plugins.forEach((p) => {
     if (!p.settings_ui || !p.settings_ui.js) return;
     const root = container.querySelector(`[data-plugin-settings-root="${p.id}"]`);
-    if (!root || root.dataset.pluginScriptInited === '1') return;
-    try {
-      const fn = new Function('window', 'pluginId', 'root', 'config', p.settings_ui.js);
-      fn(window, p.id, root, p.config || {});
-      root.dataset.pluginScriptInited = '1';
-    } catch (e) {
-      console.error(`[Plugins-Settings] custom script init failed (${p.id}):`, e);
-    }
+    if (!root || root.dataset.pluginScriptInited === '1' || root.dataset.pluginScriptPending === '1') return;
+    root.dataset.pluginScriptPending = '1'; // 라이브러리를 불러오는 동안 다시 불려도 두 번 실행하지 않게
+    withPluginGlobals(p.settings_ui.js, () => {
+      delete root.dataset.pluginScriptPending;
+      try {
+        const fn = new Function('window', 'pluginId', 'root', 'config', p.settings_ui.js);
+        fn(window, p.id, root, p.config || {});
+        root.dataset.pluginScriptInited = '1';
+      } catch (e) {
+        console.error(`[Plugins-Settings] custom script init failed (${p.id}):`, e);
+      }
+    });
   });
 }
 

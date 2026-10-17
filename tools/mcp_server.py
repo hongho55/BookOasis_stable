@@ -109,6 +109,18 @@ def get_random_book(db_type: str = "general", library_id: str = "all") -> dict:
 
 
 @mcp.tool()
+def get_request_debug_summary(hours: float = 24, top: int = 20) -> dict:
+    """느린 요청(기본 500ms 이상)·서버 오류(5xx) 기록을 경로 패턴별로 요약합니다(읽기 전용).
+    기록은 서버 .env에 DEBUG_REQUEST_LOG=true일 때만 logs/request_debug.log에 쌓입니다(enabled=false면 꺼진 상태).
+    hours=0이면 남아 있는 기록 전체. 항목별 cpu_share가 1에 가까우면 그 요청 자체가 무겁고(코드 개선 대상),
+    cpu_share는 낮은데 contention이 많으면 다른 요청과 겹쳐(단일 워커) 밀린 것입니다."""
+    def _run():
+        from services.request_debug_summary import summarize
+        return summarize(hours if hours and hours > 0 else None, top)
+    return _quiet(_run)
+
+
+@mcp.tool()
 def get_library_stats(db_type: str = "general") -> dict:
     """서재 전체 통계(총 시리즈 수/총 도서 권수) 및 카테고리별 세부 통계를 반환합니다."""
     def _run():
