@@ -951,7 +951,7 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     if library_errors:
         try:
             from utils.report_helper import save_scan_report
-            report_file = save_scan_report(library_id, library_errors)
+            report_file = save_scan_report(library_id, library_errors, db_type=db_type)
         except Exception as report_err:
             print(f"[Scanner ERROR] Scan report save failed: {report_err}")
     if result_summary is not None:

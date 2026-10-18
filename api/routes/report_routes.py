@@ -38,10 +38,9 @@ def _resolve_report_file_path(user_filename):
 def get_library_reports(library_id):
     """특정 라이브러리 카테고리의 스캔 에러 리포트 목록 조회"""
     try:
-        from utils.report_helper import get_reports_dir
-        reports_dir = get_reports_dir()
-        pattern = os.path.join(reports_dir, f"{library_id}_*.json")
-        files = glob.glob(pattern)
+        from utils.report_helper import list_report_files
+        db_type = (request.args.get('type') or 'general').strip()
+        files = list_report_files(library_id, db_type)
         # 파일명 기준 역순(최신순) 정렬
         files.sort(key=os.path.basename, reverse=True)
         

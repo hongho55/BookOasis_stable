@@ -707,6 +707,12 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
     --mobile-header-row2: 0rem;
 }
 
+/* 모바일 헤더는 숨겨지지 않고 첫 줄이 남으므로 필터 바는 계속 그 아래에 붙인다
+   (접힌 높이는 ResizeObserver가 --library-header-h로 반영) */
+.library-header--hidden ~ .active-filter-bar {
+    top: calc(var(--library-header-h, 0px) + 0.5rem);
+}
+
 .library-header.library-header--hidden {
     grid-template-rows: auto 0rem 0rem;
     transform: none;

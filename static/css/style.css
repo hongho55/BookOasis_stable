@@ -4985,9 +4985,19 @@ button, input, select, textarea {
     animation: slideDownGlow 0.3s ease-out forwards;
     box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
     flex-wrap: wrap;
-    position: relative;
-    z-index: 100;
+    /* 스크롤해도 어떤 필터가 걸렸는지 보이도록 헤더(.library-header, sticky top:0) 바로 아래에
+       따라붙는다. --library-header-h는 header_scroll_behavior.js가 실제 헤더 높이로 갱신.
+       z-index는 헤더(40)보다 낮춰 헤더의 계정 메뉴/검색 드롭다운을 가리지 않게 한다. */
+    position: sticky;
+    top: calc(var(--library-header-h, 0px) + 0.5rem);
+    transition: top 0.25s ease;
+    z-index: 39;
     margin-bottom: 1rem;
+}
+
+/* 데스크톱: 아래로 스크롤해 헤더가 위로 밀려 사라지면 필터 바가 그 자리(맨 위)로 올라간다 */
+.library-header--hidden ~ .active-filter-bar {
+    top: 0;
 }
 
 @keyframes slideDownGlow {

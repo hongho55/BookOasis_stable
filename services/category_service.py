@@ -417,7 +417,7 @@ class CategoryService:
         try:
             try:
                 from utils.report_helper import delete_all_reports
-                delete_all_reports(library_id)
+                delete_all_reports(library_id, db_type)
             except Exception as e:
                 print(f"[CategoryService ERROR] Bulk report file removal failed: {e}")
 

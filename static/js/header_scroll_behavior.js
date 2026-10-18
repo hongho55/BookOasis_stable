@@ -39,6 +39,14 @@
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
+
+    // 필터 바(#active-filter-bar)도 sticky로 헤더 바로 아래에 붙는다 - 헤더 높이는 화면 폭/
+    // 모바일 접힘(--hidden 시 2·3줄 접기)에 따라 바뀌므로 실제 높이를 CSS 변수로 넘긴다.
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => {
+        scrollEl.style.setProperty('--library-header-h', header.offsetHeight + 'px');
+      }).observe(header);
+    }
   }
 
   if (document.readyState === 'loading') {

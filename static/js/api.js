@@ -687,8 +687,8 @@ export async function editMediaDetail(formData) {
   return res.json();
 }
 
-export async function fetchScanReports(libraryId) {
-  const res = await fetch(`/api/media/libraries/${libraryId}/reports`);
+export async function fetchScanReports(libraryId, type = 'general') {
+  const res = await fetch(`/api/media/libraries/${libraryId}/reports?type=${encodeURIComponent(type)}`);
   return res.json();
 }
 

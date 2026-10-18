@@ -1,4 +1,9 @@
 # CHANGELOG
+## v2.9.7
+- (fix) 서버 응답이 느릴 때 스캔 상태 조회가 쌓여 화면이 멈추던 문제 수정 | fix scan status polls piling up and stalling the page when the server responds slowly
+- (fix) 일반·성인 카테고리 번호가 같으면 스캔 에러 리포트가 서로 섞여 보이던 문제 수정(이전 리포트는 표시되지 않고 다음 스캔부터 분리 저장) | fix scan error reports of general and adult categories with the same ID showing up in each other's viewer (older reports are no longer listed; reports are kept separately from the next scan)
+- (improvement) 필터 적용 중 표시줄이 스크롤해도 상단에 따라다니도록 변경 | the active filter bar now stays pinned at the top while scrolling
+
 ## v2.9.6
 - (removed) 알라딘 Open API 지원 종료에 따라 알라딘 샘플 플러그인(aladin, aladin_new)과 코어의 알라딘 기본값을 삭제 — 기본 메타데이터 공급자 자동 선택·다른 플러그인으로의 자동 대체가 없어지고(.env METADATA_PROVIDER 지정 시만), 플러그인용 window.triggerSearchAladinMetadataAction 별칭과 적용 API의 aladin_item 필드도 제거 | removed the Aladin sample plugins (aladin, aladin_new) and Aladin defaults in core as the Aladin Open API was discontinued — no automatic default metadata provider or silent fallback to another plugin anymore (only when METADATA_PROVIDER is set in .env); the window.triggerSearchAladinMetadataAction alias and the aladin_item field of the apply API were also removed
 - (fix) 연속 스캔 등으로 다른 탭을 보는 사이 뜬 마지막 토스트가 돌아와도 사라지지 않던 문제 수정, 토스트가 튕기지 않고 부드럽게 나타나도록 변경 | fix the last toast (e.g. after back-to-back scans) never disappearing when it appeared while the tab was in the background, and make toasts ease in smoothly instead of bouncing

@@ -792,7 +792,7 @@ def run_lazy_cover_extraction(target_book_id=None, target_db_type=None,
             from utils.report_helper import save_scan_report
             for lib_id, err_list in lib_errors.items():
                 if err_list:
-                    save_scan_report(lib_id, err_list)
+                    save_scan_report(lib_id, err_list, db_type=db_type)
             
             try:
                 if conn:

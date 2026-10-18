@@ -363,19 +363,27 @@ window.addEventListener('library:categories-rendered', () => {
 export function startSystemStatusPolling() {
   if (statusIntervalId) return;
 
-  const poll = async () => {
-    try {
-      const res = await fetch(`/api/system/status?type=${state.currentLibraryType}`);
-      const data = await res.json();
-      const scanRefresh = refreshDetailAfterBookScan(data);
-      updateCategoryScanSpinners(data, scanRefresh);
-      renderScanActivity(data);
-    } catch (err) {
-      console.error('[ScanSpinner] 상태 조회 실패:', err);
-    }
+  // 서버가 2초 넘게 걸리면(경로 스캔이 CPU를 쓰는 동안 등) 요청이 2초마다 쌓여 브라우저 연결을 다 잡았다 -
+  // 앞 요청이 끝나기 전에는 새로 보내지 않는다.
+  let pollInFlight = null;
+  const poll = () => {
+    if (pollInFlight) return pollInFlight;
+    pollInFlight = (async () => {
+      try {
+        const res = await fetch(`/api/system/status?type=${state.currentLibraryType}`);
+        const data = await res.json();
+        const scanRefresh = refreshDetailAfterBookScan(data);
+        updateCategoryScanSpinners(data, scanRefresh);
+        renderScanActivity(data);
+      } catch (err) {
+        console.error('[ScanSpinner] 상태 조회 실패:', err);
+      }
+    })().finally(() => { pollInFlight = null; });
+    return pollInFlight;
   };
 
-  refreshStatusPoll = poll;
+  // 명시적 새로고침(스캔 시작 직후 등)은 진행 중 요청이 그 전에 출발했을 수 있어 끝난 뒤 한 번 더 조회한다
+  refreshStatusPoll = () => (pollInFlight ? pollInFlight.then(poll) : poll());
   // 최초 1회 즉시 실행 후 2초 주기 반응형 폴링
   poll();
   statusIntervalId = setInterval(poll, 2000);

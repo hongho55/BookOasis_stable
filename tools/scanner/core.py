@@ -84,7 +84,7 @@ def _run_db_self_recovery(db_type):
     except Exception as rec_err:
         print(f"[Scanner-SelfHealing ERROR] Auto recovery failed: {rec_err}")
 
-def _save_report_unless_saved(library_id, library_errors, result_summary):
+def _save_report_unless_saved(library_id, library_errors, result_summary, db_type='general'):
     """엔진이 끝까지 돌면 리포트를 이미 저장하고 result_summary에 남긴다 - 같은 오류로 두 번 저장하지 않는다.
 
     엔진이 중간에 return한 경우(취소, 삭제 동기화 안전 차단 등)에만 여기서 저장한다."""
@@ -94,7 +94,7 @@ def _save_report_unless_saved(library_id, library_errors, result_summary):
         return
     try:
         from utils.report_helper import save_scan_report
-        result_summary['report_file'] = save_scan_report(library_id, library_errors)
+        result_summary['report_file'] = save_scan_report(library_id, library_errors, db_type=db_type)
         result_summary['errors'] = len(library_errors)
     except Exception as report_err:
         print(f"[Scanner ERROR] Scan report save failed: {report_err}")
@@ -233,7 +233,7 @@ def scan_library(db_path, library_id, physical_path, force=False, skip_vfs_refre
             pass
         gc.collect()
 
-    _save_report_unless_saved(library_id, library_errors, result_summary)
+    _save_report_unless_saved(library_id, library_errors, result_summary, db_type=db_type)
     return result_summary
 
 @scanner_print_control_decorator
@@ -296,7 +296,7 @@ def scan_library_path(db_path, library_id, target_path, force=False, skip_vfs_re
             pass
         gc.collect()
 
-    _save_report_unless_saved(library_id, library_errors, result_summary)
+    _save_report_unless_saved(library_id, library_errors, result_summary, db_type=db_type)
     return result_summary
 
 
