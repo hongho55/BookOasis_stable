@@ -376,6 +376,8 @@ export async function triggerDeleteLibrary() {
         window.hideGlobalLoadingSpinner();
       }
       alert(i18n.t('category.delete_fail', {error: data.error}));
+      // 타임아웃이어도 서버에서 삭제가 끝났을 수 있으니 목록을 다시 읽는다.
+      await reloadLibrarySidebar();
     }
   } catch (e) {
     if (typeof window.hideGlobalLoadingSpinner === 'function') {
@@ -613,65 +615,50 @@ export async function submitLibraryForm(event) {
 
 export async function triggerMoveLibrary() {
   if (!currentTargetLibrary || currentTargetLibrary.type === 'system') return;
-  
+
   const fromType = state.currentLibraryType;
   const toType = (fromType === 'general') ? 'adult' : 'general';
-  
+
+  // 도서 이관은 서버의 스캔 대기열(library_transfer)이 백그라운드로 처리한다 - 요청은 바로 끝나므로 화면을 잠그지 않는다.
   const targetLabel = (toType === 'general') ? '일반도서' : '성인도서';
-  const confirmMsg = `정말로 이 카테고리를 [${targetLabel}] 보관함으로 이동하시겠습니까?\n이동하는 동안 데이터베이스 정밀 이전 작업을 위해 전체 화면이 잠시 잠깁니다.`;
+  const confirmMsg = `정말로 이 카테고리를 [${targetLabel}] 보관함으로 이동하시겠습니까?
+도서 정보는 백그라운드에서 옮겨지며, 끝나면 [${targetLabel}] 보관함에 나타납니다.`;
   if (!confirm(confirmMsg)) return;
-  
+
   const modal = document.getElementById('library-form-modal');
   if (modal) modal.style.display = 'none';
-  
-  const dimmer = document.getElementById('migration-dimmer-modal');
-  if (dimmer) dimmer.style.display = 'flex';
-  
+
   const formData = new FormData();
   formData.append('id', currentTargetLibrary.id);
   formData.append('from_type', fromType);
   formData.append('to_type', toType);
-  
-  const preventClose = (e) => {
-    e.preventDefault();
-    e.returnValue = '';
-  };
-  window.addEventListener('beforeunload', preventClose);
-  
+
   try {
-    const response = await fetch('/api/media/libraries/move', {
+    const response = await fetch('/api/media/libraries/transfer', {
       method: 'POST',
       body: formData
     });
-    const data = await response.json();
-    
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // 프록시 오류 페이지(HTML) 등 JSON이 아닌 응답
+      data = {success: false, error: `HTTP ${response.status} ${response.statusText}`.trim()};
+    }
+
     if (data.success) {
-      alert(data.message || '카테고리가 성공적으로 이동되었습니다.');
-      
-      state.currentLibraryType = toType;
-      
-      document.querySelectorAll('.btn-toggle').forEach(btn => btn.classList.remove('active'));
-      if (toType === 'general') {
-        const btnGen = document.getElementById('btn-lib-general');
-        if (btnGen) btnGen.classList.add('active');
-      } else {
-        const btnAd = document.getElementById('btn-lib-adult');
-        if (btnAd) btnAd.classList.add('active');
-      }
-      
-      if (typeof window.loadLibraries === 'function') {
-        await window.loadLibraries();
-      }
-      selectCategory('home');
+      alert(data.message || '카테고리 이동을 시작했습니다.');
     } else {
       alert('이동 실패: ' + (data.error || '알 수 없는 오류'));
     }
   } catch (e) {
     console.error('이관 API 오류:', e);
     alert('서버 통신 실패 또는 타임아웃이 발생했습니다.');
-  } finally {
-    window.removeEventListener('beforeunload', preventClose);
-    if (dimmer) dimmer.style.display = 'none';
+  }
+  // 성공이면 원본이 이미 목록에서 빠졌고, 실패해도 서버 상태와 맞춘다.
+  await reloadLibrarySidebar();
+  if (String(state.currentLibraryId) === String(currentTargetLibrary.id)) {
+    selectCategory('home');
   }
 }
 

@@ -211,10 +211,13 @@ class SchedulerService:
             except Exception as tz_err:
                 print(f"[Scheduler ERROR] Failed to dynamically update running timezone ({tz_str}): {tz_err}")
 
-        # 기존 모든 job 제거
+        # 여기서 다시 만드는 job(카테고리 스캔, lazy 표지 스캔)만 제거한다 - 예전엔 모든 job을 지워 start_scheduler()가
+        # 기동 때 한 번만 등록하는 Redis 진행률 flush·gdrive 뷰캐시 정리·음악 정보 조회 job이 카테고리 추가/수정/이동이나
+        # 설정 저장 뒤 재시작 전까지 사라졌다(2026-10-21 발견).
         try:
             for job in list(scheduler.get_jobs()):
-                scheduler.remove_job(job.id)
+                if job.id.startswith('scan_') or job.id == 'lazy_scan_covers_job':
+                    scheduler.remove_job(job.id)
             print("[Scheduler] All existing scan jobs removed.")
         except Exception as e:
             print(f"[Scheduler] Error removing job: {e}")

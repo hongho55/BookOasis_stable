@@ -78,7 +78,7 @@ class UserRepository:
             user_id = cursor.lastrowid
             
             # 신규 사용자 생성 시 모든 라이브러리 카테고리 권한 기본적으로 1(허용) 처리
-            cursor.execute("SELECT id FROM libraries")
+            cursor.execute("SELECT id FROM libraries WHERE COALESCE(pending_delete, 0) = 0")
             lib_ids = [row['id'] for row in cursor.fetchall()]
             for lid in lib_ids:
                 cursor.execute(

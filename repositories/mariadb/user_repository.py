@@ -77,7 +77,7 @@ class UserRepository:
             )
             user_id = cursor.lastrowid
             
-            cursor.execute("SELECT id FROM libraries")
+            cursor.execute("SELECT id FROM libraries WHERE COALESCE(pending_delete, 0) = 0")
             lib_ids = [row['id'] for row in cursor.fetchall()]
             for lid in lib_ids:
                 cursor.execute(

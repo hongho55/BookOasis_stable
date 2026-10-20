@@ -71,6 +71,8 @@ function getQueueTaskTypeName(type, t) {
     if (type === 'cover_scan') return `<span style="color: #4ade80;"><i class="lc lc-image"></i> ${t('queue.type_cover')}</span>`;
     if (type === 'lazy_scan') return `<span style="color: var(--app-accent-hover);"><i class="lc lc-moon"></i> ${t('queue.type_lazy')}</span>`;
     if (type === 'batch_book_scan') return `<span style="color: #fbbf24;"><i class="lc lc-book-open"></i> ${t('queue.type_batch_book_scan')}</span>`;
+    if (type === 'library_delete') return `<span style="color: #f87171;"><i class="lc lc-trash-2"></i> ${t('queue.type_library_delete')}</span>`;
+    if (type === 'library_transfer') return `<span style="color: #c084fc;"><i class="lc lc-folder-tree"></i> ${t('queue.type_library_transfer')}</span>`;
     return type;
 }
 

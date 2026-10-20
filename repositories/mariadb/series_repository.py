@@ -80,6 +80,8 @@ class SeriesRepository:
                            COALESCE(MAX(b2.created_at), '') AS latest_added
                     FROM books b2
                     WHERE (b2.is_deleted = 0 OR b2.is_deleted IS NULL)
+                      -- 삭제 대기(pending_delete) 카테고리는 스캐너 큐가 지우는 중이라 요약에 다시 넣지 않는다
+                      AND b2.library_id NOT IN (SELECT id FROM libraries WHERE pending_delete = 1)
                     GROUP BY b2.library_id, COALESCE(NULLIF(b2.series_name, ''), b2.title)
                 ) rep
                 INNER JOIN books b ON b.id = rep.rep_id

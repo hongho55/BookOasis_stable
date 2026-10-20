@@ -27,7 +27,7 @@ class OpdsRepository:
     def get_library_list(db_type):
         with database.connection(db_type) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, name FROM libraries")
+            cursor.execute("SELECT id, name FROM libraries WHERE COALESCE(pending_delete, 0) = 0")
             rows = cursor.fetchall()
         return [dict(row) for row in rows]
 

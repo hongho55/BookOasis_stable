@@ -901,8 +901,14 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
         print(f"[Scanner-DB] Deletion sync skipped (library root unreachable) db={db_type} library_id={library_id}")
     elif not handle_deleted_books(cursor, db_books, set(deleted_paths) if deletion_ok else set(), target_paths, found_file_paths):
         print(f"[Scanner-DB] Deletion sync aborted db={db_type} library_id={library_id}")
+        # 중단 전에 실행된 복구(다시 발견된 도서) UPDATE는 맞는 결과이므로 남긴다.
+        _commit_with_retry(conn, 'deletion-sync-restore')
         conn.close()
         return
+    # 삭제/복구 결과는 여기서 바로 커밋한다. 아래 scan-end-cleanup은 전체 스캔에서만 돌기 때문에,
+    # 거기에 기대면 부분 스캔(scan-path)의 휴지통 이동이 conn.close()의 rollback으로 사라진다
+    # (이전 파일명 도서가 목록에 남음). 전체 스캔도 cleanup 잠금 실패 시 같은 이유로 잃는다.
+    _commit_with_retry(conn, 'deletion-sync')
     print(f"[Scanner-DB] Deletion sync done db={db_type} library_id={library_id}")
 
     # Initialize checkpoint of library upon successful completion

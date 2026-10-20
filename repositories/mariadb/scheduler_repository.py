@@ -26,7 +26,7 @@ class SchedulerRepository:
     def get_interrupted_libraries(db_type):
         with database.connection(db_type) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, name, physical_path FROM libraries WHERE scan_status = 'interrupted'")
+            cursor.execute("SELECT id, name, physical_path FROM libraries WHERE scan_status = 'interrupted' AND COALESCE(pending_delete, 0) = 0")
             rows = cursor.fetchall()
             conn.close()
             return [dict(row) for row in rows]
@@ -56,9 +56,11 @@ class SchedulerRepository:
 
     @staticmethod
     def get_scheduled_libraries(db_type):
+        # 삭제 중(1)·이동 나가는 중(2)은 빼고, 이동해 오는 중(3)인 대상의 크론은 미리 등록한다 - 웹의 스케줄러는
+        # 워커가 이동을 끝내는 시점을 모르고, 끝나기 전에 발화해도 스캔 등록이 거부되어 해가 없다.
         with database.connection(db_type) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, name, physical_path, cron_schedule FROM libraries WHERE cron_schedule IS NOT NULL AND cron_schedule != '' AND schedule_enabled = 1")
+            cursor.execute("SELECT id, name, physical_path, cron_schedule FROM libraries WHERE cron_schedule IS NOT NULL AND cron_schedule != '' AND schedule_enabled = 1 AND COALESCE(pending_delete, 0) NOT IN (1, 2)")
             rows = cursor.fetchall()
             conn.close()
             return [dict(row) for row in rows]

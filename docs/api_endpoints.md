@@ -78,7 +78,11 @@
 ---
 
 ### `[POST]` `/api/media/libraries/delete`
-* **설명**: 카테고리를 소거하며 하위 도서 메타데이터 및 독서 이력, 에러 보고서 파일을 연쇄 삭제(Cascade Delete)합니다.
+* **설명**: 카테고리를 목록에서 바로 숨기고(`pending_delete`) 스캔 대기열에 `library_delete` 작업을 등록합니다. 하위 도서 메타데이터·독서 이력은 이 작업이 나눠 지우며, 응답은 `{success, queued: true, message}`입니다. 에러 보고서 파일은 요청 안에서 지웁니다.
+* **권한**: `@admin_required`
+
+### `[POST]` `/api/media/libraries/transfer`
+* **설명**: 카테고리를 다른 보관함 DB(일반 ↔ 성인)로 도서·독서 이력과 함께 옮깁니다. form `id`, `from_type`, `to_type`. 요청은 원본을 숨기고 대상에 숨긴 카테고리를 만든 뒤 스캔 대기열에 `library_transfer` 작업을 등록하고 `{success, queued: true, message}`로 바로 응답합니다. 이관이 끝나면 대상 카테고리가 나타납니다. 스캔 중이거나 이 카테고리 도서의 TTS 음성을 만드는 중이면 400.
 * **권한**: `@admin_required`
 
 ---

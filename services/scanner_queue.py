@@ -36,6 +36,16 @@ def _is_recent_scan_finished_at(value, now=None, max_age_seconds=20):
     return -2 <= age_seconds <= max_age_seconds
 
 
+def _is_library_pending_delete(kwargs):
+    """스캔 대상 카테고리가 삭제 대기(pending_delete) 중이거나 이미 없으면 True - 지워지는 카테고리에 도서를 다시 넣지 않는다."""
+    try:
+        from repositories.category_repository import CategoryRepository
+        lib = CategoryRepository.get_library_by_id(kwargs.get('db_type', 'general'), int(kwargs.get('library_id')))
+    except Exception:
+        return False
+    return not lib or bool(int(lib.get('pending_delete') or 0))
+
+
 class ScanCancelledError(Exception):
     """사용자가 실행 중인 태스크에 취소를 요청하여 안전 중단되었음을 나타내는 신호용 예외"""
     pass
@@ -62,7 +72,7 @@ class ScannerQueue:
     def _get_task_key(self, task_type, kwargs):
         if task_type == 'lazy_scan':
             return 'lazy_scan'
-        elif task_type in ('library_scan', 'cover_scan'):
+        elif task_type in ('library_scan', 'cover_scan', 'library_delete', 'library_transfer'):
             db_type = kwargs.get('db_type', 'general')
             library_id = kwargs.get('library_id')
             return f"{task_type}_{db_type}_{library_id}"
@@ -81,6 +91,11 @@ class ScannerQueue:
     def enqueue(self, task_type, **kwargs):
         task_key = self._get_task_key(task_type, kwargs)
         force_requeue = kwargs.pop('force_requeue', False)
+        # 워커 프로세스 자신이 등록할 때는 core(웹 앱)를 불러와 워커 생존을 확인할 필요가 없다.
+        ensure_worker = kwargs.pop('ensure_worker', True)
+        if task_type in ('library_scan', 'cover_scan') and _is_library_pending_delete(kwargs):
+            self.log(f"Task '{task_key}' rejected: the category is being deleted.")
+            return False
         try:
             from repositories.scanner_queue_repository import ScannerQueueRepository
             existing = ScannerQueueRepository.get_task_by_key(task_key)
@@ -128,11 +143,12 @@ class ScannerQueue:
             self.log(f"Task '{task_key}' enqueued successfully (DB-backed).")
 
             # 내장 워커 가동 상태 헬스체크 및 필요 시 자동 재기동
-            try:
-                from core import ensure_scanner_worker_running
-                ensure_scanner_worker_running()
-            except Exception as w_err:
-                pass
+            if ensure_worker:
+                try:
+                    from core import ensure_scanner_worker_running
+                    ensure_scanner_worker_running()
+                except Exception as w_err:
+                    pass
 
             # Redis List에 작업 키 푸시
             try:
@@ -302,6 +318,8 @@ def run_scanner_worker_loop():
     except Exception as c_err:
         sq.log(f"Stale task cleanup warning: {c_err}")
 
+    _requeue_pending_library_deletes(sq)
+
     last_stale_check = time.time()
     global stop_requested
 
@@ -385,6 +403,10 @@ def run_scanner_worker_loop():
                         _process_cover_scan(sq, **kwargs)
                     elif task_type == 'gdrive_copy':
                         _process_gdrive_copy(sq, task_id, **kwargs)
+                    elif task_type == 'library_delete':
+                        result_summary = _process_library_delete(sq, task_id, **kwargs)
+                    elif task_type == 'library_transfer':
+                        result_summary = _process_library_transfer(sq, task_id, **kwargs)
                     else:
                         error_message = f"Unknown task type: {task_type}"
                         sq.log(error_message)
@@ -432,11 +454,13 @@ def run_scanner_worker_loop():
                     from utils.redis_helper import redis_delete_pattern
                     target_db = kwargs.get('db_type', 'general')
                     recent_added_db_types = ['general', 'adult', 'audiobook', 'video'] if task_type == 'lazy_scan' else [target_db]
+                    if task_type == 'library_transfer':
+                        recent_added_db_types = [kwargs.get('from_type', target_db), kwargs.get('to_type', target_db)]
                     for recent_added_db_type in recent_added_db_types:
                         redis_delete_pattern(f"cache:recent_added*:{recent_added_db_type}:*")
                     from repositories.series_repository import SeriesRepository
                     from services.system_health_service import SystemHealthService, series_summary_health_key
-                    summary_db_types = ['general', 'adult'] if task_type == 'lazy_scan' else [target_db]
+                    summary_db_types = ['general', 'adult'] if task_type == 'lazy_scan' else list(recent_added_db_types)
                     for summary_db_type in summary_db_types:
                         if summary_db_type == 'audiobook':
                             continue
@@ -658,6 +682,9 @@ def _process_lazy_scan(sq, task_id, **kwargs):
             raise RuntimeError(err_msg)
 
 def _process_library_scan(sq, **kwargs):
+    if _is_library_pending_delete(kwargs):
+        sq.log(f"Library scan skipped: category {kwargs.get('library_id')} is being deleted or no longer exists.")
+        return None
     from services.scheduler_service import run_scan_job
     # 가변 인자 딕셔너리를 그대로 포워딩하여 호출
     return run_scan_job(**kwargs)
@@ -777,6 +804,9 @@ def _process_batch_book_scan(sq, task_id, db_type='general', book_ids=None, **_k
     return result_summary
     
 def _process_cover_scan(sq, **kwargs):
+    if _is_library_pending_delete(kwargs):
+        sq.log(f"Cover scan skipped: category {kwargs.get('library_id')} is being deleted or no longer exists.")
+        return
     from services.cover_scan_service import CoverScanService
     kwargs.pop('trigger_type', None)  # 큐 기록용(누가 등록했나) - 작업 함수 인자가 아니다
     CoverScanService.run_cover_scan_job(**kwargs)
@@ -785,6 +815,66 @@ def _process_gdrive_copy(sq, task_id, **kwargs):
     from services.gdrive_copy_service import GdriveCopyService
     kwargs.pop('trigger_type', None)
     GdriveCopyService.run_gdrive_copy_job(sq, task_id, **kwargs)
+
+
+def _process_library_delete(sq, task_id, db_type='general', library_id=None, **_kwargs):
+    from services.category_service import CategoryService
+    from services.system_health_service import SystemHealthService
+    last_report = [0.0]
+
+    def reporter(text):
+        # 묶음마다 쓰면 DB 쓰기만 늘어난다 - 2초에 한 번만 진행 단계를 기록한다.
+        now = time.monotonic()
+        if now - last_report[0] >= 2.0:
+            last_report[0] = now
+            _update_batch_book_scan_stage(sq, task_id, text)
+
+    with SystemHealthService.track(f'library_delete:{db_type}', f'카테고리 삭제 ({db_type})'):
+        result = CategoryService.run_library_delete_job(db_type, int(library_id), report_stage=reporter)
+    sq.log(f"Library delete finished: db={db_type}, library_id={library_id}, deleted={result.get('deleted')}")
+    return result
+
+
+def _process_library_transfer(sq, task_id, from_type='general', to_type='adult', library_id=None,
+                              target_library_id=None, **_kwargs):
+    from services.category_service import CategoryService
+    from services.system_health_service import SystemHealthService
+    last_report = [0.0]
+
+    def reporter(text):
+        now = time.monotonic()
+        if now - last_report[0] >= 2.0:
+            last_report[0] = now
+            _update_batch_book_scan_stage(sq, task_id, text)
+
+    with SystemHealthService.track(f'library_transfer:{from_type}', f'카테고리 이동 ({from_type} → {to_type})'):
+        result = CategoryService.run_library_transfer_job(
+            from_type, to_type, int(library_id), int(target_library_id), report_stage=reporter
+        )
+    sq.log(f"Library transfer finished: {from_type}#{library_id} -> {to_type}#{target_library_id}, moved={result.get('moved')}")
+    return result
+
+
+def _requeue_pending_library_deletes(sq):
+    """삭제·이동 표시(pending_delete 1·2)만 남고 작업이 없는 카테고리를 다시 등록한다 - 요청 시 등록 실패나
+    작업 실패 뒤에도 워커가 다시 뜨면 삭제가 이어진다(이미 대기·실행 중이면 enqueue가 중복을 거부)."""
+    from repositories.category_repository import CategoryRepository
+    for db_type in ('general', 'adult', 'audiobook', 'video'):
+        try:
+            for library_id in CategoryRepository.get_pending_delete_library_ids(db_type):
+                if sq.enqueue('library_delete', db_type=db_type, library_id=library_id, ensure_worker=False):
+                    sq.log(f"Re-queued pending library delete: db={db_type}, library_id={library_id}")
+            # DB 이동은 일반↔성인 사이만 있다
+            for row in (CategoryRepository.get_pending_transfers(db_type) if db_type in ('general', 'adult') else []):
+                if not row.get('transfer_target_id'):
+                    continue
+                to_type = 'adult' if db_type == 'general' else 'general'
+                if sq.enqueue('library_transfer', db_type=db_type, from_type=db_type, to_type=to_type,
+                              library_id=int(row['id']), target_library_id=int(row['transfer_target_id']),
+                              ensure_worker=False):
+                    sq.log(f"Re-queued pending library transfer: {db_type}#{row['id']} -> {to_type}#{row['transfer_target_id']}")
+        except Exception as e:
+            sq.log(f"Pending library delete check failed (ignored): db={db_type}, error={e}")
 
 
 # 하위 호환성 유지를 위한 전역 싱글톤 인스턴스

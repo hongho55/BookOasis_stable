@@ -196,7 +196,13 @@ export async function deleteLibrary(formData) {
     method: 'POST',
     body: formData
   });
-  return res.json();
+  // 리버스 프록시 타임아웃(504 HTML)이면 JSON 파싱이 실패해 원인 없이 "서버 연결 오류"만 떴다 -
+  // 상태 코드를 그대로 돌려준다(서버 쪽 삭제는 계속 진행 중일 수 있다).
+  try {
+    return await res.json();
+  } catch (e) {
+    return {success: false, error: `HTTP ${res.status} ${res.statusText}`.trim()};
+  }
 }
 
 export async function moveLibraries(items, type) {

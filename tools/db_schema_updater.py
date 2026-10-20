@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS libraries (
     gdrive_copy_remote VARCHAR(255) DEFAULT NULL,
     gdrive_view_local_mirror_path TEXT DEFAULT NULL,
     content_kind VARCHAR(24) NOT NULL DEFAULT 'unspecified',
+    pending_delete INT DEFAULT 0,
+    transfer_target_id BIGINT DEFAULT NULL,
     INDEX idx_libraries_group_id (group_id),
     INDEX idx_libraries_group_order (group_id, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

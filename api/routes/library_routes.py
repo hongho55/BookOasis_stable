@@ -342,7 +342,8 @@ def delete_media_library():
     try:
         CategoryService.delete_library(db_type, int(library_id))
         SchedulerService.remove_job(db_type, int(library_id))
-        return jsonify({'success': True, 'message': _t('api.msg_library_deleted')})
+        # 실제 도서 삭제는 스캐너 큐가 이어서 한다 - 카테고리는 이미 목록에서 빠졌다.
+        return jsonify({'success': True, 'queued': True, 'message': _t('api.msg_library_delete_queued')})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -441,7 +442,9 @@ def _format_library_row(r):
         'rclone_rc_url': r['rclone_rc_url'] or ''
     }
 
-@library_bp.route('/api/media/libraries/move', methods=['POST'])
+# 1.8.9에서 사이드바 순서 저장(move_media_libraries)이 같은 '/api/media/libraries/move' POST를 먼저 등록해
+# DB 이동 요청이 순서 저장으로 가서 '이동할 카테고리 정보가 없습니다'로 실패했다 - 주소를 분리한다.
+@library_bp.route('/api/media/libraries/transfer', methods=['POST'])
 @admin_required
 def move_media_library():
     """라이브러리 카테고리를 다른 타입의 DB(일반 <-> 성인)로 완전히 이동시킵니다."""
@@ -451,18 +454,18 @@ def move_media_library():
     
     if not library_id:
         return jsonify({'success': False, 'error': '필수 매개변수(id)가 누락되었습니다.'}), 400
-        
+    if {from_type, to_type} != {'general', 'adult'}:
+        return jsonify({'success': False, 'error': '일반·성인 보관함 사이에서만 이동할 수 있습니다.'}), 400
+
     try:
-        # 스케줄러에서 해당 카테고리 스캔 작업 제거
-        SchedulerService.remove_job(from_type, int(library_id))
-        
-        # 카테고리 이전 수행 (동시성 락 & 트랜잭션 보장)
+        # 원본은 숨기고 대상(숨김)을 만든 뒤 바로 응답한다 - 도서 이관은 스캐너 큐(library_transfer)가 한다.
         CategoryService.move_library(from_type, to_type, int(library_id))
-        
-        # 스케줄러 리로드
+        # 원본 크론은 빼고, 대상 크론은 미리 등록한다(이동이 끝나기 전에 발화하면 스캔 등록이 거부된다).
+        SchedulerService.remove_job(from_type, int(library_id))
         SchedulerService.reload_all_jobs()
-        
-        return jsonify({'success': True, 'message': '카테고리가 안전하게 이동되었습니다.'})
+        return jsonify({'success': True, 'queued': True, 'message': _t('api.msg_library_transfer_queued')})
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         print(f"[API ERROR] 카테고리 이관 실패: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

@@ -1,4 +1,12 @@
 # CHANGELOG
+## v2.9.8
+- (fix) 폴더 단위 스캔(scan-path)에서 사라진 파일의 휴지통 이동·복구가 저장되지 않아 이름이 바뀐 파일의 이전 도서가 목록에 남던 문제 수정 | fix folder scans (scan-path) not saving trash moves and restores, which left the old entry of a renamed file in the list
+- (fix) 리버스 프록시 뒤에서 카테고리 삭제가 타임아웃(504)으로 실패하던 문제 수정 — 카테고리는 바로 목록에서 빠지고 도서 정보는 스캔 대기열의 '카테고리 삭제' 작업이 나눠 지움(재시작 시 이어서 진행), 삭제 실패 시 HTTP 상태를 표시 | fix category deletion timing out (504) behind a reverse proxy — the category leaves the list immediately and its books are removed in batches by a 'Category Delete' task in the scan queue (resumed after a restart); on failure, the HTTP status is shown
+- (fix) 카테고리를 일반↔성인 보관함으로 이동하면 '이동할 카테고리 정보가 없습니다'로 실패하던 문제 수정(1.8.9부터 사이드바 순서 저장과 주소가 겹쳤음) — 이동도 스캔 대기열의 '카테고리 이동' 작업이 나눠 처리(끝나면 대상 보관함에 나타남, 재시작 시 이어서 진행), 미분류로 들어가고 두 DB 스키마가 달라도 있는 컬럼만 옮김, EPUB 책갈피·주석·KOReader 동기화도 함께 옮기며 컬렉션에서는 빠지고 미리 만든 TTS 음성은 지워짐 | fix moving a category between the general and adult libraries failing with "no category to move" (its URL collided with sidebar reordering since 1.8.9) — moves now run in batches as a 'Category Move' task in the scan queue (the category appears in the target library when done; resumed after a restart), land ungrouped, copy only columns present in both databases, and carry EPUB bookmarks, annotations and KOReader sync; the books leave their collections and pre-generated TTS audio is removed
+- (fix) 카테고리 추가·수정·이동이나 설정 저장 뒤 재시작 전까지 Redis 읽기 진행률 저장·구글 드라이브 보기 캐시 정리·음악 정보 조회 예약 작업이 멈추던 문제 수정 | fix the scheduled Redis reading-progress save, Google Drive view-cache cleanup and music info lookup stopping until restart after adding, editing or moving a category or saving settings
+- (fix) 카테고리 삭제 시 EPUB 책갈피·주석·컬렉션 항목·KOReader 동기화·미리 만든 TTS 음성이 남던 문제 수정 | fix deleting a category leaving EPUB bookmarks, annotations, collection items, KOReader sync entries and pre-generated TTS audio behind
+- (fix) 카테고리 삭제 시 번호가 비슷한 다른 카테고리(예: 1번 삭제 시 11·21번)의 스캔 기록까지 지워지던 문제 수정 | fix deleting a category also wiping the scan history of other categories with similar IDs (e.g. 11 and 21 when deleting 1)
+
 ## v2.9.7
 - (fix) 서버 응답이 느릴 때 스캔 상태 조회가 쌓여 화면이 멈추던 문제 수정 | fix scan status polls piling up and stalling the page when the server responds slowly
 - (fix) 일반·성인 카테고리 번호가 같으면 스캔 에러 리포트가 서로 섞여 보이던 문제 수정(이전 리포트는 표시되지 않고 다음 스캔부터 분리 저장) | fix scan error reports of general and adult categories with the same ID showing up in each other's viewer (older reports are no longer listed; reports are kept separately from the next scan)

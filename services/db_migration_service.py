@@ -231,7 +231,9 @@ _SCHEMA_SQL = """
         gdrive_view_local_mirror_path TEXT DEFAULT NULL,
         cover_aspect_ratio TEXT DEFAULT '4:3',
         hide_title INTEGER DEFAULT 0,
-        content_kind TEXT NOT NULL DEFAULT 'unspecified'
+        content_kind TEXT NOT NULL DEFAULT 'unspecified',
+        pending_delete INTEGER DEFAULT 0,
+        transfer_target_id INTEGER DEFAULT NULL
     );
 
     CREATE TABLE IF NOT EXISTS plugin_group_assignments (
@@ -1440,6 +1442,16 @@ def _ensure_mariadb_columns():
         ('media_adult', 'libraries', 'content_kind', "VARCHAR(24) NOT NULL DEFAULT 'unspecified'"),
         ('media_audiobook', 'libraries', 'content_kind', "VARCHAR(24) NOT NULL DEFAULT 'unspecified'"),
         ('media_video', 'libraries', 'content_kind', "VARCHAR(24) NOT NULL DEFAULT 'unspecified'"),
+        # 카테고리 삭제·DB 이동은 이 표시만 하고 응답한 뒤 스캐너 큐(library_delete/library_transfer)가 실제 데이터를 처리한다
+        # pending_delete: 0 정상, 1 삭제 중, 2 다른 DB로 이동 중(원본), 3 이동해 오는 중(대상, 완료 전까지 숨김)
+        ('media_general', 'libraries', 'pending_delete', 'INT DEFAULT 0'),
+        ('media_adult', 'libraries', 'pending_delete', 'INT DEFAULT 0'),
+        ('media_audiobook', 'libraries', 'pending_delete', 'INT DEFAULT 0'),
+        ('media_video', 'libraries', 'pending_delete', 'INT DEFAULT 0'),
+        ('media_general', 'libraries', 'transfer_target_id', 'BIGINT DEFAULT NULL'),
+        ('media_adult', 'libraries', 'transfer_target_id', 'BIGINT DEFAULT NULL'),
+        ('media_audiobook', 'libraries', 'transfer_target_id', 'BIGINT DEFAULT NULL'),
+        ('media_video', 'libraries', 'transfer_target_id', 'BIGINT DEFAULT NULL'),
         ('media_general', 'libraries', 'gdrive_copy_remote', 'VARCHAR(255) DEFAULT NULL'),
         ('media_adult', 'libraries', 'gdrive_copy_remote', 'VARCHAR(255) DEFAULT NULL'),
         ('media_audiobook', 'libraries', 'gdrive_copy_remote', 'VARCHAR(255) DEFAULT NULL'),

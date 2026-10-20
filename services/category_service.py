@@ -4,15 +4,16 @@ import database
 from repositories.category_repository import CategoryRepository
 
 
-def _refresh_series_summaries(*db_types):
-    from repositories.series_repository import SeriesRepository
-    from services.system_health_service import SystemHealthService, series_summary_health_key
-    for db_type in dict.fromkeys(db_types):
-        if db_type != 'audiobook':
-            with SystemHealthService.track(*series_summary_health_key(db_type)):
-                SeriesRepository.rebuild_summary(db_type)
-    from services.series_service import SeriesService
-    SeriesService.invalidate_all_books_cache()
+def _remove_tts_audio_dirs(db_type, rel_dirs):
+    """카테고리 삭제·이동으로 지운 도서의 미리 만든 TTS 음성 폴더를 지운다(행은 이미 커밋됨, 다시 만들 수 있는 캐시)."""
+    if not rel_dirs:
+        return
+    try:
+        from services.tts_pregen_service import _remove_book_dir
+        for rel_dir in rel_dirs:
+            _remove_book_dir(db_type, rel_dir)
+    except Exception as e:
+        print(f"[CategoryService ERROR] TTS audio folder cleanup failed ({db_type}): {e}")
 
 
 def apply_running_scan_status(libraries, db_type, queue_status):
@@ -351,6 +352,9 @@ class CategoryService:
             raise ValueError('카테고리 이름은 비워둘 수 없습니다.')
         if len(name) > 25:
             raise ValueError('카테고리 이름은 25자를 초과할 수 없습니다.')
+        current = CategoryRepository.get_library_by_id(db_type, library_id)
+        if current and int(current.get('pending_delete') or 0):
+            raise ValueError("삭제가 진행 중인 카테고리는 수정할 수 없습니다.")
         CategoryService._validate_gdrive_requirements(physical_path, gdrive_copy_remote, gdrive_view_local_mirror_path)
         physical_path = CategoryService._clean_physical_path(physical_path)
         group_id = CategoryService._normalize_group_id(db_type, group_id)
@@ -407,47 +411,76 @@ class CategoryService:
         if has_pending_scan:
             raise ValueError("현재 카테고리에 대한 스캔 작업이 대기열에 존재합니다. 스캔 완료 또는 취소 후 다시 시도해 주세요.")
 
-        gate_token = None
+        if int(lib.get('pending_delete') or 0):
+            raise ValueError("이미 삭제가 진행 중인 카테고리입니다.")
+
+        # 요청 안에서는 표시만 하고 바로 응답한다 - 도서 수에 비례하는 실제 삭제는 스캐너 큐(library_delete)가
+        # 나눠 커밋한다. 2026-10-20 커뮤니티 제보: 요청 안에서 전부 지우다 리버스 프록시 60초 타임아웃(504).
+        import time
+        t_start = time.perf_counter()
+        CategoryRepository.mark_library_pending_delete(db_type, library_id)
+
         try:
-            from utils.redis_helper import redis_acquire_lock
-            gate_token = redis_acquire_lock(f"lock:db_write:{db_type}", ttl=120, wait_timeout=10.0)
+            from utils.report_helper import delete_all_reports
+            delete_all_reports(library_id, db_type)
+        except Exception as e:
+            print(f"[CategoryService ERROR] Bulk report file removal failed: {e}")
+
+        try:
+            from services.series_service import SeriesService
+            SeriesService.invalidate_all_books_cache()
+        except Exception as e:
+            print(f"[CategoryService ERROR] Books cache invalidation after delete failed: {e}")
+
+        # 등록에 실패해도 카테고리는 숨겨진 채 남고, 워커가 시작할 때 pending_delete 카테고리를 다시 등록한다.
+        queued = scanner_queue.enqueue('library_delete', db_type=db_type, library_id=int(library_id))
+        print(f"[PERF-PROFILE] delete_library(type={db_type}, lib={library_id}) REQUEST: "
+              f"{(time.perf_counter() - t_start) * 1000:.1f}ms | queued={queued}")
+        return queued
+
+    @staticmethod
+    def run_library_delete_job(db_type, library_id, report_stage=None):
+        """스캐너 큐 작업(library_delete): pending_delete로 표시된 카테고리의 데이터를 나눠 지운다.
+        중간에 워커가 재시작되면 큐가 작업을 다시 pending으로 돌리고, 남은 것부터 이어서 지운다."""
+        import time
+        lib = CategoryRepository.get_library_by_id(db_type, library_id)
+        if not lib:
+            return {'deleted': 0}
+        if not int(lib.get('pending_delete') or 0):
+            # 표시 없이 들어온 작업으로 카테고리를 지우지 않는다(잘못 등록된 작업 방어).
+            raise ValueError(f"카테고리 {library_id}는 삭제 대기 상태가 아닙니다.")
+
+        t_start = time.perf_counter()
+        deleted = 0
+        chunks = 0
+        while True:
+            n, rel_dirs, _book_ids = CategoryRepository.delete_library_chunk(db_type, library_id)
+            _remove_tts_audio_dirs(db_type, rel_dirs)
+            if not n:
+                break
+            deleted += n
+            chunks += 1
+            if report_stage:
+                report_stage(f'카테고리 삭제 중 · {deleted:,}개 정리')
+        t_chunks = time.perf_counter()
+
+        CategoryRepository.delete_library_finalize(db_type, library_id)
+        from services.problem_service import ProblemService
+        ProblemService.on_library_deleted(db_type, library_id)
+        try:
+            from utils.redis_helper import redis_del
+            redis_del(f"status:scan:stage:library_scan_{db_type}_{library_id}")
         except Exception:
-            gate_token = None
+            pass
+        t_final = time.perf_counter()
+        print(f"[PERF-PROFILE] library_delete(type={db_type}, lib={library_id}) TOTAL: {(t_final - t_start) * 1000:.1f}ms "
+              f"| Chunks({chunks}, {deleted} rows): {(t_chunks - t_start) * 1000:.1f}ms | Finalize: {(t_final - t_chunks) * 1000:.1f}ms")
 
         try:
-            try:
-                from utils.report_helper import delete_all_reports
-                delete_all_reports(library_id, db_type)
-            except Exception as e:
-                print(f"[CategoryService ERROR] Bulk report file removal failed: {e}")
-
-            CategoryRepository.delete_library(db_type, library_id)
-            from services.problem_service import ProblemService
-            ProblemService.on_library_deleted(db_type, library_id)
-            try:
-                from utils.redis_helper import redis_del
-                redis_del(f"status:scan:stage:library_scan_{db_type}_{library_id}")
-            except Exception:
-                pass
-        finally:
-            if gate_token:
-                try:
-                    from utils.redis_helper import redis_release_lock
-                    redis_release_lock(f"lock:db_write:{db_type}", gate_token)
-                except Exception:
-                    pass
-
-            try:
-                _refresh_series_summaries(db_type)
-            except Exception as e:
-                # 카테고리/도서 삭제는 이미 커밋된 상태이므로, 이후 요약 재구성 실패를
-                # "삭제 실패"로 오인시키지 않는다. 다음 스캔이나 재구성 시점에 자연 복구된다.
-                print(f"[CategoryService ERROR] Series summary refresh after delete failed: {e}")
-
-        import threading
-        t = threading.Thread(target=database.optimize_database, args=(db_type,))
-        t.daemon = True
-        t.start()
+            database.optimize_database(db_type)
+        except Exception as e:
+            print(f"[CategoryService ERROR] Optimize after library delete failed: {e}")
+        return {'deleted': deleted}
 
     @staticmethod
     def move_library(from_type, to_type, library_id):
@@ -459,7 +492,9 @@ class CategoryService:
         lib = CategoryRepository.get_library_by_id(from_type, library_id)
         if not lib:
             raise ValueError("이전할 원본 카테고리를 찾을 수 없습니다.")
-            
+        if int(lib.get('pending_delete') or 0):
+            raise ValueError("삭제나 이동이 진행 중인 카테고리는 이전할 수 없습니다.")
+
         # [제약 조건] 스캐너 큐 상태 검증: 현재 카테고리 스캔 작업이 실행/대기 중인 경우 이전 차단
         from services.scanner_queue import scanner_queue
         q_status = scanner_queue.get_queue_status()
@@ -511,23 +546,80 @@ class CategoryService:
             source_names = {kind['code']: kind['name'] for kind in CategoryRepository.get_library_kinds(from_type)}
             lib['content_kind'] = CategoryService.ensure_library_kind(to_type, source_kind, source_names.get(source_kind))
 
-        # 3. 이관을 위한 소스 DB 도서 데이터 수집
-        books = CategoryRepository.get_books_by_library_raw(from_type, library_id)
-        
-        # 4. 트랜잭션 수행
-        CategoryRepository.move_library_transaction(from_type, to_type, library_id, lib["name"], lib, books)
-        _refresh_series_summaries(from_type, to_type)
+        if CategoryRepository.has_active_tts_jobs(from_type, library_id):
+            raise ValueError("이 카테고리 도서의 TTS 음성을 만드는 중입니다. 생성이 끝나거나 취소한 뒤 다시 시도해 주세요.")
+
+        # 요청 안에서는 대상에 숨긴 카테고리를 만들고 원본을 숨긴 뒤 바로 응답한다 - 도서 수에 비례하는 실제 이관은
+        # 스캐너 큐(library_transfer)가 묶음으로 처리한다(2026-10-20: 4만 권 이동이 요청 안에서 169초 → 프록시 504).
+        import time
+        t_start = time.perf_counter()
+        target_id = CategoryRepository.prepare_library_transfer(from_type, to_type, library_id, lib)
+        try:
+            from services.series_service import SeriesService
+            SeriesService.invalidate_all_books_cache()
+        except Exception as e:
+            print(f"[CategoryService ERROR] Books cache invalidation after transfer start failed: {e}")
+        queued = scanner_queue.enqueue('library_transfer', db_type=from_type, from_type=from_type, to_type=to_type,
+                                       library_id=int(library_id), target_library_id=int(target_id))
+        print(f"[PERF-PROFILE] move_library({from_type}->{to_type}, lib={library_id} -> {target_id}) REQUEST: "
+              f"{(time.perf_counter() - t_start) * 1000:.1f}ms | queued={queued}")
+        return queued
+
+    @staticmethod
+    def run_library_transfer_job(from_type, to_type, library_id, target_library_id, report_stage=None):
+        """스캐너 큐 작업(library_transfer): 이동 중(pending_delete=2)인 원본 카테고리의 도서를 대상 카테고리로
+        묶음 단위로 옮긴다. 워커가 재시작되면 남은 묶음부터 이어서 옮긴다(이미 대상에 커밋된 권은 건너뜀)."""
+        import time
+        from repositories.category_data_shared import TransferConflictError
+        lib = CategoryRepository.get_library_by_id(from_type, library_id)
+        if not lib:
+            # 이미 끝났는데 결과 기록 전에 멈춘 경우 - 대상만 공개되면 된다
+            CategoryRepository.finish_library_transfer(to_type, target_library_id)
+            return {'moved': 0}
+        if int(lib.get('pending_delete') or 0) != 2:
+            raise ValueError(f"카테고리 {library_id}는 이동 대기 상태가 아닙니다.")
+
+        t_start = time.perf_counter()
+        moved = 0
+        chunks = 0
+        while True:
+            try:
+                n, rel_dirs = CategoryRepository.transfer_library_chunk(from_type, to_type, library_id, target_library_id)
+            except TransferConflictError:
+                # 아무것도 옮기지 않은 상태면 원래대로 되돌리고, 일부 옮긴 뒤라면 표시를 그대로 두어 재시도에 맡긴다
+                if CategoryRepository.count_transferred_books(to_type, target_library_id) == 0:
+                    CategoryRepository.rollback_library_transfer(from_type, to_type, library_id, target_library_id)
+                raise
+            _remove_tts_audio_dirs(from_type, rel_dirs)
+            if not n:
+                break
+            moved += n
+            chunks += 1
+            if report_stage:
+                report_stage(f'카테고리 이동 중 · {moved:,}권')
+        t_chunks = time.perf_counter()
+
+        # 원본에 남은 오디오북·영상(일반·성인 DB에는 보통 없다)과 카테고리 단위 기록을 정리하고 대상을 공개한다
+        while True:
+            n, rel_dirs, _book_ids = CategoryRepository.delete_library_chunk(from_type, library_id)
+            _remove_tts_audio_dirs(from_type, rel_dirs)
+            if not n:
+                break
+        CategoryRepository.delete_library_finalize(from_type, library_id)
+        CategoryRepository.finish_library_transfer(to_type, target_library_id)
         # 구 DB 기준으로 남은 문제 기록은 더 이상 가리키는 대상이 없다 (다음 스캔이 새 DB 기준으로 다시 기록).
         from services.problem_service import ProblemService
         ProblemService.on_library_deleted(from_type, library_id)
-        
-        # 5. 이관 후 구 DB의 디스크 공간 회수를 위해 백그라운드로 튜닝 구동
-        import threading
-        t = threading.Thread(target=database.optimize_database, args=(from_type,))
-        t.daemon = True
-        t.start()
-        
-        return True
+        t_final = time.perf_counter()
+        print(f"[PERF-PROFILE] library_transfer({from_type}->{to_type}, lib={library_id} -> {target_library_id}) "
+              f"TOTAL: {(t_final - t_start) * 1000:.1f}ms | Chunks({chunks}, {moved} books): {(t_chunks - t_start) * 1000:.1f}ms "
+              f"| Finalize: {(t_final - t_chunks) * 1000:.1f}ms")
+
+        try:
+            database.optimize_database(from_type)
+        except Exception as e:
+            print(f"[CategoryService ERROR] Optimize after library transfer failed: {e}")
+        return {'moved': moved}
 
     @staticmethod
     def check_duplicate_path_warnings():
