@@ -1105,13 +1105,13 @@ def _keep_renamed_track_ids(repo, audiobook_id, folder_path, track_cache):
     return len(pairs)
 
 
-def _audio_signature(folder_path):
-    """폴더 안 오디오 파일의 {(상대 경로, 크기): 전체 경로}. 목록 정보만 써서 원격에서도 다운로드가 없다."""
+def _audio_signature(folder_path, extensions=AUDIO_EXTENSIONS):
+    """폴더 안 오디오(영상 스캐너는 영상) 파일의 {(상대 경로, 크기): 전체 경로}. 목록 정보만 써서 원격에서도 다운로드가 없다."""
     sig = {}
     base = os.path.normpath(folder_path)
     for root, _, files in os.walk(base):
         for name in files:
-            if not name.lower().endswith(AUDIO_EXTENSIONS):
+            if not name.lower().endswith(extensions):
                 continue
             full = os.path.normpath(os.path.join(root, name))
             try:

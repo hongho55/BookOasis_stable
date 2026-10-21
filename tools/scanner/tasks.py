@@ -134,44 +134,48 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
     # 1. Pre-check if metadata file exists
     has_yaml = any(f.lower() == 'kavita.yaml' for f in files)
     has_xml = any(f.lower() == 'info.xml' for f in files)
-    
+    # 폴더 메타 신호: 메타 파일 + (책이 있는 폴더의) 표지 그림. 나중에 생기거나 바뀌면 그 폴더 도서를 다시 처리한다.
+    meta_signal_files = [f for f in files if f.lower() in ('kavita.yaml', 'info.xml', 'series.json')]
+    if media_files:
+        meta_signal_files += image_files
+    has_meta_files = bool(meta_signal_files)
+
     dir_mtime = None
     meta_mtime = None
-    
-    if is_remote or root.startswith(('gdrive:', 'gdrive://')):
+
+    if root.startswith(('gdrive:', 'gdrive://')):
         is_remote = True
         dir_mtime = 0.0
         meta_mtime = 0.0
     else:
+        # rclone 마운트도 stat은 VFS 디렉터리 캐시가 답한다(내려받기 없음) → 로컬과 같이 실제 값을 쓴다.
         try:
             dir_mtime = os.path.getmtime(root)
-            meta_mtimes_list = []
-            if has_yaml:
-                yaml_file = next(f for f in files if f.lower() == 'kavita.yaml')
-                meta_mtimes_list.append(os.path.getmtime(join_canonical(root, yaml_file)))
-            if has_xml:
-                xml_file = next(f for f in files if f.lower() == 'info.xml')
-                meta_mtimes_list.append(os.path.getmtime(join_canonical(root, xml_file)))
-            
-            if meta_mtimes_list:
-                meta_mtime = max(meta_mtimes_list)
-            else:
-                meta_mtime = 0.0
+            meta_mtime = max((os.path.getmtime(join_canonical(root, f)) for f in meta_signal_files), default=0.0)
         except Exception as e:
             print(f"[Scanner-DEBUG-Task] ⚠️ Failed to get mtime for folder '{root}': {e}")
             dir_mtime = None
 
-    # 폴더 메타 파일(kavita.yaml/info.xml)이 마지막 기록 이후 새로 생기거나 바뀌었는지.
-    # 책 파일 자체는 그대로라도 메타가 바뀌었으면 파일 단위 스킵을 풀어 새 메타를 DB에 반영한다
-    # (예: 이미 스캔된 작품 폴더에 나중에 kavita.yaml을 추가한 경우 — 예전엔 폴더 mtime 불일치로
-    # Ultra-fast skip만 풀리고 파일은 전부 "변경 없음"으로 스킵돼 태그 등이 영원히 안 들어갔다).
-    # 원격은 meta_mtime을 항상 0.0으로 두므로 이 감지는 로컬 경로에서만 동작한다.
+    # 이 폴더의 메타 신호 기준값(folder_mtimes)이 있으면, 책 파일과 메타 신호가 그대로인 도서는 메타가 다
+    # 채워졌는지와 상관없이 건너뛴다. 예전엔 출판사·줄거리·표지 중 하나라도 비면 매번 다시 처리해서,
+    # 새 회차 하나에도 폴더 회차 전체를 다시 처리·저장했다(커뮤니티 제보, 회차 수에 비례해 수십 초).
+    # 원격은 예전에 dir/meta mtime을 0.0으로 기록했으므로 그 행은 기준값이 없는 것으로 보고, 이번만
+    # 예전 규칙(메타가 다 채워진 도서만 건너뜀)으로 처리하고 실제 값을 기록한다. gdrive://는 계속 예전 규칙.
+    cached_mtimes = db_folder_mtimes.get(root) if db_folder_mtimes else None
+    baseline_known = (
+        bool(cached_mtimes) and dir_mtime is not None
+        and (not is_remote or float(cached_mtimes[0] or 0) > 0)
+    )
+
+    # 폴더 메타 신호가 마지막 기록 이후 새로 생기거나 바뀌었으면 파일 단위 스킵을 풀어 새 메타를 DB에 반영한다
+    # (예: 이미 스캔된 작품 폴더에 나중에 kavita.yaml을 추가한 경우).
     meta_changed = False
-    if (has_yaml or has_xml) and not is_remote and dir_mtime is not None and meta_mtime:
-        cached_mtimes = db_folder_mtimes.get(root) if db_folder_mtimes else None
-        if not cached_mtimes or int(cached_mtimes[1] or 0) != int(meta_mtime):
-            meta_changed = True
-            print(f"[Scanner-DEBUG-Task] 📝 Folder metadata file new/changed - per-file skip disabled - folder: '{root}'")
+    if baseline_known:
+        meta_changed = int(cached_mtimes[1] or 0) != int(meta_mtime or 0)
+    elif has_meta_files and not is_remote and dir_mtime is not None and meta_mtime:
+        meta_changed = True
+    if meta_changed:
+        print(f"[Scanner-DEBUG-Task] 📝 Folder metadata file new/changed - per-file skip disabled - folder: '{root}'")
 
     # 2. Early skip if files are unchanged (mtime & size match DB cache)
     skipped_files = set()
@@ -194,12 +198,12 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
                         if file_ext == '.txt':
                             skipped_files.add(filename)
                             continue
-                        if full_path not in db_meta_full:
+                        if not baseline_known and full_path not in db_meta_full:
                             continue
                         skipped_files.add(filename)
                 except Exception:
                     # 원격 드라이브이고 이미 DB 캐시(mtime, 메타데이터, 커버)가 있는 경우 예외가 나더라도 스킵 처리
-                    if is_remote and full_path in db_meta_full:
+                    if is_remote and (baseline_known or full_path in db_meta_full):
                         c_mtime, c_size = db_files_cache[full_path]
                         if c_mtime > 0.0:
                             skipped_files.add(filename)
@@ -223,7 +227,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
             and (not has_imgdir_candidate or imgdir_skip)
         )
         if all_files_skipped:
-            if not has_yaml and not has_xml:
+            if not has_meta_files:
                 print(f"[Scanner-DEBUG-Task] ⚡ [Ultra-fast skip] All files unchanged (mtime/size match) - folder: '{root}'")
                 return None
             else:

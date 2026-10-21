@@ -187,6 +187,23 @@ class VideoRepository:
         return [r['folder_path'] for r in rows if r and r['folder_path']]
 
     @staticmethod
+    def get_episode_signatures(library_id):
+        """스캐너용: 카테고리의 강좌마다 회차 {(강좌 폴더 기준 상대 경로, 크기)} - 폴더 안 변경 감지에 쓴다."""
+        with database.connection('video') as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT v.folder_path, e.file_path, COALESCE(e.file_size, 0) AS file_size FROM video_episodes e "
+                "JOIN videos v ON v.id = e.video_id WHERE v.library_id = %s",
+                (library_id,))
+            rows = cursor.fetchall()
+        sigs = {}
+        for r in rows:
+            folder = os.path.normpath(str(r['folder_path']))
+            rel = os.path.relpath(os.path.normpath(str(r['file_path'])), folder)
+            sigs.setdefault(folder, set()).add((rel, int(r['file_size'] or 0)))
+        return sigs
+
+    @staticmethod
     def touch_updated_at(row_id):
         """표지 원본(같은 경로)이 바뀐 것을 스캐너가 알아챘을 때 updated_at만 올려 화면 표지 주소(?t=)를 바꾼다."""
         conn = database.get_connection('video')

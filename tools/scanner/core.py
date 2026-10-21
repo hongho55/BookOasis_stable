@@ -261,6 +261,11 @@ def scan_library_path(db_path, library_id, target_path, force=False, skip_vfs_re
     if not is_gdrive and not os.path.exists(target_path):
         raise FileNotFoundError(f"스캔 대상 경로를 찾을 수 없습니다: {target_path}")
 
+    # 파일 경로를 받으면 os.walk(파일)이 아무것도 내지 않아 처리 없이 성공으로 끝났다 → 그 파일의 폴더를 스캔한다.
+    if not is_gdrive and os.path.isfile(target_path):
+        print(f"[ScannerEngine] Target is a file; scanning its folder instead: '{target_path}'")
+        target_path = os.path.dirname(target_path)
+
     if not skip_vfs_refresh:
         trigger_vfs_refresh(db_path, library_id, target_path)
 

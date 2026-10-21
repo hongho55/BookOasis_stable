@@ -408,13 +408,18 @@ def scan_video_library(library_path, library_id=None, force=False):
 
     count = 0
     skipped = 0
+    changed = 0
     errors = 0
     skip_existing = not force
     library_started_at = time.perf_counter()
 
     from repositories.video_repository import VideoRepository
+    from services.audiobook_scanner import _audio_signature
     raw_paths = VideoRepository.get_folder_paths(library_id)
     existing_folder_paths = {os.path.normpath(str(p)) for p in raw_paths if p}
+    # 등록된 강좌도 파일 목록(상대 경로+크기)을 DB 회차와 비교해 달라진 강좌(회차 추가/삭제·이름 변경)만 다시
+    # 처리한다 - 예전엔 등록된 강좌를 통째로 건너뛰어 새 회차가 강제 재스캔 전까지 등록되지 않았다.
+    episode_signatures = VideoRepository.get_episode_signatures(library_id) if skip_existing else {}
 
     print(
         "[VideoScanner][LIBRARY_SCAN_START] "
@@ -428,7 +433,12 @@ def scan_video_library(library_path, library_id=None, force=False):
         has_video_files = any(f.lower().endswith(VIDEO_EXTENSIONS) for f in files)
 
         if has_video_files:
-            if skip_existing and os.path.normpath(root) in existing_folder_paths:
+            folder = os.path.normpath(root)
+            if skip_existing and folder in existing_folder_paths and \
+                    set(_audio_signature(root, VIDEO_EXTENSIONS)) != episode_signatures.get(folder, set()):
+                changed += 1
+                print(f"[VideoScanner][CHANGED] library_id={library_id} reason=file_list_changed folder_path={folder}")
+            elif skip_existing and folder in existing_folder_paths:
                 skipped += 1
                 dirs.clear()
                 continue
@@ -446,6 +456,7 @@ def scan_video_library(library_path, library_id=None, force=False):
         f"library_id={library_id} "
         f"processed={count} "
         f"skipped={skipped} "
+        f"changed={changed} "
         f"errors={errors} "
         f"force={force} "
         f"elapsed_ms={library_elapsed_ms} "

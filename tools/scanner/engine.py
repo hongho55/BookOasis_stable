@@ -189,6 +189,16 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
         FROM books WHERE library_id = ?{scope_clause}
     """, scope_params)
     all_rows = cursor.fetchall()
+    if path_scope:
+        # LIKE 'S%'는 형제 폴더('S 외전/...')와 '_'/'%'가 든 다른 이름까지 잡는다. 그 도서는 이 스캔이
+        # 훑지 않으므로 "사라짐"으로 판정돼 휴지통으로 갔다 - 대상 경로 자체와 그 하위만 남긴다.
+        scope_root = canonical_path(path_scope)
+        scope_prefix = scope_root if scope_root.endswith('/') else scope_root + '/'
+        all_rows = [
+            row for row in all_rows
+            if canonical_path(row['file_path']) == scope_root
+            or canonical_path(row['file_path']).startswith(scope_prefix)
+        ]
     db_books = {}
     db_meta_full = set()
     db_offsets_cached = set()
@@ -210,7 +220,19 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
         if not row['banner_image']:
             db_banner_missing.add(norm_path)
 
-    cursor.execute("SELECT folder_path, dir_mtime, meta_mtime FROM folder_mtimes")
+    if path_scope:
+        # 부분 스캔은 대상 폴더와 그 하위 기록만 읽는다 - 전체(모든 보관함)를 읽으면 웹훅 한 번마다 행 수에
+        # 비례해 느려졌다(.21 실측 15만 행 +1.1초). '/' 다음 문자가 '0'이라 [경로/, 경로0) 범위가 정확히 하위 경로다
+        # (folder_path는 기본키·이진 비교라 인덱스를 탄다).
+        scope_root = canonical_path(path_scope)
+        scope_prefix = scope_root if scope_root.endswith('/') else scope_root + '/'
+        cursor.execute(
+            "SELECT folder_path, dir_mtime, meta_mtime FROM folder_mtimes "
+            "WHERE folder_path = ? OR (folder_path >= ? AND folder_path < ?)",
+            (scope_root, scope_prefix, scope_prefix[:-1] + '0'),
+        )
+    else:
+        cursor.execute("SELECT folder_path, dir_mtime, meta_mtime FROM folder_mtimes")
     db_folder_mtimes = {canonical_path(row['folder_path']): (row['dir_mtime'], row['meta_mtime']) for row in cursor.fetchall()}
 
     # 0. Load completely scanned folders from previous checkpoint
