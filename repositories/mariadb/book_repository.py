@@ -30,12 +30,12 @@ class BookRepository:
 
     @staticmethod
     def get_book_reader_info(db_type, book_id, user_id=None):
-        """킷오스크/외부 딥링크에서 openReader()에 바로 넘길 도서 메타(제목/포맷/진척도) 조회"""
+        """킷오스크/외부 딥링크에서 openReader()에 바로 넘길 도서 메타(제목/시리즈명/포맷/진척도) 조회"""
         with database.connection(db_type) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT b.id, b.title, b.file_format, b.total_pages, b.file_path, p.pages_read
+                SELECT b.id, b.title, b.series_name, b.series_alias, b.file_format, b.total_pages, b.file_path, p.pages_read
                 FROM books b
                 LEFT JOIN user_progress p ON b.id = p.book_id AND p.user_id = %s
                 WHERE b.id = %s AND COALESCE(b.is_deleted, 0) = 0

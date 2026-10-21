@@ -77,105 +77,37 @@
     display: none !important;
 }
 
-/* 세션 선택 버튼 → 세션 전환 팝업 (sidebar_manager.js initMobileSessionMenu) - 세션 이동이 불편하다는 이슈(2026-10-01).
-   팝업 위치(top/left/width)는 JS가 버튼 아래, 헤더 카드 폭으로 잡는다. */
+/* 서재 선택 버튼·팝업의 기본 모양은 style.css (PC와 공용). 폰은 헤더 그리드 칸과 2열 팝업만 */
 .mobile-session-select {
     grid-area: session;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    min-width: 0;
-    padding: 0 0.75rem;
-    border: 1px solid var(--app-border);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--app-text-primary);
-    font: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.mobile-session-select[hidden] {
-    display: none;
-}
-
-.mobile-session-select i {
-    font-size: 0.7rem;
-    color: var(--app-text-muted);
-    transition: transform 0.2s ease;
-}
-
-.mobile-session-select[aria-expanded="true"] {
-    border-color: color-mix(in srgb, var(--app-accent) 60%, transparent);
-}
-
-.mobile-session-select[aria-expanded="true"] i {
-    transform: rotate(180deg);
+    justify-self: start;
+    padding: 0 var(--app-space-2);
 }
 
 .mobile-session-menu {
-    position: fixed;
-    z-index: 5;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.3rem;
-    padding: 0.4rem;
-    box-sizing: border-box;
-    border: 1px solid var(--app-border);
+    gap: var(--app-space-1);
     border-radius: 12px;
-    background: var(--app-bg-card);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
-}
-
-.mobile-session-menu[hidden],
-.mobile-session-menu-item[hidden] {
-    display: none;
 }
 
 .mobile-session-menu-item {
     min-height: 2.6rem;
-    padding: 0 0.5rem;
-    border: 1px solid transparent;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--app-text-secondary, var(--app-text-primary));
-    font: inherit;
-    font-size: 0.88rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    font-size: var(--app-fs-sm);
 }
 
-.mobile-session-menu-item:active {
-    background: var(--app-bg-card-hover);
-}
-
-.mobile-session-menu-item.active {
-    border-color: color-mix(in srgb, var(--app-accent) 45%, transparent);
-    background: color-mix(in srgb, var(--app-accent) 12%, transparent);
-    color: var(--app-accent);
-    font-weight: 700;
-}
-
+/* 서재별 선택 색 (폰 팝업의 선택 항목) */
 :root[data-library-type="adult"] .mobile-session-menu-item.active {
-    border-color: rgba(248, 113, 113, 0.45);
     background: rgba(248, 113, 113, 0.12);
     color: #f87171;
 }
 
 :root[data-library-type="audiobook"] .mobile-session-menu-item.active {
-    border-color: rgba(56, 189, 248, 0.45);
     background: rgba(56, 189, 248, 0.12);
     color: #38bdf8;
 }
 
 :root[data-library-type="video"] .mobile-session-menu-item.active {
-    border-color: rgba(167, 139, 250, 0.45);
     background: rgba(167, 139, 250, 0.12);
     color: #a78bfa;
 }
@@ -407,9 +339,9 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 
 .library-sidebar .sidebar-section-label {
     display: block;
-    padding: 0.95rem 0.6rem 0.35rem;
-    font-size: 0.78rem;
-    font-weight: 600;
+    padding: var(--app-space-4) var(--app-space-2) var(--app-space-1-5);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-semibold);
     color: var(--app-text-muted);
     letter-spacing: 0.02em;
     list-style: none;
@@ -440,16 +372,16 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 /* 사이드바 메뉴는 세로 나열 유지하여 가독성 개선 */
 .sidebar-menu {
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 2px;
 }
 
 .sidebar-menu .menu-item {
     min-height: 2.75rem; /* 터치 타깃 44px */
     box-sizing: border-box;
-    padding: 0.55rem 0.75rem;
-    font-size: 0.95rem;
+    padding: var(--app-space-2) var(--app-space-3);
+    font-size: var(--app-fs-md);
     justify-content: flex-start;
-    border: 1px solid transparent;
+    border: 0;
     border-radius: 10px;
     background: transparent;
     color: var(--app-text-primary);
@@ -461,12 +393,12 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 }
 
 .sidebar-menu .menu-item:hover {
-    background: var(--app-bg-card-hover);
+    background: color-mix(in srgb, var(--app-text-primary) 6%, transparent);
 }
 
+/* 선택된 메뉴: 테두리 상자 없이 옅은 배경 (PC와 같은 모양) */
 .sidebar-menu .menu-item.active {
-    background: var(--app-bg-card);
-    border-color: var(--app-accent);
+    background: color-mix(in srgb, var(--app-text-primary) 8%, transparent);
 }
 
 /* 하위 메뉴 접기 버튼은 손가락으로 누르기 쉽게 키운다 */
@@ -619,23 +551,21 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 
 /* 4. 도서 보관함 헤더 영역 - 모바일은 이 카드 한 장이 앱바(로고 앱바는 숨김, 2026-10-01):
      1줄: ☰ | 검색창 | 계정        ← 항상 보임
-     2줄: 기본 | 작가별              ← 아래로 스크롤하면 접히고 위로 올리면 다시 펼쳐짐
-     3줄: 세션 선택 ⋯ | 필터·스캔·정렬
+     2줄: 서재 선택 ▾ … 알림        ← 아래로 스크롤하면 접히고 위로 올리면 다시 펼쳐짐
+   기본|작가별·정렬·필터·카테고리 정보(⋯)는 책 목록 제목 줄로 옮겼다(2026-10-22, 예전 2·3줄 → 1줄).
    세션탭(#library-type-toggle-group)은 숨겨 두고 세션 선택 팝업이 복제해 쓴다(sidebar_manager.js initMobileSessionMenu).
    .library-header-actions/.library-controls-persistent는 display:contents로 풀어 안쪽 요소를 바로 그리드에 배치한다.
-   (페이지 타이틀/건수는 데스크톱과 마찬가지로 모바일에서도 인라인 display:none으로 숨김 - 별도 grid-area 불필요) */
+   배경 카드는 PC와 같이 스크롤했을 때만(--elevated) 깐다 (style.css .library-header) */
 .library-header {
     --mobile-header-row: 2.3rem;
     display: grid;
-    grid-template-columns: var(--mobile-header-row) auto auto minmax(0, 1fr) auto var(--mobile-header-row);
-    /* 2·3줄 = 요소 높이 + 위 간격(margin-top). 접을 때 0으로 보간한다(fr은 빈 줄도 다른 fr 줄 높이로 맞춰져 못 씀) */
+    grid-template-columns: var(--mobile-header-row) auto minmax(0, 1fr) auto var(--mobile-header-row);
+    /* 2줄 = 요소 높이 + 위 간격(margin-top). 접을 때 0으로 보간한다(fr은 빈 줄도 다른 fr 줄 높이로 맞춰져 못 씀) */
     --mobile-header-row2: calc(var(--mobile-header-row) + 0.5rem);
-    --mobile-header-row3: calc(var(--mobile-header-row) + 0.5rem);
-    grid-template-rows: auto var(--mobile-header-row2) var(--mobile-header-row3);
+    grid-template-rows: auto var(--mobile-header-row2);
     grid-template-areas:
-        "menu search search search search account"
-        "group group group group group group"
-        "session session info . controls controls";
+        "menu search search search account"
+        "session session . controls controls";
     align-items: center;
     column-gap: 0.4rem;
     row-gap: 0; /* 줄 간격은 2·3줄 요소의 margin-top으로 - 뷰에 따라 줄이 통째로 비면 간격도 같이 사라지게 */
@@ -645,37 +575,6 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 
 #btn-sidebar-toggle {
     grid-area: menu;
-}
-
-#btn-category-info {
-    grid-area: info;
-    width: 2.1rem;
-    padding: 0;
-}
-
-#library-type-toggle-group {
-    display: none !important;
-}
-
-#group-mode-toggle-group {
-    grid-area: group;
-    justify-self: stretch;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-#group-mode-toggle-group .btn-toggle {
-    flex: 1;
-}
-
-/* 모바일 기본|작가별은 한 줄을 다 쓰므로 아이콘 옆에 이름도 보인다 (데스크톱은 아이콘만) */
-#group-mode-toggle-group .btn-toggle--icon .btn-toggle-label {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    overflow: visible;
-    clip: auto;
 }
 
 .library-header-actions,
@@ -702,11 +601,6 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
     overflow-anchor: none;
 }
 
-/* 환경설정/플러그인 화면은 view_manager.js가 그룹모드를 인라인 display:none으로 숨긴다 - 빈 줄 높이도 0으로 */
-.library-header:has(#group-mode-toggle-group[style*="display: none"]) {
-    --mobile-header-row2: 0rem;
-}
-
 /* 모바일 헤더는 숨겨지지 않고 첫 줄이 남으므로 필터 바는 계속 그 아래에 붙인다
    (접힌 높이는 ResizeObserver가 --library-header-h로 반영) */
 .library-header--hidden ~ .active-filter-bar {
@@ -714,15 +608,13 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
 }
 
 .library-header.library-header--hidden {
-    grid-template-rows: auto 0rem 0rem;
+    grid-template-rows: auto 0rem;
     transform: none;
     opacity: 1;
     pointer-events: auto;
 }
 
-#group-mode-toggle-group,
 .mobile-session-select,
-#btn-category-info,
 .library-controls {
     height: var(--mobile-header-row);
     margin-top: 0.5rem;
@@ -730,9 +622,7 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
     transition: opacity 0.18s ease, visibility 0.18s ease;
 }
 
-.library-header--hidden #group-mode-toggle-group,
 .library-header--hidden .mobile-session-select,
-.library-header--hidden #btn-category-info,
 .library-header--hidden .library-controls {
     opacity: 0;
     visibility: hidden;
@@ -954,8 +844,20 @@ body {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 1.2rem;
-    padding: 1.2rem;
+    gap: var(--app-space-5);
+}
+
+/* 가운데 정렬 헤더에서는 버튼 줄·장르/태그 줄도 가운데, ⋯ 메뉴는 오른쪽 끝 기준으로 왼쪽으로 펼친다(화면 밖으로 안 나가게) */
+.detail-actions,
+.detail-rating-row,
+.detail-chip-row {
+    justify-content: center;
+}
+
+.detail-more-menu {
+    left: auto;
+    right: 0;
+    text-align: left;
 }
 
 .detail-cover-container {
@@ -972,7 +874,7 @@ body {
 .detail-meta {
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.8rem;
+    gap: var(--app-space-1) var(--app-space-3);
 }
 
 /* 도서 상세 하단 2열 레이아웃 대응 */
@@ -986,26 +888,36 @@ body {
     width: 100%;
 }
 
-/* 8. 볼륨(단행본) 리스트 카드 반응형 튜닝 */
+/* 8. 볼륨(단행본) 리스트 카드 반응형 튜닝
+   표지는 왼쪽에 작게, 정보는 오른쪽, 읽기 버튼은 그 아래 한 줄 - 예전처럼 세로로 쌓으면 한 권이 화면 절반을 차지했다 */
 .volume-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 1.2rem;
-    gap: 1.2rem;
-    text-align: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: var(--app-space-2);
+    gap: var(--app-space-2) var(--app-space-3);
+    text-align: left;
 }
 
 .volume-thumb {
-    align-self: center;
+    width: 64px;
+    min-width: 64px;
+    height: 92px;
 }
 
 .volume-info {
-    width: 100%;
-    align-items: center;
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
 }
 
 .volume-title-row {
-    justify-content: center;
+    justify-content: flex-start;
+}
+
+/* 정보 칸이 왼쪽 정렬(align-items:flex-start)이라 진행 막대가 내용 폭으로 줄어들지 않게 */
+.volume-progress-bar-wrap {
+    align-self: stretch;
 }
 
 /* 모바일에서 디렉토리 경로 감춤 */
@@ -1013,14 +925,15 @@ body {
     display: none !important; /* JS/HTML 인라인 display 제어 오버라이드 */
 }
 
-.volume-meta-row {
-    justify-content: center;
+/* 읽기/이어보기 버튼: 표지·정보 아래 한 줄 전체 폭 */
+.volume-card > .btn-read,
+.volume-card > .btn-read-row {
+    flex-basis: 100%;
 }
 
-/* 읽기/이어보기 버튼 전체 폭 지정 및 중앙 정렬 */
 .btn-read {
     width: 100%;
-    margin-top: 0.5rem;
+    margin-top: 0;
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -1030,7 +943,7 @@ body {
 /* epub/pdf/txt: 이어보기 + 다운로드 버튼 행 (모바일) — 50:50 균등 배분 */
 .btn-read-row {
     width: 100%;
-    margin-top: 0.5rem;
+    margin-top: 0;
     gap: 0.4rem;
 }
 
@@ -1048,9 +961,6 @@ body {
 }
 
 /* 오디오북 상세 탭/테이블 모바일 최적화 */
-.ab-volumes-shell {
-    padding: 0.75rem;
-}
 
 .ab-tab-header {
     overflow-x: auto;
@@ -1177,8 +1087,8 @@ body {
         display: grid;
         grid-template-columns: 1fr auto;
         align-items: center;
-        padding: 0.5rem 0.8rem;
-        gap: 0.4rem;
+        padding: var(--app-space-2) var(--app-space-3);
+        gap: var(--app-space-1-5);
         border-left: 3px solid #ffffff;
     }
     
@@ -1195,17 +1105,17 @@ body {
     }
     
     .active-filter-item {
-        padding: 0.2rem 0.4rem;
-        font-size: 0.7rem;
-        gap: 0.2rem;
+        padding: var(--app-space-1) var(--app-space-1-5);
+        font-size: var(--app-fs-2xs);
+        gap: var(--app-space-1);
     }
     
     #active-filter-bar .btn-active-filter-reset {
         grid-column: 2;
         grid-row: 1;
         margin-left: 0;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.7rem;
+        padding: var(--app-space-1) var(--app-space-2);
+        font-size: var(--app-fs-2xs);
     }
 
     /* 12. 삭제 관리 (휴지통) 탭 모바일 반응형 개선 */
@@ -1282,10 +1192,6 @@ body {
 }
 
 @media screen and (max-width: 430px) {
-    .ab-volumes-shell {
-        padding: 0.62rem;
-    }
-
     .ab-tab-btn {
         font-size: 0.73rem;
         padding: 0.28rem 0.58rem;
@@ -1392,4 +1298,18 @@ body {
     #audio-player-modal .audio-player-controls {
         gap: 0.75rem !important;
     }
+}
+
+/* 책 목록 제목 줄(style.css .library-list-toolbar): 폰에선 제목 한 줄, 그 아래 정렬·필터·작가별 한 줄 */
+.library-list-toolbar {
+    margin-bottom: var(--app-space-3);
+}
+
+.library-title {
+    font-size: var(--app-fs-lg);
+}
+
+.library-list-controls {
+    width: 100%;
+    margin-left: calc(-1 * var(--app-space-2));
 }

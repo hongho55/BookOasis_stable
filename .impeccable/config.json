@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "templates/components/media_viewer.html"
+        ],
+        "createdAt": "2026-10-21T18:46:47.261Z",
+        "reason": "Claude: only <img> here is #comic-page-img, a JS-filled viewer page image (src set per page by the comic renderer), pre-existing, not a placeholder"
+      }
+    ]
+  }
+}

@@ -39,7 +39,7 @@ export function renderVideoVolumes(orderedBooks, detailMeta = null) {
   const totalDurationText = toClock(totalDurationSec);
 
   return `
-    <div class="volumes-section ab-volumes-shell" style="margin-top: 1.2rem;">
+    <div class="volumes-section ab-volumes-shell">
       <div class="ab-tab-header">
         <button class="ab-tab-btn active" data-role="detail-audio-tab" data-target="episodes">에피소드 <span>${episodes.length}</span></button>
         <button class="ab-tab-btn" data-role="detail-audio-tab" data-target="detail">세부사항</button>

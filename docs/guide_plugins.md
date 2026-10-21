@@ -34,7 +34,8 @@
 | 1.1.1 | `search`, `apply` | `dashboard.html`/`dashboard.css`/`dashboard.js` | `home_widget`에 커스텀 CSS/이미지 허용 - 위젯별 Shadow DOM 격리 렌더링 (§5-1) |
 | 1.1.2 (BookOasis 2.8.4+) | `search`, `apply` | `report_problem`, `resolve_problem` | 관리자 알림에 문제 카드 올리기/해결 - 베이스 클래스 헬퍼, 추가만 하는 계약 (아래 "관리자 알림 문제 카드") |
 | 1.1.3 (BookOasis 2.8.4+) | `search`, `apply` | `lookup_music_album` | 음악 카테고리에서 album.yaml이 없는 앨범의 정보 조회 - 코어가 백그라운드로 부르는 추가 계약 (아래 "음악 앨범 정보 조회") |
-| 1.1.4+ (현재, BookOasis 2.9.4+) | `search`, `apply` | `home_widget.frame` | `'none'`이면 홈 위젯의 제목줄 없이 내용만 표시 - 배너형 위젯용, 추가만 하는 필드 (§5-1 "테두리") |
+| 1.1.4 (BookOasis 2.9.4+) | `search`, `apply` | `home_widget.frame` | `'none'`이면 홈 위젯의 제목줄 없이 내용만 표시 - 배너형 위젯용, 추가만 하는 필드 (§5-1 "테두리") |
+| 1.1.5+ (현재, BookOasis 3.0.0+) | `search`, `apply` | CSS `--app-fs-*` / `--app-fw-*` / `--app-lh-*` / `--app-space-*` | 글자·여백 단계 CSS 토큰 추가 - 추가만 하는 변수 (아래 "글자·여백 단계 토큰") |
 
 호환성 원칙:
 
@@ -127,6 +128,18 @@ All plugin UI/HTML/CSS templates should use the global CSS variables below inste
 | `var(--app-border)` | Primary border color / 기본 테두리 색상 | 카드/입력창 테두리 |
 | `var(--app-border-light)` | Light border color / 은은한 구분선 색상 | 항목 간 구분선(`border-bottom`) |
 | `var(--app-input-bg)` | Input form background / 입력창 배경색 | `input`, `select`, `textarea` |
+
+#### 🔤 Type & Spacing Tokens (글자·여백 단계 토큰, contract 1.1.5+)
+
+Theme-independent steps used by the core UI. Using them keeps plugin text sizes and gaps in step with the app.
+테마와 무관한 코어 UI 단계입니다. 플러그인도 이 값을 쓰면 글자 크기·간격이 앱과 맞춰집니다.
+
+| CSS 변수 | 값 | 용도 |
+| :--- | :--- | :--- |
+| `--app-fs-2xs` / `xs` / `sm` / `md` / `lg` / `xl` / `2xl` | 0.72 / 0.8 / 0.875 / 1 / 1.125 / 1.5 / 2rem | 배지 / 메타 / 기본 UI / 본문 / 섹션 제목 / 화면 제목 / 큰 숫자 |
+| `--app-fw-regular` / `medium` / `semibold` / `bold` | 400 / 500 / 600 / 700 | 본문 / 강조 / 제목 / 큰 숫자 |
+| `--app-lh-tight` / `normal` | 1.3 / 1.5 | 제목 / 본문 |
+| `--app-space-1` / `1-5` / `2` / `3` / `4` / `5` / `6` / `8` / `12` | 0.25 / 0.375 / 0.5 / 0.75 / 1 / 1.25 / 1.5 / 2 / 3rem | margin · padding · gap |
 
 #### 💻 Theme Integration Example Code (테마 연동 실전 예시 코드)
 

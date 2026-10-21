@@ -442,6 +442,7 @@ function initMobileSessionMenu() {
   if (!trigger || !menu || !group || menu.dataset.bound === '1') return;
   menu.dataset.bound = '1';
   const triggerLabel = trigger.querySelector('.mobile-session-select-label');
+  const triggerIcon = trigger.querySelector('.mobile-session-select-icon');
 
   const close = () => {
     if (menu.hidden) return;
@@ -449,13 +450,19 @@ function initMobileSessionMenu() {
     trigger.setAttribute('aria-expanded', 'false');
   };
   const open = () => {
-    // 팝업은 헤더 카드 폭에 맞춰 세션 버튼 바로 아래에 띄운다
-    const header = trigger.closest('.library-header');
-    const anchor = (header || trigger).getBoundingClientRect();
     const rect = trigger.getBoundingClientRect();
     menu.style.top = `${Math.round(rect.bottom + 6)}px`;
-    menu.style.left = `${Math.round(anchor.left)}px`;
-    menu.style.width = `${Math.round(anchor.width)}px`;
+    if (isMobileLayout()) {
+      // 폰: 헤더 카드 폭에 맞춘 2열 그리드
+      const header = trigger.closest('.library-header');
+      const anchor = (header || trigger).getBoundingClientRect();
+      menu.style.left = `${Math.round(anchor.left)}px`;
+      menu.style.width = `${Math.round(anchor.width)}px`;
+    } else {
+      // PC: 버튼 왼쪽 아래에 내용 폭만큼의 세로 목록
+      menu.style.left = `${Math.round(rect.left)}px`;
+      menu.style.width = '';
+    }
     menu.hidden = false;
     trigger.setAttribute('aria-expanded', 'true');
   };
@@ -474,19 +481,37 @@ function initMobileSessionMenu() {
     }
     let visibleCount = 0;
     let activeLabel = '';
+    let activeIcon = '';
     sources.forEach((src, i) => {
       const btn = menu.children[i];
       const label = src.textContent.replace(/\s+/g, ' ').trim();
-      if (btn.textContent !== label) btn.textContent = label;
+      const icon = src.querySelector('i')?.className || '';
+      // 아이콘 + 이름 (원본 탭과 같은 아이콘)
+      if (btn.dataset.label !== label || btn.dataset.icon !== icon) {
+        btn.dataset.label = label;
+        btn.dataset.icon = icon;
+        btn.innerHTML = '';
+        if (icon) {
+          const iconEl = document.createElement('i');
+          iconEl.className = icon;
+          iconEl.setAttribute('aria-hidden', 'true');
+          btn.appendChild(iconEl);
+        }
+        btn.appendChild(document.createTextNode(label));
+      }
       const visible = src.style.display !== 'none';
       btn.hidden = !visible;
       if (visible) visibleCount += 1;
       const active = src.classList.contains('active');
-      if (active) activeLabel = label;
+      if (active) {
+        activeLabel = label;
+        activeIcon = icon;
+      }
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
     if (triggerLabel && triggerLabel.textContent !== activeLabel) triggerLabel.textContent = activeLabel;
+    if (triggerIcon) triggerIcon.className = `mobile-session-select-icon ${activeIcon}`.trim();
     // 세션이 하나뿐이면 고를 게 없으므로 버튼째 숨긴다
     trigger.hidden = group.style.display === 'none' || visibleCount < 2;
     if (trigger.hidden) close();

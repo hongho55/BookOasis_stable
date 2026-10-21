@@ -517,67 +517,100 @@
     background: rgba(var(--app-panel-rgb), 0.85);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.6rem 3.75rem 0.6rem 3rem;
+    padding: var(--app-space-2) var(--app-space-3);
     display: flex;
-    /* 닫기 버튼을 absolute로 빼서, 탭 버튼 그룹이 오른쪽에 오도록 함.
-       오른쪽 패딩을 닫기 버튼 폭보다 넉넉히 줘서 '여백' 탭과 겹치지 않게 함. */
+    /* [⛶] [무슨 책인지 (늘어남)] [탭들] [×] 한 줄. 예전엔 ⛶·×를 absolute로 양 끝에 박고 탭만 오른쪽에
+       두어 제목이 들어갈 자리가 없었다. 휴대폰은 탭을 아랫줄로 (아래 @media) */
     justify-content: flex-end;
     align-items: center;
-    gap: 0.6rem;
+    gap: var(--app-space-2);
     flex-wrap: wrap;
     animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.overlay-close-btn {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(239, 68, 68, 0.25);
-    border: 1px solid rgba(239, 68, 68, 0.5);
-    color: #fca5a5;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    border-radius: 6px;
-    cursor: pointer;
-    line-height: 1;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 0 6px rgba(239, 68, 68, 0.2);
-}
-
-.overlay-close-btn:hover {
-    background: #ef4444;
-    border-color: #f87171;
-    color: #fff;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
-    /* 베이스 규칙의 translateY(-50%)를 유지한 채로 scale만 얹어야 한다 - transform은
-       속성 전체가 교체되므로 여기서 scale(1.05)만 쓰면 세로 중앙 정렬이 풀려 버튼이
-       위로 튀어 올라 호버하자마자 클릭이 빗나가는 원인이었다. */
-    transform: translateY(-50%) scale(1.05);
-}
-
-/* 전체화면 전환 (닫기 버튼과 대칭으로 왼쪽 여백에 배치) */
+/* 닫기·전체화면: 상자 없는 아이콘 버튼 (닫기만 마우스를 올리면 옅은 빨강) */
+.overlay-close-btn,
 .overlay-fullscreen-btn {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--app-text-muted);
-    padding: 0.3rem 0.6rem;
-    font-size: 0.95rem;
-    border-radius: 6px;
-    cursor: pointer;
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--app-text-secondary);
+    font-size: 1.1rem;
     line-height: 1;
-    transition: all 0.2s ease;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .overlay-fullscreen-btn:hover {
-    background: color-mix(in srgb, var(--app-accent) 20%, transparent);
-    border-color: var(--app-accent);
+    background: color-mix(in srgb, var(--app-text-primary) 12%, transparent);
     color: var(--app-text-primary);
+}
+
+.overlay-close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+/* 무슨 책인지: 시리즈명(굵게) + 권 이름(옅게), 남는 폭을 다 쓰고 넘치면 말줄임 */
+.overlay-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: var(--app-space-2);
+    margin-right: auto;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.overlay-series {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--app-text-primary);
+    font-size: var(--app-fs-sm);
+    font-weight: var(--app-fw-semibold);
+}
+
+.overlay-volume {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--app-text-muted);
+    font-size: var(--app-fs-xs);
+}
+
+.overlay-series:empty {
+    display: none;
+}
+
+/* 휴대폰: 1줄 [⛶] [시리즈명 / 권 이름 두 줄] [×], 2줄 탭 (탭까지 한 줄이면 제목 자리가 없다) */
+@media (max-width: 768px) {
+    .overlay-tab-nav {
+        order: 3;
+        flex-basis: 100%;
+        justify-content: center;
+    }
+
+    .overlay-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+
+    .overlay-series,
+    .overlay-volume {
+        max-width: 100%;
+    }
 }
 
 .overlay-controls-panel {
@@ -608,37 +641,42 @@
 /* 📌 뷰어 오버레이 탭 헤더 및 콘텐츠 (탭 버튼은 상단 헤더에 상시 노출) */
 .overlay-tab-nav {
     display: flex;
-    gap: 6px;
+    gap: var(--app-space-1);
     justify-content: flex-start;
     flex-wrap: wrap;
 }
 
+/* 탭: 상자 없는 글자 탭, 선택된 탭만 옅은 배경 (예전 그라데이션·발광 제거) */
 .overlay-tab-btn {
-    background: rgba(var(--app-panel-border-rgb), 0.05);
-    border: 1px solid rgba(var(--app-panel-border-rgb), 0.08);
+    background: none;
+    border: 0;
     color: var(--app-text-muted);
-    padding: 0.35rem 0.85rem;
-    font-size: 0.78rem;
-    font-weight: 600;
+    padding: var(--app-space-1-5) var(--app-space-3);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-medium);
     border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, color 0.15s ease;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--app-space-1-5);
 }
 
 .overlay-tab-btn:hover {
-    background: color-mix(in srgb, var(--app-accent) 15%, transparent);
-    color: var(--app-accent-hover);
-    border-color: color-mix(in srgb, var(--app-accent) 40%, transparent);
+    color: var(--app-text-primary);
 }
 
 .overlay-tab-btn.active {
-    background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 70%, black) 100%);
-    color: var(--app-accent-contrast);
-    border-color: var(--app-accent);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--app-accent) 40%, transparent);
+    background: color-mix(in srgb, var(--app-text-primary) 12%, transparent);
+    color: var(--app-text-primary);
+}
+
+/* 키보드로 쪽을 넘긴 뒤엔 브라우저가 클릭한 버튼에도 굵은 흰 테두리를 그린다 - 메뉴 색에 맞춘 얇은 링으로 */
+.overlay-header button:focus-visible,
+.overlay-controls-panel button:focus-visible,
+.overlay-footer button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--app-accent) 60%, transparent);
 }
 
 .overlay-tab-content {
@@ -670,8 +708,26 @@
 .overlay-margin-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.2rem 0.4rem;
+    gap: var(--app-space-3);
+    padding: var(--app-space-1) var(--app-space-1);
+    /* 이름이 짧아 패널이 줄어들면 슬라이더도 짧아져 조절하기 어렵다 */
+    min-width: min(300px, 80vw);
+}
+
+/* 여백 탭: 이름(옅게) ... 값(오른쪽) 한 줄 + 슬라이더 (예전엔 스타일이 없어 브라우저 기본 16px였다) */
+.quick-padding-row label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--app-space-1);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-regular);
+    color: var(--app-text-muted);
+}
+
+.quick-padding-value {
+    color: var(--app-text-secondary);
+    font-variant-numeric: tabular-nums;
 }
 
 .overlay-slider {
@@ -777,68 +833,67 @@
     box-shadow: 0 0 6px color-mix(in srgb, var(--app-accent) 65%, transparent);
 }
 
+/* 패널 버튼: 테두리 없이 옅은 배경만 (누를 곳은 보이게) */
 .btn-overlay-action {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: color-mix(in srgb, var(--app-text-primary) 8%, transparent);
+    border: 0;
     color: var(--app-text-primary);
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border-radius: 4px;
+    padding: var(--app-space-1-5) var(--app-space-3);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-medium);
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.15s ease;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--app-space-1-5);
 }
 
 .btn-overlay-action:hover {
-    background: color-mix(in srgb, var(--app-accent) 25%, transparent);
-    border-color: var(--app-accent);
+    background: color-mix(in srgb, var(--app-text-primary) 16%, transparent);
     color: var(--app-text-primary);
 }
 
 /* 텍스트 라벨 없이 아이콘만 쓰는 오버레이 액션 버튼 (예: 북마크 추가) —
    좁은 화면 가로모드에서 버튼 줄 줄바꿈을 피하기 위해 폭을 최소화한다. */
 .btn-overlay-action-icon-only {
-    padding: 0.4rem 0.6rem;
+    padding: var(--app-space-1-5) var(--app-space-2);
 }
 
 .overlay-fit-group {
     display: flex;
-    background: rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--app-text-primary) 6%, transparent);
     padding: 2px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
 }
 
 .btn-overlay-fit {
     background: transparent;
     border: none;
     color: var(--app-text-muted);
-    padding: 0.3rem 0.6rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: var(--app-space-1) var(--app-space-2);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-medium);
     cursor: pointer;
-    border-radius: 3px;
-    transition: all 0.2s;
+    border-radius: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* 선택된 값: 옅은 강조 배경 + 강조색 글자 (예전 그라데이션·발광 제거) */
 .btn-overlay-fit.active {
-    background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 70%, black) 100%);
-    color: var(--app-accent-contrast);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--app-accent) 40%, transparent);
+    background: var(--app-accent-soft);
+    color: var(--app-accent-hover);
 }
 
 .overlay-footer {
     background: rgba(var(--app-panel-rgb), 0.85);
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0.7rem 1.2rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+    padding: var(--app-space-2) var(--app-space-4) calc(var(--app-space-3) + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--app-space-1-5);
     /* 패널이 더 이상 justify-content: space-between으로 중앙에 밀리지 않으므로,
        시크바(footer)는 margin-top: auto로 직접 하단에 고정한다. */
     margin-top: auto;
@@ -877,8 +932,8 @@
 /* 시작/끝 페이지 숫자 */
 .seekbar-page-num {
     color: var(--app-text-muted);
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: var(--app-fs-2xs);
+    font-weight: var(--app-fw-medium);
     min-width: 22px;
     text-align: center;
     flex-shrink: 0;
@@ -919,13 +974,11 @@
     border-radius: 50%;
     background: var(--app-accent);
     cursor: pointer;
-    box-shadow: 0 0 8px color-mix(in srgb, var(--app-accent) 55%, transparent);
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.15s;
 }
 
 .seekbar-input::-webkit-slider-thumb:hover {
     transform: scale(1.3);
-    box-shadow: 0 0 12px color-mix(in srgb, var(--app-accent) 85%, transparent);
 }
 
 /* Firefox thumb */
@@ -936,7 +989,6 @@
     background: var(--app-accent);
     cursor: pointer;
     border: none;
-    box-shadow: 0 0 8px color-mix(in srgb, var(--app-accent) 55%, transparent);
     transition: transform 0.15s;
 }
 
@@ -958,7 +1010,6 @@
     pointer-events: none;
     display: none;
     transform: translateX(-50%);
-    box-shadow: 0 2px 8px color-mix(in srgb, var(--app-accent) 50%, transparent);
     z-index: 1;
 }
 
@@ -968,12 +1019,12 @@
 
 /* 첫/마지막 페이지 이동 버튼 */
 .seekbar-btn {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--app-text-muted);
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
+    background: none;
+    border: 0;
+    color: var(--app-text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -984,20 +1035,15 @@
 }
 
 .seekbar-btn:hover {
-    background: color-mix(in srgb, var(--app-accent) 20%, transparent);
-    border-color: var(--app-accent);
-    color: var(--app-accent-hover);
+    background: color-mix(in srgb, var(--app-text-primary) 12%, transparent);
+    color: var(--app-text-primary);
 }
 
-/* 현재 페이지 배지 */
+/* 현재 쪽 번호: 글자만 (예전엔 테마와 상관없이 보라색 알약이었다) */
 .seekbar-current-badge {
-    background: rgba(168, 85, 247, 0.15);
-    border: 1px solid rgba(168, 85, 247, 0.35);
-    color: #d8b4fe;
-    padding: 2px 12px;
-    border-radius: 12px;
-    font-size: 0.78rem;
-    font-weight: 700;
+    color: var(--app-text-secondary);
+    font-size: var(--app-fs-xs);
+    font-weight: var(--app-fw-medium);
     font-variant-numeric: tabular-nums;
 }
 

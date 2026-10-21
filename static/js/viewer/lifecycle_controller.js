@@ -35,6 +35,38 @@ function rememberOpenViewer(entry) {
   try { sessionStorage.setItem(OPEN_VIEWER_SESSION_KEY, JSON.stringify(entry)); } catch (e) {}
 }
 
+// ── 메뉴 위 줄의 "무슨 책인지" (시리즈명 + 권 이름) ──
+// 상세 화면에서 연 책이면 이미 아는 시리즈명으로 바로, 아니면(홈·목록·이어읽기·다음 권 등)
+// reader-info로 한 번 받아 온다.
+function setOverlaySeriesTitle(seriesTitle, volumeTitle) {
+  const seriesEl = document.getElementById('overlay-series-text');
+  const volumeEl = document.getElementById('overlay-volume-text');
+  const name = String(seriesTitle || '').trim();
+  let volume = String(volumeTitle || '').trim();
+  // 권 파일명이 시리즈명으로 시작하면("20대 벼락부자 01권") 앞부분을 떼고, 단권처럼 같으면 한 번만
+  if (name && volume.startsWith(name)) volume = volume.slice(name.length).trim();
+  if (seriesEl) seriesEl.textContent = name;
+  if (volumeEl) volumeEl.textContent = volume;
+}
+
+function loadOverlaySeriesTitle(bookId, volumeTitle) {
+  setOverlaySeriesTitle('', volumeTitle);
+  const id = Number(bookId);
+  if (Array.isArray(state.detailBookIds) && state.detailBookIds.includes(id)) {
+    setOverlaySeriesTitle(state.detailDisplayTitle || state.detailSeriesName, volumeTitle);
+    return;
+  }
+  const type = encodeURIComponent(state.currentLibraryType || 'general');
+  fetch(`/api/media/books/${encodeURIComponent(bookId)}/reader-info?type=${type}`)
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      // 응답 전에 다른 권으로 넘어갔으면 버린다
+      if (!data || !data.success || !data.book || String(state.activeBookId) !== String(bookId)) return;
+      setOverlaySeriesTitle(data.book.series_alias || data.book.series_name, volumeTitle);
+    })
+    .catch(() => {});
+}
+
 function forgetOpenViewer() {
   try { sessionStorage.removeItem(OPEN_VIEWER_SESSION_KEY); } catch (e) {}
   // 닫은 뒤 이 항목으로 다시 로드돼도(앞으로 가기·새로고침) 책이 다시 열리지 않게 표식을 지운다
@@ -93,6 +125,7 @@ export function openReader(bookId, format, title, pagesRead, totalPages) {
 
   viewerModal.style.display = 'flex';
   document.getElementById('viewer-title-text').textContent = title;
+  loadOverlaySeriesTitle(bookId, title);
 
   // 플랫폼/포맷 정책 기반 자동 전체화면 분기 (수동 전체화면 버튼은 별도로 유지)
   if (shouldAutoFullscreenForFormat(fmt)) {

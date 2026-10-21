@@ -701,7 +701,9 @@ export async function loadLibraries() {
       renderSidebarAdminTools({ isAdmin, isPinned, pinTitle });
       normalizeSidebarBareLabels(sidebar);
       applySavedMixedOrder(sidebar);
-      const activeItem = document.getElementById(`category-${state.currentLibraryId}`) || sidebar.querySelector(`[data-id="${state.currentLibraryId}"]`);
+      // 그룹 제목(.sidebar-group-header)도 data-id(그룹 번호)를 가져서, 번호가 같은 카테고리 대신 그룹이 잡히면
+      // 그 카테고리의 표지 비율·제목 감추기 설정이 안 먹었다 - 그룹 제목은 뺀다
+      const activeItem = document.getElementById(`category-${state.currentLibraryId}`) || sidebar.querySelector(`.menu-item:not(.sidebar-group-header)[data-id="${state.currentLibraryId}"]`);
       state.currentLibraryHideCovers = !!(activeItem && activeItem.dataset && activeItem.dataset.type === 'custom' && activeItem.dataset.hideCover === '1');
       state.currentLibraryAspectRatio = resolveCoverAspectRatio(activeItem?.dataset, state.currentLibraryType);
       state.currentLibraryHideTitles = !!(activeItem && activeItem.dataset && activeItem.dataset.type === 'custom' && activeItem.dataset.hideTitle === '1');

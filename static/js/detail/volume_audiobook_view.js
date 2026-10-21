@@ -86,7 +86,7 @@ export function renderAudiobookVolumes(orderedBooks, detailMeta = null) {
   `;
 
   return `
-    <div class="volumes-section ab-volumes-shell" style="margin-top: 1.2rem;">
+    <div class="volumes-section ab-volumes-shell">
       <div class="ab-tab-header">
         <button class="ab-tab-btn active" data-role="detail-audio-tab" data-target="chapters">${isMusic ? '트랙' : '챕터'} <span>${books.length}</span></button>
         <button class="ab-tab-btn" data-role="detail-audio-tab" data-target="tracks">오디오 트랙 <span>${books.length}</span></button>

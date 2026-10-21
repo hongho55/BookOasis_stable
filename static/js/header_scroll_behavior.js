@@ -23,7 +23,9 @@
         const st = scrollEl.scrollTop;
         const delta = st - lastScrollTop;
 
-        if (st <= revealNearTop) {
+        // 검색창 등 헤더 안에 포커스가 있으면 숨기지 않는다 - 입력 중에 스크롤하면 검색창이 사라졌다
+        const headerHasFocus = header.contains(document.activeElement);
+        if (st <= revealNearTop || headerHasFocus) {
           header.classList.remove('library-header--hidden');
         } else if (delta > moveThreshold) {
           header.classList.add('library-header--hidden');
@@ -39,6 +41,11 @@
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
+
+    // 숨겨진 상태에서 검색 단축키(search_shortcut_manager.js) 등으로 헤더 안 요소에 포커스가 오면 다시 보인다
+    header.addEventListener('focusin', () => {
+      header.classList.remove('library-header--hidden');
+    });
 
     // 필터 바(#active-filter-bar)도 sticky로 헤더 바로 아래에 붙는다 - 헤더 높이는 화면 폭/
     // 모바일 접힘(--hidden 시 2·3줄 접기)에 따라 바뀌므로 실제 높이를 CSS 변수로 넘긴다.

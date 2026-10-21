@@ -8,6 +8,8 @@ let searchShortcutConfig = { ctrlKey: false, altKey: true, shiftKey: false, meta
 export function focusLibrarySearchInput() {
   const searchInput = document.getElementById('library-search');
   if (!searchInput) return;
+  // 스크롤로 헤더가 숨겨진 상태면 다시 보이게 (이미 포커스가 있던 경우엔 focusin이 다시 안 생겨서 직접 푼다)
+  searchInput.closest('.library-header')?.classList.remove('library-header--hidden');
   searchInput.focus();
   searchInput.select();
 }

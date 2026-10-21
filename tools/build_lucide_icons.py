@@ -101,6 +101,15 @@ def subset_font(woff2: bytes, codepoints: list) -> bytes:
     subsetter = subset.Subsetter(options)
     subsetter.populate(unicodes=codepoints)
     subsetter.subset(font)
+    # 원본 lucide 글꼴은 윤곽이 가운데(예: x 334~666)에 있는데 hmtx의 왼쪽 여백(lsb)이 0으로 적혀 있다.
+    # 그대로 woff2로 저장하면 윤곽이 lsb에 맞춰 왼쪽 끝(x=0)으로 밀려 모든 아이콘이 왼쪽으로 쏠린다
+    # (정사각 버튼의 < > 가 4px쯤 왼쪽). 실제 윤곽 위치로 lsb를 맞춘다.
+    glyf, hmtx = font['glyf'], font['hmtx']
+    for name in font.getGlyphOrder():
+        glyph = glyf[name]
+        glyph.recalcBounds(glyf)
+        if glyph.numberOfContours:
+            hmtx[name] = (hmtx[name][0], glyph.xMin)
     out = io.BytesIO()
     font.flavor = 'woff2'
     font.save(out)

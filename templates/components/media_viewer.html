@@ -7,7 +7,8 @@
 
     <div class="viewer-header">
 
-        <span class="viewer-title" id="viewer-title-text" data-i18n="viewer.reading">독서 중...</span>
+        <!-- data-i18n을 달면 번역 재적용 때 열린 책 제목이 "독서 중..."으로 덮인다 (문제 신고 등이 이 글자를 읽음) -->
+        <span class="viewer-title" id="viewer-title-text">독서 중...</span>
         <div class="viewer-controls">
             <!-- 텍스트 뷰어용 폰트 제어판 -->
             <div id="txt-controls" class="txt-controls-panel" style="display:none;">
@@ -49,6 +50,12 @@
                 <button id="btn-overlay-fullscreen" class="overlay-fullscreen-btn" data-role="viewer-action" data-action="toggle-fullscreen" data-i18n-title="viewer.fullscreen" title="전체화면" style="display: none;">
                     <i class="lc lc-expand" id="overlay-fullscreen-icon"></i>
                 </button>
+                <!-- 무슨 책인지: 시리즈명 + 권 이름 (책을 열 때 lifecycle_controller.js가 채움).
+                     2.6.2에서 탭 줄로 바꾸며 빠졌던 자리 -->
+                <div class="overlay-title">
+                    <span class="overlay-series" id="overlay-series-text"></span>
+                    <span class="overlay-volume" id="overlay-volume-text"></span>
+                </div>
                 <!-- 탭 네비게이션: 항상 상단에 노출되는 메뉴 버튼들 (예전엔 화면 중앙 카드 안에 있었음) -->
                 <div class="overlay-tab-nav">
                     <button class="overlay-tab-btn active" id="tab-btn-nav" data-role="viewer-action" data-action="overlay-tab" data-value="nav">
@@ -64,7 +71,7 @@
                         <i class="lc lc-move"></i> <span data-i18n="viewer.tab_margin">여백</span>
                     </button>
                 </div>
-                <button class="overlay-close-btn" data-role="viewer-action" data-action="close" data-i18n-title="viewer.close_fullscreen" title="뷰어 닫기">&times;</button>
+                <button class="overlay-close-btn" data-role="viewer-action" data-action="close" data-i18n-title="viewer.close_fullscreen" title="뷰어 닫기"><i class="lc lc-x"></i></button>
             </div>
 
             <div class="overlay-controls-panel">
@@ -199,19 +206,19 @@
                 <div class="overlay-tab-content" id="overlay-tab-margin">
                     <div class="overlay-margin-container">
                         <div class="quick-padding-row">
-                            <label><span data-i18n="settings.padding_top_label">상단 여백</span> <span><span id="quick-novel-top-val">40</span>px</span></label>
+                            <label><span data-i18n="viewer.margin_top">위 여백</span> <span class="quick-padding-value"><span id="quick-novel-top-val">40</span>px</span></label>
                             <input type="range" id="quick-novel-top-slider" min="0" max="200" step="5" value="40" class="overlay-slider">
                         </div>
                         <div class="quick-padding-row">
-                            <label><span data-i18n="settings.padding_bottom_label">하단 여백</span> <span><span id="quick-novel-bottom-val">60</span>px</span></label>
+                            <label><span data-i18n="viewer.margin_bottom">아래 여백</span> <span class="quick-padding-value"><span id="quick-novel-bottom-val">60</span>px</span></label>
                             <input type="range" id="quick-novel-bottom-slider" min="0" max="200" step="5" value="60" class="overlay-slider">
                         </div>
                         <div class="quick-padding-row">
-                            <label><span data-i18n="settings.padding_left_label">좌측 여백</span> <span><span id="quick-novel-left-val">20</span>px</span></label>
+                            <label><span data-i18n="viewer.margin_left">왼쪽 여백</span> <span class="quick-padding-value"><span id="quick-novel-left-val">20</span>px</span></label>
                             <input type="range" id="quick-novel-left-slider" min="0" max="200" step="5" value="20" class="overlay-slider">
                         </div>
                         <div class="quick-padding-row">
-                            <label><span data-i18n="settings.padding_right_label">우측 여백</span> <span><span id="quick-novel-right-val">20</span>px</span></label>
+                            <label><span data-i18n="viewer.margin_right">오른쪽 여백</span> <span class="quick-padding-value"><span id="quick-novel-right-val">20</span>px</span></label>
                             <input type="range" id="quick-novel-right-slider" min="0" max="200" step="5" value="20" class="overlay-slider">
                         </div>
                     </div>

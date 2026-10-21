@@ -278,7 +278,7 @@ export async function openBookDetail(event, seriesName, libraryId, representativ
       } else {
         const btnManual = document.getElementById('btn-manual-meta-search');
         if (btnManual) {
-          btnManual.style.display = 'inline-block';
+          btnManual.style.display = ''; // ⋯ 메뉴 항목 기본 모양(.detail-more-item)으로
           btnManual.addEventListener('click', () => {
             btnManual.style.display = 'none';
             triggerRecommendSearch();

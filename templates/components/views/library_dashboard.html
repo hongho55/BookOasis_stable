@@ -9,9 +9,9 @@
 
 {% macro core_recent_slot(hidden=False) %}
 <div class="dashboard-section home-widget-slot home-widget-slot--full" id="home-widget-core.recent" data-widget-id="core.recent"{% if hidden %} style="display:none;"{% endif %}>
-    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-        <h3 class="section-title" style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;"><i class="lc lc-history" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span id="dashboard-recent-title" data-i18n="dashboard.recent_title">최근 읽은 도서</span><span id="dashboard-recent-title-suffix" style="margin-left: 0.35rem; font-size: 0.82em; font-weight: 500; color: var(--app-text-muted);">(시리즈기준)</span></h3>
-        <div class="section-nav-btns" style="display: flex; gap: 0.5rem; align-items: center;">
+    <div class="section-header home-section-header">
+        <h3 class="section-title home-section-title"><i class="lc lc-history"></i> <span id="dashboard-recent-title" data-i18n="dashboard.recent_title">최근 읽은 도서</span><span id="dashboard-recent-title-suffix" class="home-section-title-suffix">(시리즈기준)</span></h3>
+        <div class="section-nav-btns">
             <button data-scroll-row-nav="dashboard-history-row" data-dir="left" class="btn-nav-arrow" data-i18n-title="common.prev" title="이전"><i class="lc lc-chevron-left"></i></button>
             <button data-scroll-row-nav="dashboard-history-row" data-dir="right" class="btn-nav-arrow" data-i18n-title="common.next" title="다음"><i class="lc lc-chevron-right"></i></button>
             <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.recent" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
@@ -25,9 +25,9 @@
 
 {% macro core_new_slot(hidden=False) %}
 <div class="dashboard-section home-widget-slot home-widget-slot--full" id="home-widget-core.new" data-widget-id="core.new"{% if hidden %} style="display:none;"{% endif %}>
-    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
-        <h3 class="section-title" style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;"><i class="lc lc-square-plus" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span id="dashboard-new-title" data-i18n="dashboard.new_books_title">신규 추가 도서</span></h3>
-        <div class="section-nav-btns" style="display: flex; gap: 0.5rem; align-items: center;">
+    <div class="section-header home-section-header">
+        <h3 class="section-title home-section-title"><i class="lc lc-square-plus"></i> <span id="dashboard-new-title" data-i18n="dashboard.new_books_title">신규 추가 도서</span></h3>
+        <div class="section-nav-btns">
             <button data-scroll-row-nav="dashboard-new-row" data-dir="left" class="btn-nav-arrow" data-i18n-title="common.prev" title="이전"><i class="lc lc-chevron-left"></i></button>
             <button data-scroll-row-nav="dashboard-new-row" data-dir="right" class="btn-nav-arrow" data-i18n-title="common.next" title="다음"><i class="lc lc-chevron-right"></i></button>
             <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.new" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
@@ -73,7 +73,7 @@
 {%- endif -%}
 {% endmacro %}
 
-<div id="library-dashboard-view" style="display: none; flex-direction: column; gap: 0.9rem;">
+<div id="library-dashboard-view" style="display: none; flex-direction: column; gap: var(--app-space-4);">
     <!-- -1. 플러그인 로드 상태 알림 패널 (관리자 전용, 기본 숨김 – JS가 role 확인 후 데이터 채워서 노출) -->
     <div id="plugin-health-panel" class="plugin-health-panel" style="display: none;">
         <div class="plugin-health-panel-summary">
@@ -137,10 +137,8 @@
 {% endif %}
     </div>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem; padding-bottom: 0;">
-        <span style="font-size: 0.68rem; color: var(--boe-copyright-whisper-a17f3c9); letter-spacing: 0.04em; opacity: 0.9; user-select: none;">
-            Copyright 2026 BookOasis Engine. All rights reserved.
-        </span>
+    <div class="home-copyright">
+        <span>Copyright 2026 BookOasis Engine. All rights reserved.</span>
     </div>
 
 </div>

@@ -31,19 +31,30 @@ export function applyDetailVolumeView() {
     if (visible) visibleCount += 1;
   });
 
-  const unreadButton = section.querySelector('[data-detail-unread-filter]');
-  if (unreadButton) {
-    unreadButton.classList.toggle('active', detailVolumeViewState.unreadOnly);
-    unreadButton.setAttribute('aria-pressed', String(detailVolumeViewState.unreadOnly));
-  }
-  section.querySelectorAll('[data-detail-sort]').forEach(button => {
-    const active = button.dataset.detailSort === detailVolumeViewState.sortOrder;
-    button.classList.toggle('active', active);
-    button.setAttribute('aria-pressed', String(active));
-  });
+  const controls = section.querySelector('.volume-list-controls');
+  if (controls) controls.innerHTML = renderVolumeControlsInner(detailVolumeViewState.unreadOnly, detailVolumeViewState.sortOrder);
 
   const empty = section.querySelector('.volumes-empty-filter');
   if (empty) empty.style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+// 권 목록 제목 줄 오른쪽 컨트롤: 상자 없는 글자 버튼 두 개.
+// "안 읽은 권만"은 켜고 끄는 토글, 정렬은 지금 순서 하나만 보이고 누르면 반대 순서로 바뀐다
+// (data-sort가 다음 값 - interactions.js detail-volume-sort가 그대로 setDetailVolumeSort에 넘긴다)
+function renderVolumeControlsInner(unreadOnly, sortOrder) {
+  const isNewest = sortOrder === 'newest';
+  return `
+    <button type="button" class="volume-text-toggle${unreadOnly ? ' active' : ''}" data-role="detail-volume-filter" aria-pressed="${unreadOnly}">
+      <i class="lc ${unreadOnly ? 'lc-circle-check' : 'lc-circle'}" aria-hidden="true"></i> ${i18n.t('detail.unread_only')}
+    </button>
+    <button type="button" class="volume-text-toggle" data-role="detail-volume-sort" data-sort="${isNewest ? 'oldest' : 'newest'}" title="${i18n.t('detail.sort_order')}">
+      <i class="lc ${isNewest ? 'lc-arrow-down-1-0' : 'lc-arrow-up-0-1'}" aria-hidden="true"></i> ${i18n.t(isNewest ? 'detail.sort_newest' : 'detail.sort_oldest')}
+    </button>
+  `;
+}
+
+export function renderVolumeControls(unreadOnly, sortOrder) {
+  return `<div class="volume-list-controls" aria-label="${i18n.t('detail.list_controls')}">${renderVolumeControlsInner(unreadOnly, sortOrder)}</div>`;
 }
 
 export function toggleDetailUnreadFilter() {

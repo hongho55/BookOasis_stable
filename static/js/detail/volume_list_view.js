@@ -3,11 +3,15 @@ import { state } from '../state.js';
 import { stripLeadingBracketTags } from '../series_display.js';
 import { canDownloadFiles } from '../library_type_toggle.js';
 import { canListen } from '../tts_launcher.js';
+import { renderVolumeControls } from './volume_controller.js';
 
 export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, dbType = 'general', options = {}) {
   const books = Array.isArray(orderedBooks) ? orderedBooks : [];
   const unreadOnly = options.unreadOnly === true;
   const sortOrder = options.sortOrder === 'newest' ? 'newest' : 'oldest';
+  // 서버 파일 경로는 관리자에게만 (일반 사용자에겐 잡음이고 서버 구조가 드러난다)
+  const currentUser = state.currentUser || window.currentUser || {};
+  const showFilePath = String(currentUser.role || '').trim().toLowerCase() === 'admin';
   let volumesHtml = '';
 
   books.forEach((book) => {
@@ -54,7 +58,7 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
     const favIconClass = isFav ? 'fa-solid fa-star' : 'lc lc-star';
     const favIconColor = isFav ? '#eab308' : '#64748b';
     const favBtnHtml = `
-      <button class="btn-fav-toggle" data-role="detail-book-favorite" data-book-id="${book.id}" data-next-status="${isFav ? 0 : 1}" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" style="background:none; border:none; color:${favIconColor}; cursor:pointer; font-size:1.1rem; padding:0 0.5rem; display:inline-flex; align-items:center;" title="${i18n.t('detail.toggle_fav_book')}">
+      <button class="btn-fav-toggle volume-fav-btn" data-role="detail-book-favorite" data-book-id="${book.id}" data-next-status="${isFav ? 0 : 1}" data-series-name="${safeSeriesName.replace(/"/g, '&quot;')}" data-library-id="${actualLibraryId}" style="color:${favIconColor};" title="${i18n.t('detail.toggle_fav_book')}">
         <i class="${favIconClass}"></i>
       </button>
     `;
@@ -84,7 +88,7 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
     ` : '';
 
     const infoBannerHtml = (noCoverInfo && state.showTxtNoCoverInfoBanner !== false) ? `
-      <div class="vol-warn-banner" style="border-color: rgba(59, 130, 246, 0.35); background: rgba(30, 58, 138, 0.22); color: #93c5fd;">
+      <div class="vol-warn-banner vol-warn-banner--info">
         <i class="lc lc-info"></i>
         <span>기본 커버 사용 중 (TXT)</span>
       </div>
@@ -115,12 +119,12 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
         <div class="volume-info">
           ${warnBannerHtml}
           ${infoBannerHtml}
-          <div class="volume-title-row" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+          <div class="volume-title-row">
             <span class="volume-title">${rawDisplayTitle}</span>
             ${isCompleted}
             ${favBtnHtml}
           </div>
-          <span class="volume-path" style="font-size: 0.72rem; color: var(--app-text-muted); word-break: break-all; margin-top: 0.15rem; display: block;">(${pathDisplay})</span>
+          ${showFilePath ? `<span class="volume-path">${pathDisplay}</span>` : ''}
           <div class="volume-meta-row">
             <span class="vol-meta"><i class="lc lc-file"></i> ${book.total_pages}p</span>
             <span class="vol-meta"><i class="lc lc-clock"></i> ${i18n.t('detail.time_est', { minutes: Math.max(1, Math.ceil(book.total_pages / 40)) })}</span>
@@ -142,15 +146,7 @@ export function renderVolumeList(orderedBooks, safeSeriesName, actualLibraryId, 
         <i class="lc lc-layers"></i> ${i18n.t('dashboard.single_book_list')}
         <span class="vol-count-badge">${i18n.t('dashboard.book_unit', { count: books.length })}</span>
       </h4>
-      <div class="volume-list-controls" aria-label="${i18n.t('detail.list_controls')}">
-        <button type="button" class="volume-filter-btn${unreadOnly ? ' active' : ''}" data-role="detail-volume-filter" data-detail-unread-filter aria-pressed="${unreadOnly}">
-          ${i18n.t('detail.unread_only')}
-        </button>
-        <div class="volume-sort-control" role="group" aria-label="${i18n.t('detail.sort_order')}">
-          <button type="button" class="volume-sort-btn${sortOrder === 'oldest' ? ' active' : ''}" data-role="detail-volume-sort" data-sort="oldest" data-detail-sort="oldest" aria-pressed="${sortOrder === 'oldest'}">${i18n.t('detail.sort_oldest')}</button>
-          <button type="button" class="volume-sort-btn${sortOrder === 'newest' ? ' active' : ''}" data-role="detail-volume-sort" data-sort="newest" data-detail-sort="newest" aria-pressed="${sortOrder === 'newest'}">${i18n.t('detail.sort_newest')}</button>
-        </div>
-      </div>
+      ${renderVolumeControls(unreadOnly, sortOrder)}
     </div>
     <div class="volumes-list">
       ${volumesHtml}

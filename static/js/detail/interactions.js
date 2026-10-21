@@ -7,7 +7,7 @@ export function bindDetailInteractions() {
 
   document.addEventListener('click', (event) => {
     const target = event && event.target && typeof event.target.closest === 'function'
-      ? event.target.closest('[data-role="detail-listen"], [data-role="detail-genre-filter"], [data-role="detail-tag-filter"], [data-role="detail-collapse-toggle"], [data-role="detail-rescan-missing"], [data-role="detail-unlock-metadata"], [data-role="detail-cover-upload"], [data-role="detail-series-favorite"], [data-role="detail-edit-toggle"], [data-role="detail-plugin-meta-search"], [data-role="detail-rescan-series"], [data-role="detail-mark-series-complete"], [data-role="detail-mark-series-unread"], [data-role="detail-save-meta"], [data-role="detail-cancel-meta"], [data-role="detail-volume-filter"], [data-role="detail-volume-sort"], [data-role="detail-summary-toggle"], [data-role="detail-continue"], [data-role="detail-music-shuffle"], [data-role="detail-book-favorite"], [data-role="detail-rescan-book"], [data-role="detail-audio-open"], [data-role="detail-audio-play"], [data-role="detail-audio-tab"], [data-role="detail-video-open"], [data-role="detail-video-play"], [data-role="detail-volume-open-reader"], [data-role="detail-download-link"]')
+      ? event.target.closest('[data-role="detail-more-toggle"], [data-role="detail-listen"],[data-role="detail-genre-filter"], [data-role="detail-tag-filter"], [data-role="detail-collapse-toggle"], [data-role="detail-rescan-missing"], [data-role="detail-unlock-metadata"], [data-role="detail-cover-upload"], [data-role="detail-series-favorite"], [data-role="detail-edit-toggle"], [data-role="detail-plugin-meta-search"], [data-role="detail-rescan-series"], [data-role="detail-mark-series-complete"], [data-role="detail-mark-series-unread"], [data-role="detail-save-meta"], [data-role="detail-cancel-meta"], [data-role="detail-volume-filter"], [data-role="detail-volume-sort"], [data-role="detail-summary-toggle"], [data-role="detail-continue"], [data-role="detail-music-shuffle"], [data-role="detail-book-favorite"], [data-role="detail-rescan-book"], [data-role="detail-audio-open"], [data-role="detail-audio-play"], [data-role="detail-audio-tab"], [data-role="detail-video-open"], [data-role="detail-video-play"], [data-role="detail-volume-open-reader"], [data-role="detail-download-link"]')
       : null;
     if (!target) return;
 
@@ -22,6 +22,12 @@ export function bindDetailInteractions() {
     }
 
     event.preventDefault();
+
+    if (role === 'detail-more-toggle') {
+      const wrap = target.closest('.detail-more');
+      if (wrap) setDetailMoreOpen(wrap, !wrap.classList.contains('is-open'));
+      return;
+    }
 
     // 음성으로 듣기: 도서 메뉴와 같이 새 탭으로 연다 (듣기 화면의 뒤로 버튼이 그 탭을 닫는다)
     if (role === 'detail-listen') {
@@ -229,5 +235,25 @@ export function bindDetailInteractions() {
   document.addEventListener('touchend', endTouchHandler, { capture: true });
   document.addEventListener('touchcancel', endTouchHandler, { capture: true });
 
+  // ⋯ 더보기 메뉴: 바깥을 누르거나 항목을 고르면(위 위임 리스너가 동작을 먼저 처리한 뒤) 닫고, Esc로도 닫는다
+  document.addEventListener('click', (event) => {
+    const open = document.querySelector('.detail-more.is-open');
+    const target = event.target;
+    if (!open || !target || typeof target.closest !== 'function') return;
+    if (target.closest('[data-role="detail-more-toggle"]')) return;
+    if (!open.contains(target) || target.closest('.detail-more-item')) setDetailMoreOpen(open, false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const open = document.querySelector('.detail-more.is-open');
+    if (open) setDetailMoreOpen(open, false);
+  });
+
   window.__detailRenderDelegationBound = true;
+}
+
+function setDetailMoreOpen(wrap, open) {
+  wrap.classList.toggle('is-open', open);
+  const toggle = wrap.querySelector('[data-role="detail-more-toggle"]');
+  if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 }

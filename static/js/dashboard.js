@@ -210,6 +210,8 @@ function applyHomeWidgetLockUi(locked) {
   btn.innerHTML = locked
     ? '<i class="lc lc-lock"></i> <span>배치 잠금</span>'
     : '<i class="lc lc-lock-open"></i> <span>배치 편집 중</span>';
+  // 잠금 중엔 위젯 제거(×) 버튼도 숨긴다 (style.css .home-widget-stack--locked) - 드래그만 막고 ×는 보였다
+  document.getElementById('home-widget-stack')?.classList.toggle('home-widget-stack--locked', locked);
 }
 
 function setHomeWidgetsLocked(locked) {

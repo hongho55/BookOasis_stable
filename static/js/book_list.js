@@ -477,12 +477,11 @@ export function restoreLibrarySearchQuery(query = '') {
 export function updateSortButtonUI() {
   const btn = document.getElementById('btn-lib-sort');
   if (!btn) return;
-  // 아이콘 전용 압축 버튼이라 라벨 텍스트는 항상 sr-only로 감싼다 - 그냥 텍스트 노드로
-  // 넣으면 34px 정사각 버튼 안에서 글자가 줄바꿈되며 깨져 보인다(title 툴팁으로 접근성 유지).
-  // title에는 "현재 정렬 상태"를 넣는다 - 아이콘만 봐서는 지금 어떤 정렬인지 구분이 안 된다는 피드백 반영.
+  // 목록 제목 줄의 글자 버튼: 지금 정렬 이름이 보이고 ▾로 목록이 열린다는 걸 알린다
+  // (예전엔 상단 헤더의 아이콘 전용 버튼이라 이름을 sr-only로 숨겼고 "지금 무슨 정렬인지 모른다"는 피드백이 있었다)
   const option = getSortOption(state.currentSortDirection || 'asc');
   const label = i18n.t(option.labelKey);
-  btn.innerHTML = `<i class="${option.icon}"></i> <span class="sr-only">${label}</span>`;
+  btn.innerHTML = `<i class="${option.icon}"></i> <span>${label}</span> <i class="lc lc-chevron-down library-list-btn-caret"></i>`;
   btn.title = `${i18n.t('header.sort_title')}: ${label}`;
 }
 

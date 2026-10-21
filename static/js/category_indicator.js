@@ -14,7 +14,9 @@ export function updateCurrentCategoryIndicator(id, activeItem = null) {
   if (!indicator) return;
 
   const targetId = String(id || '');
-  const resolvedItem = activeItem || Array.from(document.querySelectorAll('#sidebar-categories .menu-item'))
+  // 그룹 제목(.sidebar-group-header)도 .menu-item이고 data-id가 그룹 번호라, 카테고리 번호와 같으면
+  // 그룹 이름이 제목으로 잡혔다 (예: 그룹 1 "디자인 테스트 그룹" vs 카테고리 1 "완결A") - 그룹 제목은 뺀다
+  const resolvedItem = activeItem || Array.from(document.querySelectorAll('#sidebar-categories .menu-item:not(.sidebar-group-header)'))
     .find(item => String(item.dataset.id || item.dataset.categoryId || item.getAttribute('data-category-id') || item.getAttribute('data-id')) === targetId);
 
   let label = '';

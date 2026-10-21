@@ -1,6 +1,35 @@
         <div id="books-grid-view">
+            <!-- 책 목록 제목 줄: [제목·건수] [⋯ 카테고리 정보] … [정렬 ▾] [필터] [기본 | 작가별]
+                 예전엔 제목은 숨기고 나머지는 상단 헤더 아이콘이었다 - 목록에서만 의미가 있어 여기로(2026-10-22).
+                 id·data-role은 그대로라 기존 JS(book_list.js, view_manager.js, category_info_popover.js 등)가 그대로 찾는다 -->
+            <div class="library-list-toolbar">
+                <div class="library-list-heading">
+                    <h2 class="library-title">
+                        <span class="library-title-main"><span id="current-category-indicator" class="current-category-indicator-title" aria-live="polite">도서 보관함</span></span>
+                        <i id="header-category-scan-spinner" class="lc lc-loader-circle lc-spin library-title-spinner" title="스캔 진행 중"></i>
+                        <span id="library-total-count" class="library-total-count"></span>
+                    </h2>
+                    <button id="btn-category-info" class="btn-category-info" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="category-info-popover" title="현재 카테고리 정보">
+                        <i class="lc lc-ellipsis" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="library-list-controls">
+                    <button id="btn-lib-sort" data-role="library-sort-toggle" class="library-list-btn" style="display: none;"
+                        data-i18n-title="header.sort_title" title="정렬 조건 변경">
+                        <i class="lc lc-arrow-down-a-z"></i> <span data-i18n="header.sort_asc">가나다 오름차순</span>
+                    </button>
+                    <button id="btn-open-filter" data-role="library-open-filter" class="library-list-btn"
+                        data-i18n-title="header.filter_title" title="장르/태그 필터 열기">
+                        <i class="lc lc-filter"></i> <span data-i18n="header.filter">필터</span>
+                    </button>
+                    <div id="group-mode-toggle-group" class="library-list-segment">
+                        <button class="library-list-segment-btn active" id="btn-group-default" data-role="grouping-mode-toggle" data-group-mode="default" title="기본" data-i18n-title="header.group_mode_default"><i class="lc lc-layout-grid" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.group_mode_default">기본</span></button>
+                        <button class="library-list-segment-btn" id="btn-group-author" data-role="grouping-mode-toggle" data-group-mode="author" title="작가별" data-i18n-title="header.group_mode_author"><i class="lc lc-users" aria-hidden="true"></i><span class="btn-toggle-label" data-i18n="header.group_mode_author">작가별</span></button>
+                    </div>
+                </div>
+            </div>
             <!-- 위쪽 무한 스크롤 로딩 스피너 (초성 점프 등으로 중간 페이지부터 로드된 경우) -->
-            <div id="infinite-scroll-spinner-top" class="scroll-spinner" style="display: none; text-align: center; padding: 1.5rem; color: #a855f7;">
+            <div id="infinite-scroll-spinner-top" class="scroll-spinner" style="display: none;">
                 <i class="lc lc-loader-circle lc-spin lc-2x"></i>
             </div>
             <div class="books-grid" id="books-list-container">
@@ -8,7 +37,7 @@
                 <div class="loading-spinner" data-i18n="common.loading_books">도서 목록을 불러오는 중...</div>
             </div>
             <!-- 무한 스크롤 로딩 스피너 -->
-            <div id="infinite-scroll-spinner" class="scroll-spinner" style="display: none; text-align: center; padding: 1.5rem; color: #a855f7;">
+            <div id="infinite-scroll-spinner" class="scroll-spinner" style="display: none;">
                 <i class="lc lc-loader-circle lc-spin lc-2x"></i>
             </div>
         </div>

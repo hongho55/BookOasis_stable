@@ -259,7 +259,9 @@ export function renderEpubTocPanel({ tocList, txtChunks, onJumpToChapter }) {
     btn.innerHTML = '<i class="fas fa-list"></i>';
     btn.style.cssText = `
       position: fixed;
-      top: calc(100px + env(safe-area-inset-top, 0px));
+      /* 메뉴가 열려 있을 때만 보이는 버튼 - 위쪽에 두면 메뉴 패널(여백 탭처럼 길 때)을 가려서
+         아래 쪽 번호 줄 바로 위 오른쪽에 둔다 */
+      bottom: calc(112px + env(safe-area-inset-bottom, 0px));
       right: calc(20px + env(safe-area-inset-right, 0px));
       z-index: 10009;
       background: rgba(0,0,0,0.6);

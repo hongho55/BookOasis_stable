@@ -53,7 +53,7 @@ class BookInfoService:
 
     @staticmethod
     def get_reader_info(db_type, book_id, user_id=None):
-        """킷오스크 모드 등에서 openReader()를 book_id만으로 즉시 호출하기 위한 메타 조회"""
+        """킷오스크 모드 등에서 openReader()를 book_id만으로 즉시 호출하기 위한 메타 조회 (뷰어 제목 줄의 시리즈명도)"""
         row = BookRepository.get_book_reader_info(db_type, book_id, user_id=user_id)
         if not row:
             return None
@@ -65,6 +65,9 @@ class BookInfoService:
         return {
             'id': row['id'],
             'title': row['title'],
+            # 뷰어 위 줄에 "무슨 책인지" 보이기 위한 시리즈명 (별칭이 있으면 화면엔 별칭)
+            'series_name': row.get('series_name') or '',
+            'series_alias': row.get('series_alias') or '',
             'file_format': row['file_format'],
             'total_pages': total_pages,
             'pages_read': row['pages_read'] or 0

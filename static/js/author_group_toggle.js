@@ -6,7 +6,7 @@ export function applyGroupModeButtonState(mode) {
   const safeMode = mode === 'author' ? 'author' : 'default';
   state.groupMode = safeMode;
 
-  document.querySelectorAll('#group-mode-toggle-group .btn-toggle').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('#group-mode-toggle-group [data-role="grouping-mode-toggle"]').forEach(btn => btn.classList.remove('active'));
   if (safeMode === 'author') {
     document.getElementById('btn-group-author')?.classList.add('active');
   } else {

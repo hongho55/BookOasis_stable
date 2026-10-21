@@ -57,7 +57,9 @@ function ensureToggleButton() {
     // 여백을 재사용한다.
     'position:fixed', 'right:calc(20px + env(safe-area-inset-right, 0px))',
     'top:calc(108px + env(safe-area-inset-top, 0px))',
-    'width:20px', 'height:20px', 'border-radius:50%', 'z-index:10004',
+    // 조작 메뉴(#comic-overlay-menu, z 10003)보다 아래 - 메뉴를 열면 패널(여백 탭 등)이 이 버튼에 가리지 않게.
+    // 본문 터치 레이어(z 10002)와는 같은 값이지만 DOM에서 뒤에 붙어 그 위에 온다
+    'width:20px', 'height:20px', 'border-radius:50%', 'z-index:10002',
     'background:rgba(15,23,42,0.7)', 'border:1px solid rgba(255,255,255,0.15)',
     'color: var(--app-text-primary)', 'font-size:0.7rem', 'cursor:pointer', 'backdrop-filter:blur(8px)',
     'display:flex', 'align-items:center', 'justify-content:center', 'transition:all 0.2s ease',

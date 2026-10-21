@@ -31,7 +31,8 @@ This document describes the current plugin standard for BookOasis metadata/dashb
 | 1.1.1 | `search`, `apply` | `dashboard.html`/`dashboard.css`/`dashboard.js` | `home_widget` can now use full custom CSS/images - rendered in a per-widget Shadow DOM for isolation (§5-1) |
 | 1.1.2 (BookOasis 2.8.4+) | `search`, `apply` | `report_problem`, `resolve_problem` | Raise/resolve problem cards in the admin notifications - base-class helpers, additive contract (see "Admin Notification Problem Cards") |
 | 1.1.3 (BookOasis 2.8.4+) | `search`, `apply` | `lookup_music_album` | Look up album info for music-category albums without album.yaml - additive contract the core calls in the background (see "Music Album Lookup") |
-| 1.1.4+ (current, BookOasis 2.9.4+) | `search`, `apply` | `home_widget.frame` | `'none'` shows a home widget without its title bar - for banner-style widgets, additive field (§5-1 "Frame") |
+| 1.1.4 (BookOasis 2.9.4+) | `search`, `apply` | `home_widget.frame` | `'none'` shows a home widget without its title bar - for banner-style widgets, additive field (§5-1 "Frame") |
+| 1.1.5+ (current, BookOasis 3.0.0+) | `search`, `apply` | CSS `--app-fs-*` / `--app-fw-*` / `--app-lh-*` / `--app-space-*` | Type and spacing step CSS tokens - additive variables (see "Type & Spacing Tokens" in guide_plugins.md) |
 
 Compatibility rules:
 
