@@ -17,12 +17,12 @@
     <meta name="theme-color" content="#090d16">
     <title>BookOasis - 도서 보관함</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ static_asset_url('images/icon-192.png', sig='boe-favicon-b28e4d1') }}">
+    <link rel="icon" type="image/png" href="{{ static_asset_url('images/favicon.png', sig='boe-favicon-palm') }}">
     <!-- PWA 매니페스트 + 홈 화면 아이콘 (여백 없이 꽉 채운 전용 아이콘 — logo.png는 여백이
          커서 그대로 쓰면 안드로이드/iOS가 홈 화면에 추가할 때 이중으로 여백이 생겨 유독
          작아 보인다는 실사용자 리포트로 확인, 2026-08-22) -->
-    <link rel="manifest" href="{{ static_asset_url('manifest.json', sig='boe-manifest-a17f3c9') }}">
-    <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png', sig='boe-apple-icon-a17f3c9') }}">
+    <link rel="manifest" href="{{ static_asset_url('manifest.json', sig='boe-manifest-palm') }}">
+    <link rel="apple-touch-icon" href="{{ static_asset_url('images/apple-touch-icon.png', sig='boe-apple-icon-palm') }}">
     <!-- 앱 글꼴: Pretendard 가변 글꼴을 완성형 한글 2,350자 + 영문·기호로 자른 파일 하나(tools/fonts/build_app_font.py).
          글자 범위별 조각(92개) 방식은 화면 글자에 따라 조각을 계속 받고 받을 때마다 다시 그려 2.9.4에서 느려졌다는 체감이 나왔다.
          head에서 바로 받기 시작하고, font-display: optional로 다시 그리기가 없게 한다(첫 방문에 늦으면 그 화면만 기본 글꼴, 다음부터 캐시).

@@ -11,28 +11,28 @@ export async function runVaapiCheck() {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="lc lc-loader lc-spin"></i> 점검 중...';
+    btn.innerHTML = `<i class="lc lc-loader lc-spin"></i> ${i18n.t('settings.gen_vaapi_checking_btn')}`;
   }
   resultEl.style.display = 'block';
   resultEl.style.background = 'rgba(15, 23, 42, 0.6)';
   resultEl.style.border = '1px solid rgba(255,255,255,0.1)';
   resultEl.style.color = '#cbd5e1';
-  resultEl.textContent = '점검 중입니다...';
+  resultEl.textContent = i18n.t('settings.gen_vaapi_checking');
 
   try {
     const data = await api.checkVaapiSupport(devicePath);
     if (!data.success) {
       resultEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
       resultEl.style.color = '#fca5a5';
-      resultEl.textContent = `점검 실패: ${data.error || '알 수 없는 오류'}`;
+      resultEl.textContent = i18n.t('settings.gen_vaapi_check_fail', { error: data.error || i18n.t('settings.gen_unknown_error') });
       return;
     }
 
     const overallLabel = {
-      ok: '✅ 사용 가능 (VAAPI 하드웨어 가속을 바로 쓸 수 있습니다)',
-      partial: '⚠️ 부분적으로 확인됨 (ffmpeg/디바이스는 준비됐지만 vainfo로 실동작 확인은 실패했습니다)',
-      unavailable: '❌ 사용 불가 (아래 상세 내역에서 어느 단계가 막혔는지 확인하세요)',
-      error: '❌ ffmpeg를 찾을 수 없습니다',
+      ok: i18n.t('settings.gen_vaapi_ok'),
+      partial: i18n.t('settings.gen_vaapi_partial'),
+      unavailable: i18n.t('settings.gen_vaapi_unavailable'),
+      error: i18n.t('settings.gen_vaapi_no_ffmpeg'),
     }[data.overall] || data.overall;
 
     const colorMap = { ok: '#34d399', partial: '#fbbf24', unavailable: '#f87171', error: '#f87171' };
@@ -41,7 +41,7 @@ export async function runVaapiCheck() {
 
     const lines = [overallLabel, '', ...(data.detail || [])];
     if (data.vainfo_output) {
-      lines.push('', '[vainfo 출력 일부]', data.vainfo_output.split('\n').slice(0, 12).join('\n'));
+      lines.push('', i18n.t('settings.gen_vaapi_vainfo_head'), data.vainfo_output.split('\n').slice(0, 12).join('\n'));
     }
     resultEl.textContent = lines.join('\n');
 
@@ -56,11 +56,11 @@ export async function runVaapiCheck() {
     console.error('[Settings] VAAPI 점검 요청 실패:', e);
     resultEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
     resultEl.style.color = '#fca5a5';
-    resultEl.textContent = '서버 요청 중 오류가 발생했습니다.';
+    resultEl.textContent = i18n.t('settings.gen_server_request_error');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="lc lc-search"></i> 지금 점검';
+      btn.innerHTML = `<i class="lc lc-search"></i> ${i18n.t('settings.gen_vaapi_check_btn')}`;
     }
   }
 }

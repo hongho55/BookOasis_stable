@@ -1,4 +1,16 @@
 # CHANGELOG
+## v3.0.1
+- (fix) PC 홈에서 서재 선택 메뉴가 대시보드 통계 카드 아래로 가려지던 문제 수정 | fix the library picker menu showing beneath the home dashboard stat cards on desktop
+- (fix) 휴대폰(특히 iOS 사파리)에서 목록 아래쪽에 빈 띠가 남아 화면이 답답해 보이던 문제 수정 — 목록이 화면 끝까지 이어짐 | fix an empty strip at the bottom of lists on phones (notably iOS Safari) — lists now run to the bottom edge
+- (improvement) 브라우저 탭 아이콘·홈 화면 아이콘·로고를 새 야자수 마크로 교체 | browser tab icon, home screen icon and logo switched to the new palm mark
+- (improvement) 로그인 화면과 정보 탭 제목의 예전 보라색을 앱 기본 테마의 파랑으로 변경, 로그인 버튼은 그라데이션 없는 단색 | the login page and the About tab title drop the old purple for the app's default blue; the login button is a flat color
+- (improvement) PC 사이드바 접기 버튼(☰)을 검색창 옆에서 로고 왼쪽으로 옮기고, 로고 줄을 상단 줄과 같은 높이로 맞추며 로고와 첫 메뉴 사이 공백을 줄임(접으면 ☰와 Home 아이콘 표시) | on desktop the sidebar toggle (☰) moves from beside the search box to the left of the logo, the logo row lines up with the top bar and the gap under it is reduced (when collapsed, ☰ and the Home icon remain)
+- (improvement) 책 목록 제목 옆 카테고리 정보 버튼과 도서 카드의 정보 버튼을 ⋯ 대신 ⓘ 아이콘으로 변경 | the category info button next to the book list title and the info button on book cards use an ⓘ icon instead of ⋯
+- (fix) 홈 섹션 제목(최근 읽은 도서·신규 추가 도서)의 아이콘이 글자보다 위로 떠 보이던 문제 수정 | fix home section title icons (Recently read, New additions) sitting higher than the text
+- (fix) 영어로 설정해도 환경설정(기본 시스템·스케줄·권한·휴지통·내 설정·스캔 기록·뷰어·플러그인·외부 도메인)과 사이드바 '컬렉션'에 한국어가 남던 문제 수정 | fix Korean text remaining in English mode in settings (system, schedule, permissions, trash, my settings, scan history, viewer, plugins, external domains) and the sidebar 'Collections' item
+- (fix) 계정 메뉴에서 '로그아웃' 글자만 들여쓴 것처럼 어긋나 보이던 문제 수정 | fix 'Log out' looking indented in the account menu
+- (fix) 제목 숨김 카드에 마우스를 올리면 정보 버튼이 NEW/+N권 배지와 겹치던 문제 수정 | fix the info button overlapping the NEW/+N badge when hovering a card with hidden titles
+
 ## v3.0.0
 - (improvement) 홈 섹션의 테두리 상자를 없애고 표지가 바탕에 바로 놓이도록 변경, 섹션 제목 크기·굵기 정리 | home sections no longer sit in bordered boxes so covers lie directly on the background; section titles use consistent size and weight
 - (improvement) 책 목록 카드의 테두리 상자를 없애고 표지 중심으로 정리(표지 둥근 모서리·그림자, 마우스를 올리면 살짝 떠오름), 목록 글자 크기·간격 정리 | book cards drop their bordered box so the cover leads (rounded cover with a soft shadow that lifts on hover); list text sizes and spacing made consistent

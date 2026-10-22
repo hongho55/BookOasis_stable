@@ -1,10 +1,10 @@
             <!-- 6. 이 S/W는... 탭 (About) -->
             <div id="settings-tab-about" class="settings-tab-content" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1.5rem; text-align: center; color: var(--app-text-primary);">
                 <div style="margin-bottom: 1.5rem;">
-                    <img src="{{ static_asset_url('images/logo.png') }}" alt="BookOasis" style="width: 5rem; height: 5rem; object-fit: contain; border-radius: 12px;">
+                    <img src="{{ static_asset_url('images/logo.png', sig='boe-logo-palm') }}" alt="BookOasis" style="width: 5rem; height: 5rem; object-fit: contain; border-radius: 12px;">
                 </div>
-                <h2 style="font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #fff 30%, #a855f7 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">BookOasis</h2>
-                <p style="color: var(--app-text-muted); font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 2rem;">북오아시스 미디어 서재 관리 도구</p>
+                <h2 style="font-size: 2.2rem; font-weight: 800; margin: 0; background: linear-gradient(135deg, #fff 30%, var(--app-accent-hover) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">BookOasis</h2>
+                <p style="color: var(--app-text-muted); font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 2rem;" data-i18n="settings.about_subtitle">북오아시스 미디어 서재 관리 도구</p>
                 
                 <div style="width: 100%; max-width: 500px; background: rgba(var(--app-panel-rgb), 0.25); border: 1px solid rgba(var(--app-panel-border-rgb), 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; text-align: left;">
                     <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.75rem; margin-bottom: 0.75rem; font-size: 0.88rem;">
@@ -20,7 +20,7 @@
                         <span style="color: var(--app-accent-hover); font-weight: 600;" id="about-ver-state" data-i18n="common.loading">로드 중...</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.75rem; margin-bottom: 0.75rem; font-size: 0.88rem;">
-                        <span style="color: var(--app-text-muted);">업데이트 가능 여부</span>
+                        <span style="color: var(--app-text-muted);" data-i18n="settings.about_update_label">업데이트 가능 여부</span>
                         <span style="color: var(--app-text-muted); font-weight: 600;" id="about-update-status">확인 중...</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.88rem; align-items: center;">

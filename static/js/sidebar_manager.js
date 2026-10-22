@@ -441,6 +441,9 @@ function initMobileSessionMenu() {
   const group = document.getElementById('library-type-toggle-group');
   if (!trigger || !menu || !group || menu.dataset.bound === '1') return;
   menu.dataset.bound = '1';
+  // 사이드바 안에 두면 조상의 쌓임 맥락에 갇혀 PC 홈 대시보드 카드(통계 위젯) 아래로 깔렸다(2026-10-22).
+  // body 바로 아래로 옮겨 z-index가 뷰포트 기준으로 먹게 한다 - 클릭은 document 위임이라 위치와 무관.
+  if (menu.parentElement !== document.body) document.body.appendChild(menu);
   const triggerLabel = trigger.querySelector('.mobile-session-select-label');
   const triggerIcon = trigger.querySelector('.mobile-session-select-icon');
 

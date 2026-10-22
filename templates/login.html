@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookOasis - 로그인</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ static_asset_url('images/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ static_asset_url('images/favicon.png', sig='boe-favicon-palm') }}">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="{{ static_asset_url('lib/font-awesome/css/all.min.css') }}">
     <!-- 코어 UI 아이콘: Lucide 선 아이콘(FA는 플러그인·브랜드·채움 상태 아이콘용으로 계속 로드) -->
@@ -23,7 +23,7 @@
     <!-- 1. 로그인 폼 카드 -->
     <div id="login-card" class="auth-card">
         <div class="auth-header">
-            <span class="auth-logo"><img src="{{ static_asset_url('images/logo.png') }}" alt="BookOasis" style="width: 4rem; height: 4rem; object-fit: contain; border-radius: 8px;"></span>
+            <span class="auth-logo"><img src="{{ static_asset_url('images/logo.png', sig='boe-logo-palm') }}" alt="BookOasis" style="width: 4rem; height: 4rem; object-fit: contain; border-radius: 8px;"></span>
             <h2 class="auth-title" data-i18n="login.title">BookOasis</h2>
             <p class="auth-subtitle" data-i18n="login.subtitle">북오아시스 미디어 서재 로그인</p>
         </div>

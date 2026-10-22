@@ -114,9 +114,9 @@ function applyNonAdminGeneralSettingsMode() {
     if (!el) return;
     el.disabled = true;
     if (el.type === 'submit') {
-      el.title = '관리자 권한에서만 저장 가능합니다.';
+      el.title = i18n.t('settings.gen_admin_only_save');
     } else if (!el.title) {
-      el.title = '관리자 권한에서만 변경 가능합니다.';
+      el.title = i18n.t('settings.gen_admin_only_change');
     }
   });
 }
@@ -213,10 +213,12 @@ async function loadTtsPregenAvailability() {
     const res = await fetch('/api/media/tts/pregen/admin-status');
     const data = await res.json();
     if (!data.success) throw new Error(data.error || res.status);
-    el.textContent = data.available ? `사용 가능 · 저장 경로 ${data.audio_root} · 대기 ${data.queued}건 · 진행 ${data.running}건 · 사용량 ${data.cache_mb}MB` : `사용 불가: ${data.reason}`;
+    el.textContent = data.available
+      ? i18n.t('settings.gen_tts_pregen_available', { root: data.audio_root, queued: data.queued, running: data.running, mb: data.cache_mb })
+      : i18n.t('settings.gen_tts_pregen_unavailable', { reason: data.reason });
     el.style.color = data.available ? '' : '#f87171';
   } catch (e) {
-    el.textContent = `상태 확인 실패: ${e.message}`;
+    el.textContent = i18n.t('settings.gen_tts_pregen_status_fail', { error: e.message });
   }
 }
 
@@ -425,7 +427,7 @@ export async function submitGeneralSettings(event) {
   if (!isAdminUser()) {
     applySettingsToUI({});
     if (typeof window.showToast === 'function') {
-      window.showToast('테마와 대시보드 표시 설정은 즉시 적용되었습니다.', 'info');
+      window.showToast(i18n.t('settings.gen_non_admin_applied'), 'info');
     }
     return;
   }

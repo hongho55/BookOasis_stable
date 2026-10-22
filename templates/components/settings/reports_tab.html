@@ -6,12 +6,12 @@
         <div class="section-header" style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;">
             <div>
                 <h3 class="section-title" style="margin: 0; color: var(--app-text-primary); font-size: 1.15rem; font-weight: 700;">
-                    <i class="lc lc-history" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span>최근 스캔 히스토리</span>
+                    <i class="lc lc-history" style="color: var(--app-accent); margin-right: 0.5rem;"></i> <span data-i18n="settings.rep_title">최근 스캔 히스토리</span>
                 </h3>
-                <p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0.3rem 0 0 0;">수동 실행 및 크론(Cron) 자동 스케줄로 구동된 최근 스캔 이력 (최대 20건)</p>
+                <p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0.3rem 0 0 0;" data-i18n="settings.rep_subtitle">수동 실행 및 크론(Cron) 자동 스케줄로 구동된 최근 스캔 이력 (최대 20건)</p>
             </div>
             <button data-role="reports-history-refresh" class="btn-toggle" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--app-text-primary); cursor: pointer;">
-                <i class="lc lc-rotate-cw"></i> 이력 새로고침
+                <i class="lc lc-rotate-cw"></i> <span data-i18n="settings.rep_refresh">이력 새로고침</span>
             </button>
         </div>
 
@@ -19,18 +19,18 @@
             <table class="settings-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
                 <thead>
                     <tr style="background: rgba(var(--app-panel-rgb), 0.4); border-bottom: 1px solid rgba(var(--app-panel-border-rgb), 0.08); color: var(--app-text-muted);">
-                        <th style="padding: 0.8rem 1rem; width: 22%;">카테고리명</th>
-                        <th style="padding: 0.8rem 1rem; width: 14%; text-align: center;">경과 시각</th>
-                        <th style="padding: 0.8rem 1rem; width: 22%; text-align: center;">시작 시간</th>
-                        <th style="padding: 0.8rem 1rem; width: 22%; text-align: center;">종료 시간</th>
-                        <th style="padding: 0.8rem 1rem; width: 10%; text-align: center;">종류</th>
-                        <th style="padding: 0.8rem 1rem; width: 10%; text-align: center;">상태</th>
+                        <th style="padding: 0.8rem 1rem; width: 22%;" data-i18n="settings.rep_col_category">카테고리명</th>
+                        <th style="padding: 0.8rem 1rem; width: 14%; text-align: center;" data-i18n="settings.rep_col_elapsed">경과 시각</th>
+                        <th style="padding: 0.8rem 1rem; width: 22%; text-align: center;" data-i18n="settings.rep_col_start">시작 시간</th>
+                        <th style="padding: 0.8rem 1rem; width: 22%; text-align: center;" data-i18n="settings.rep_col_end">종료 시간</th>
+                        <th style="padding: 0.8rem 1rem; width: 10%; text-align: center;" data-i18n="settings.rep_col_type">종류</th>
+                        <th style="padding: 0.8rem 1rem; width: 10%; text-align: center;" data-i18n="settings.rep_col_status">상태</th>
                     </tr>
                 </thead>
                 <tbody id="scan-history-table-body">
                     <tr>
                         <td colspan="6" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-                            <i class="lc lc-loader-circle lc-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> 최근 스캔 이력을 불러오는 중...
+                            <i class="lc lc-loader-circle lc-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> <span data-i18n="settings.rep_loading">최근 스캔 이력을 불러오는 중...</span>
                         </td>
                     </tr>
                 </tbody>

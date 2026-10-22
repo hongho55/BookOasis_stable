@@ -21,7 +21,7 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid color-mix(in srgb, var(--app-accent) 20%, transparent); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-monitor" style="color: var(--app-accent); font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">화면 및 뷰어 개인화 설정</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.my_section_ui">화면 및 뷰어 개인화 설정</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
@@ -105,25 +105,25 @@
 
                                     <!-- 체크박스 스위치 모음 -->
                                     <div class="settings-checkbox-group">
-                                        {% call my_checkbox_row('my-setting-show-sidebar-category-all', 'SHOW_SIDEBAR_CATEGORY_ALL', checked=True) %}사이드바에 '전체 도서 보기' 메뉴 표시{% endcall %}
+                                        {% call my_checkbox_row('my-setting-show-sidebar-category-all', 'SHOW_SIDEBAR_CATEGORY_ALL', checked=True, i18n_key='settings.my_show_sidebar_category_all') %}사이드바에 '전체 도서 보기' 메뉴 표시{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-hide-completed-in-history', 'HIDE_COMPLETED_IN_HISTORY') %}다 읽은 도서는 최근 읽은 도서에서 삭제{% endcall %}
+                                        {% call my_checkbox_row('my-setting-hide-completed-in-history', 'HIDE_COMPLETED_IN_HISTORY', i18n_key='settings.my_hide_completed_in_history') %}다 읽은 도서는 최근 읽은 도서에서 삭제{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-tag-filter-scope-all', 'TAG_FILTER_SEARCH_SCOPE_ALL') %}태그 선택 시 전체 목록에서 조회{% endcall %}
+                                        {% call my_checkbox_row('my-setting-tag-filter-scope-all', 'TAG_FILTER_SEARCH_SCOPE_ALL', i18n_key='settings.my_tag_filter_scope_all') %}태그 선택 시 전체 목록에서 조회{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-show-txt-no-cover-info-banner', 'SHOW_TXT_NO_COVER_INFO_BANNER', checked=True) %}TXT 무커버 안내 배너 표시{% endcall %}
+                                        {% call my_checkbox_row('my-setting-show-txt-no-cover-info-banner', 'SHOW_TXT_NO_COVER_INFO_BANNER', checked=True, i18n_key='settings.my_show_txt_no_cover_banner') %}TXT 무커버 안내 배너 표시{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-smart-recommend-enabled', 'SMART_RECOMMEND_ENABLED', checked=True) %}스마트 추천 기능 사용 <span class="settings-checkbox-hint">(해제 시 사이드바 메뉴에서도 숨김)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-smart-recommend-enabled', 'SMART_RECOMMEND_ENABLED', checked=True, i18n_key='settings.my_smart_recommend_enabled') %}스마트 추천 기능 사용 <span class="settings-checkbox-hint">(해제 시 사이드바 메뉴에서도 숨김)</span>{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-book-recommend-enabled', 'BOOK_RECOMMEND_ENABLED', checked=True) %}도서 상세 사이드바 위젯 표시 <span class="settings-checkbox-hint">(설치된 플러그인이 제공하는 '이 작가의 다른 도서' 등)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-book-recommend-enabled', 'BOOK_RECOMMEND_ENABLED', checked=True, i18n_key='settings.my_book_recommend_enabled') %}도서 상세 사이드바 위젯 표시 <span class="settings-checkbox-hint">(설치된 플러그인이 제공하는 '이 작가의 다른 도서' 등)</span>{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-detail-volume-grid-view', 'DETAIL_VOLUME_GRID_VIEW') %}도서 상세 목록 그리드로 보기 <span class="settings-checkbox-hint">(커버+제목 그리드 형태)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-detail-volume-grid-view', 'DETAIL_VOLUME_GRID_VIEW', i18n_key='settings.my_detail_volume_grid_view') %}도서 상세 목록 그리드로 보기 <span class="settings-checkbox-hint">(커버+제목 그리드 형태)</span>{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-collapse-detail-genre-tags', 'COLLAPSE_DETAIL_GENRE_TAGS') %}도서 상세 태그/장르 축소 <span class="settings-checkbox-hint">(기본 1개 표출 후 +N 클릭 시 전체 펼침)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-collapse-detail-genre-tags', 'COLLAPSE_DETAIL_GENRE_TAGS', i18n_key='settings.my_collapse_detail_genre_tags') %}도서 상세 태그/장르 축소 <span class="settings-checkbox-hint">(기본 1개 표출 후 +N 클릭 시 전체 펼침)</span>{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-show-content-rating-badge', 'SHOW_CONTENT_RATING_BADGE') %}도서 상세페이지에 콘텐츠 등급 배지 표시 <span class="settings-checkbox-hint">(전체이용가/15세/18세/성인망가/포르노)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-show-content-rating-badge', 'SHOW_CONTENT_RATING_BADGE', i18n_key='settings.my_show_content_rating_badge') %}도서 상세페이지에 콘텐츠 등급 배지 표시 <span class="settings-checkbox-hint">(전체이용가/15세/18세/성인망가/포르노)</span>{% endcall %}
 
-                                        {% call my_checkbox_row('my-setting-home-dashboard-plugin-mode', 'HOME_DASHBOARD_PLUGIN_MODE') %}홈 화면을 플러그인 배치 모드로 전환 <span class="settings-checkbox-hint">(코어 위젯과 플러그인 위젯을 함께 드래그로 재배치)</span>{% endcall %}
+                                        {% call my_checkbox_row('my-setting-home-dashboard-plugin-mode', 'HOME_DASHBOARD_PLUGIN_MODE', i18n_key='settings.my_home_dashboard_plugin_mode') %}홈 화면을 플러그인 배치 모드로 전환 <span class="settings-checkbox-hint">(코어 위젯과 플러그인 위젯을 함께 드래그로 재배치)</span>{% endcall %}
                                     </div>
                                 </div>
                             </div>

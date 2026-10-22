@@ -40,14 +40,14 @@ export async function rescanCustomThemesUi() {
   const resultEl = document.getElementById('custom-theme-rescan-result');
   try {
     const data = await api.rescanCustomThemes();
-    if (!data || !data.success) throw new Error((data && data.error) || '알 수 없는 오류');
+    if (!data || !data.success) throw new Error((data && data.error) || i18n.t('settings.gen_unknown_error'));
     customThemesLoaded = false;
     await populateCustomThemeOptions();
     if (resultEl) {
       const rejected = Array.isArray(data.rejected) ? data.rejected : [];
-      let msg = `로드됨: ${data.loaded_count}개`;
+      let msg = i18n.t('settings.gen_theme_loaded', { count: data.loaded_count });
       if (rejected.length > 0) {
-        msg += ` / 거부됨: ${rejected.length}개 (${rejected.map((r) => `${r.file}: ${r.reason}`).join(', ')})`;
+        msg += ' / ' + i18n.t('settings.gen_theme_rejected', { count: rejected.length, detail: rejected.map((r) => `${r.file}: ${r.reason}`).join(', ') });
       }
       resultEl.textContent = msg;
       resultEl.style.color = rejected.length > 0 ? '#f87171' : 'var(--app-text-muted)';
@@ -55,7 +55,7 @@ export async function rescanCustomThemesUi() {
   } catch (e) {
     console.error('[Settings] 커스텀 테마 재스캔 실패:', e);
     if (resultEl) {
-      resultEl.textContent = `재스캔 실패: ${e.message || e}`;
+      resultEl.textContent = i18n.t('settings.gen_theme_rescan_fail', { error: e.message || e });
       resultEl.style.color = '#f87171';
     }
   }

@@ -960,11 +960,6 @@ button, input, select, textarea {
     display: none !important;
 }
 
-/* Home 항목은 상단 로고 클릭으로도 홈 이동이 되므로, 좁은 레일에서는 중복이라 아예 숨김 */
-.library-sidebar.collapsed #category-home {
-    display: none !important;
-}
-
 /* 그룹 펼침/접기 화살표, 항목 수 배지는 레일 모드에서 의미가 없어 아이콘 복원 대상에서도 제외 */
 .library-sidebar.collapsed .sidebar-group-chevron,
 .library-sidebar.collapsed .sidebar-group-header small {
@@ -1044,6 +1039,54 @@ button, input, select, textarea {
 
 .sidebar-brand-accent {
     color: var(--app-accent-hover);
+}
+
+/* PC 사이드바 머리 줄: [☰][야자수 BookOasis] (2026-10-22, Plex처럼 ☰가 여닫는 메뉴 바로 위에 오게).
+   ☰ 글리프는 아래 메뉴 아이콘 열(menu-item 왼쪽 여백 1rem)에 맞추고 로고는 그 오른쪽에 붙인다.
+   HTML 인라인 justify-content:space-between을 덮어야 해서 !important. 모바일은 이 줄째 숨김(mobile.css) */
+.sidebar-header-wrapper {
+    justify-content: flex-start !important;
+    gap: var(--app-space-1);
+    margin-bottom: 0.4rem;
+}
+
+/* 로고 h3의 아래 margin이 줄 안에 있으면 ☰와 세로 중심이 어긋나 줄(wrapper)로 옮기고,
+   높이는 오른쪽 상단 줄(.library-header, 46px)에 맞춰 ☰·로고·검색창이 한 줄에 오게 */
+.sidebar-header-wrapper .sidebar-title {
+    margin-bottom: 0;
+    min-height: 46px;
+}
+
+.sidebar-header-wrapper .btn-sidebar-toggle-desktop {
+    margin-left: calc(var(--app-space-4) - 0.4rem); /* 0.4rem = 버튼 인라인 padding */
+    border-radius: 6px;
+}
+
+.sidebar-header-wrapper .btn-sidebar-toggle-desktop:hover {
+    color: var(--app-text-primary) !important;
+    background: color-mix(in srgb, var(--app-text-primary) 8%, transparent) !important;
+}
+
+.sidebar-header-wrapper .sidebar-title {
+    padding-left: 0;
+}
+
+/* 접힌 레일(60px)에는 ☰만 가운데에 - 로고까지 두면 레일 폭을 넘는다.
+   예전엔 레일의 야자수 로고가 홈 버튼을 겸해 Home 항목을 숨겼는데, 이제 로고가 없으므로 Home을 그대로 둔다 */
+.library-sidebar.collapsed .sidebar-header-wrapper .sidebar-title {
+    display: none;
+}
+
+.library-sidebar.collapsed .sidebar-header-wrapper .btn-sidebar-toggle-desktop {
+    margin-left: 0;
+}
+
+/* 로고 줄과 첫 메뉴(Home) 사이가 사이드바 gap(1rem) + 메뉴 묶음 인라인 margin-top(1rem)으로 너무 벌어져
+   위쪽이 비어 보였다. PC에서만 인라인 여백을 없앤다(모바일 드로어는 그 여백을 그대로 쓴다) */
+@media (min-width: 1201px) {
+    .library-sidebar .sidebar-drawer-scroll {
+        margin-top: 0 !important;
+    }
 }
 
 .sidebar-menu {
@@ -1351,12 +1394,14 @@ button, input, select, textarea {
     color: var(--app-accent) !important;
 }
 
-/* 현재 카테고리 정보 팝오버 트리거("...") - 책 목록 제목 옆 */
+/* 현재 카테고리 정보 팝오버 트리거(ⓘ) - 책 목록 제목 옆.
+   바로 앞의 작은 건수 글자와 크기·줄을 맞춘다(제목 줄은 기준선 정렬, .library-list-heading).
+   예전엔 큰 제목의 세로 가운데에 맞춰져 작은 건수 글자 옆에서 3px쯤 떠 보였다 */
 .btn-category-info {
     background: transparent;
     border: none;
     color: var(--app-text-muted);
-    font-size: 1.05rem;
+    font-size: var(--app-fs-sm);
     cursor: pointer;
     padding: 0.4rem 0.3rem;
     display: inline-flex;
@@ -1365,6 +1410,11 @@ button, input, select, textarea {
     transition: color 0.2s ease;
     outline: none;
     flex-shrink: 0;
+}
+
+/* lucide 글리프는 기준선보다 살짝 위에 그려져, 기준선 정렬만으로는 건수 글자 중심보다 2px(0.15em) 높다 */
+.btn-category-info i {
+    transform: translateY(0.15em);
 }
 
 .btn-category-info:hover,
@@ -1843,7 +1893,7 @@ button, input, select, textarea {
 
 .library-list-heading {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: var(--app-space-1);
     min-width: 0;
 }
@@ -2607,6 +2657,16 @@ button, input, select, textarea {
 
 .account-menu-logout:hover {
     background: rgba(239, 68, 68, 0.12);
+}
+
+/* 계정 메뉴 세 줄(사용자·KOReader·로그아웃)의 아이콘 칸 폭을 같게 - 줄마다 아이콘 폭이 달라
+   글자 시작 위치가 어긋났다(로그아웃만 들여쓴 것처럼 보임, 2026-10-22) */
+.account-menu-user i,
+.account-menu-item i,
+.account-menu-logout i {
+    width: 1.25rem;
+    flex-shrink: 0;
+    text-align: center;
 }
 
 /* 커스텀 우클릭 컨텍스트 메뉴 */
@@ -3645,6 +3705,15 @@ button, input, select, textarea {
     .book-card.book-card--hide-title .btn-card-info-toggle {
         left: auto;
         right: 8px;
+    }
+
+    /* 그 자리(우측 하단)는 NEW/+N권 배지 자리라 마우스를 올린 동안 둘이 겹쳤다 - 올린 동안만 배지를 숨긴다 */
+    .book-card.book-card--hide-title .book-card-recent-badge {
+        transition: opacity 0.15s ease;
+    }
+
+    .book-card.book-card--hide-title:hover .book-card-recent-badge {
+        opacity: 0;
     }
 }
 
@@ -5940,6 +6009,8 @@ button, input, select, textarea {
 .home-section-title i {
   color: var(--app-accent);
   margin-right: var(--app-space-2);
+  /* lucide 글리프는 한글(Pretendard) 옆에서 0.15em(이 크기에서 2.7px) 떠 보인다 - 잉크 중심을 재서 맞춤(2026-10-22) */
+  vertical-align: -0.15em;
 }
 
 .home-section-title-suffix {
@@ -6381,9 +6452,10 @@ button, input, select, textarea {
     align-items: center;
     justify-content: center;
     background: rgba(var(--app-panel-rgb), 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* 아이콘(ⓘ)이 이미 원이라 버튼 테두리 링은 없앤다(원이 이중으로 보임). ⋯는 '정보'로 안 읽혀 ⓘ로(2026-10-22) */
+    border: 0;
     color: var(--app-text-primary);
-    font-size: 0.78rem;
+    font-size: 1rem;
     cursor: pointer;
     z-index: 5;
     opacity: 0;
@@ -6560,7 +6632,6 @@ body.book-selection-active .btn-card-info-toggle {
 
 .account-menu-item i {
     color: var(--app-text-muted);
-    width: 1.1rem;
 }
 
 .kosync-status-badge {

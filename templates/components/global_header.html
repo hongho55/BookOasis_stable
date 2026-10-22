@@ -1,14 +1,9 @@
-<!-- 상단 헤더: [☰] [검색] [서재 선택 ▾] … [알림] [환경설정] [계정]
+<!-- 상단 헤더: [검색] [서재 선택 ▾] … [알림] [환경설정] [계정]
      목록에만 의미 있는 제목·건수·카테고리 정보·정렬·필터·기본|작가별은 책 목록 화면 제목 줄
      (views/library_grid.html .library-list-toolbar)로 옮겼다 (2026-10-22, 상단 아이콘이 너무 많다는 의견).
      view_manager.js의 switchActiveView()가 설정/플러그인 화면에서 검색·알림을 숨기지만,
      이 헤더 자체와 서재 선택·환경설정·계정은 모든 뷰에서 항상 보인다. -->
 <div class="library-header">
-    <!-- 데스크톱 전용 사이드바 토글 버튼 -->
-    <button id="btn-sidebar-toggle-desktop" class="btn-sidebar-toggle-desktop" data-role="desktop-sidebar-toggle" title="사이드바 접기/펼치기" style="background: transparent; border: none; color: var(--app-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.4rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; outline: none; flex-shrink: 0;">
-        <i class="lc lc-menu"></i>
-    </button>
-
     <!-- 모바일 전용 햄버거(좌측 드로어 열기): 모바일은 로고 앱바 없이 이 헤더 카드 한 장이 앱바 역할을 한다(2026-10-01).
          데스크톱에선 sidebar_manager.js syncSidebarResponsiveControls가 숨긴다 -->
     <button id="btn-sidebar-toggle" class="btn-sidebar-toggle" aria-expanded="false" aria-controls="sidebar-collapsible-content" data-i18n-title="sidebar.open_menu" title="메뉴" style="display: none; background: transparent; border: none; color: var(--app-text-primary); font-size: 1.25rem; cursor: pointer; padding: 0.2rem 0.5rem; outline: none;">

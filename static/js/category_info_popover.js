@@ -12,8 +12,7 @@ let hoverCloseTimer = null;
 let requestSerial = 0;
 
 function getTriggerButtons() {
-  return [document.getElementById('btn-category-info'), document.getElementById('btn-category-info-mobile')]
-    .filter(Boolean);
+  return [document.getElementById('btn-category-info')].filter(Boolean);
 }
 
 function getActiveCategoryElement() {

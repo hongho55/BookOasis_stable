@@ -19,12 +19,18 @@
     <div class="library-sidebar"
         style="display: flex; flex-direction: column; justify-content: space-between; min-height: auto;">
         <div class="sidebar-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <!-- PC 사이드바 접기/펼치기(☰): 예전엔 오른쪽 상단 줄(검색창 왼쪽)에 있어 여닫는 메뉴와 떨어져 보였다.
+                 로고 왼쪽으로 옮겨 상단 줄과 한 줄로 읽히게 한다(2026-10-22). 모바일은 이 줄째 숨김(mobile.css) -->
+            <button id="btn-sidebar-toggle-desktop" class="btn-sidebar-toggle-desktop" data-role="desktop-sidebar-toggle" title="사이드바 접기/펼치기" style="background: transparent; border: none; color: var(--app-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.4rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; outline: none; flex-shrink: 0;">
+                <i class="lc lc-menu"></i>
+            </button>
             <h3 class="sidebar-title" data-role="mobile-brand-home"><i class="lc lc-tree-palm sidebar-brand-mark" aria-hidden="true"></i><span class="sidebar-brand-word">Book<span class="sidebar-brand-accent">Oasis</span></span></h3>
         </div>
 
         <!-- 모바일 전용 세션 전환 팝업: 헤더의 세션 선택 버튼(#btn-mobile-session-select)을 누르면 뜬다 (2026-10-01).
              버튼은 sidebar_manager.js initMobileSessionMenu가 #library-type-toggle-group을 그대로 복제해 채운다.
-             .library-header는 스크롤 숨김용 transform이 걸려 그 안에 두면 position:fixed 기준이 틀어지므로 여기 둔다 -->
+             .library-header는 스크롤 숨김용 transform이 걸려 그 안에 두면 position:fixed 기준이 틀어지므로 여기 둔다.
+             초기화 시 body 바로 아래로 옮긴다(사이드바 쌓임 맥락에 갇혀 대시보드 카드 아래로 깔리던 문제, 2026-10-22) -->
         <nav id="mobile-session-menu" class="mobile-session-menu" aria-label="세션 전환" hidden></nav>
 
         <!-- 모바일(≤1200px) 좌측 드로어: 백드롭/드로어 헤더/메뉴 검색/관리 도구/하단 푸터는 .mobile-drawer-only로
@@ -33,7 +39,7 @@
 
         <div class="sidebar-collapsible-content" id="sidebar-collapsible-content" style="display: flex; flex-direction: column; justify-content: space-between; flex: 1; width: 100%;">
             <div class="sidebar-drawer-head mobile-drawer-only">
-                <span class="sidebar-drawer-brand"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="" aria-hidden="true"> <span>BookOasis</span></span>
+                <span class="sidebar-drawer-brand"><img src="{{ static_asset_url('images/logo.png', sig='boe-logo-palm') }}" alt="" aria-hidden="true"> <span>BookOasis</span></span>
                 <button type="button" class="sidebar-drawer-close" data-role="sidebar-drawer-close" data-i18n-title="common.close" title="닫기">
                     <i class="lc lc-x" aria-hidden="true"></i>
                 </button>

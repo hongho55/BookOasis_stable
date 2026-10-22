@@ -24,7 +24,7 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid color-mix(in srgb, var(--app-accent) 20%, transparent); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-monitor" style="color: var(--app-accent); font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">화면 및 뷰어 환경 설정</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_ui">화면 및 뷰어 환경 설정</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
@@ -77,7 +77,7 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-zap" style="color: #38bdf8; font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">백그라운드 스캐너 설정</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_scanner">백그라운드 스캐너 설정</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
@@ -97,47 +97,47 @@
                                     <!-- Lazy 스캐너 개별 파일 크기 제한 -->
                                     <div class="library-form-group">
                                         <label for="setting-lazy-scan-max-file-size" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-weight" style="color: #38bdf8; margin-right: 0.3rem;"></i> Lazy 스캐너 개별 파일 크기 제한 (MB)
+                                            <i class="lc lc-weight" style="color: #38bdf8; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_lazy_max_file_label">Lazy 스캐너 개별 파일 크기 제한 (MB)</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center; max-width: 480px; width: 100%;">
                                             <input type="number" id="setting-lazy-scan-max-file-size" name="LAZY_SCAN_MAX_FILE_SIZE_MB" min="0" max="10240" value="300" style="flex: 1; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
                                             <span style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">MB</span>
                                         </div>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">이 크기를 초과하는 ZIP/CBZ 파일은 스캔을 건너뛰고 오류 리포트에 기록합니다. <strong style="color: #fbbf24;">0 = 제한 없음.</strong> (기본값: 300 MB)</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_lazy_max_file_desc">이 크기를 초과하는 ZIP/CBZ 파일은 스캔을 건너뛰고 오류 리포트에 기록합니다. <strong style="color: #fbbf24;">0 = 제한 없음.</strong> (기본값: 300 MB)</p>
                                     </div>
 
                                     <!-- Lazy 스캐너 1회 세션 누적 용량 한도 -->
                                     <div class="library-form-group">
                                         <label for="setting-lazy-scan-max-batch-size" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-layers" style="color: #38bdf8; margin-right: 0.3rem;"></i> Lazy 스캐너 1회 세션 누적 용량 한도 (MB)
+                                            <i class="lc lc-layers" style="color: #38bdf8; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_lazy_max_batch_label">Lazy 스캐너 1회 세션 누적 용량 한도 (MB)</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center; max-width: 480px; width: 100%;">
                                             <input type="number" id="setting-lazy-scan-max-batch-size" name="LAZY_SCAN_MAX_BATCH_SIZE_MB" min="0" max="51200" value="1024" style="flex: 1; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
                                             <span style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">MB</span>
                                         </div>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">1회 백그라운드 스캔 회차에서 처리할 수 있는 최대 누적 파일 용량입니다. <strong style="color: #fbbf24;">0 = 제한 없음.</strong> (기본값: 1024 MB)</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_lazy_max_batch_desc">1회 백그라운드 스캔 회차에서 처리할 수 있는 최대 누적 파일 용량입니다. <strong style="color: #fbbf24;">0 = 제한 없음.</strong> (기본값: 1024 MB)</p>
                                     </div>
 
                                     <div class="library-form-group">
                                         <label for="setting-lazy-scan-video-max-episodes" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-clapperboard" style="color: #38bdf8; margin-right: 0.3rem;"></i> Lazy 스캐너 영상 강좌 재생시간 분석 1회 처리량 (건)
+                                            <i class="lc lc-clapperboard" style="color: #38bdf8; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_lazy_video_episodes_label">Lazy 스캐너 영상 강좌 재생시간 분석 1회 처리량 (건)</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center; max-width: 480px; width: 100%;">
                                             <input type="number" id="setting-lazy-scan-video-max-episodes" name="LAZY_SCAN_VIDEO_MAX_EPISODES_PER_RUN" min="1" max="2000" value="300" style="flex: 1; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
-                                            <span style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">건</span>
+                                            <span data-i18n="settings.gen_unit_items" style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">건</span>
                                         </div>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">1회 Lazy 스캔 실행마다 ffprobe로 재생시간/해상도를 분석할 영상 강좌 에피소드 최대 건수입니다. 원격 드라이브에서 느린 파일이 섞여 있으면 값이 클수록 책 커버 스캔이 그만큼 늦게 시작됩니다. (기본값: 300건, 서버가 자주 재시작되는 환경이라면 값을 줄이세요)</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_lazy_video_episodes_desc">1회 Lazy 스캔 실행마다 ffprobe로 재생시간/해상도를 분석할 영상 강좌 에피소드 최대 건수입니다. 원격 드라이브에서 느린 파일이 섞여 있으면 값이 클수록 책 커버 스캔이 그만큼 늦게 시작됩니다. (기본값: 300건, 서버가 자주 재시작되는 환경이라면 값을 줄이세요)</p>
                                     </div>
 
                                     <div class="library-form-group">
                                         <label for="setting-lazy-scan-video-probe-workers" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-gauge" style="color: #38bdf8; margin-right: 0.3rem;"></i> Lazy 스캐너 영상 재생시간 분석 동시 처리 개수
+                                            <i class="lc lc-gauge" style="color: #38bdf8; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_lazy_video_workers_label">Lazy 스캐너 영상 재생시간 분석 동시 처리 개수</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center; max-width: 480px; width: 100%;">
                                             <input type="number" id="setting-lazy-scan-video-probe-workers" name="LAZY_SCAN_VIDEO_PROBE_WORKERS" min="1" max="16" value="4" style="flex: 1; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
-                                            <span style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">개</span>
+                                            <span data-i18n="settings.gen_unit_count" style="color: var(--app-text-muted); font-size: 0.85rem; white-space: nowrap;">개</span>
                                         </div>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">ffprobe 분석을 몇 개씩 동시에 돌릴지입니다. ffprobe는 파일을 읽어들이는 대기 시간이 대부분이라, 원격(rclone) 드라이브에서 값을 올리면 처리 속도가 크게 빨라집니다. 너무 높이면 원격 저장소 쪽 동시 요청 제한에 걸릴 수 있습니다. (기본값: 4)</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_lazy_video_workers_desc">ffprobe 분석을 몇 개씩 동시에 돌릴지입니다. ffprobe는 파일을 읽어들이는 대기 시간이 대부분이라, 원격(rclone) 드라이브에서 값을 올리면 처리 속도가 크게 빨라집니다. 너무 높이면 원격 저장소 쪽 동시 요청 제한에 걸릴 수 있습니다. (기본값: 4)</p>
                                     </div>
 
                                     <!-- 스캐너 실행 로그 저장 옵션 -->
@@ -168,7 +168,7 @@
                                         <label for="setting-adult-genre-tag-keywords" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
                                             <i class="lc lc-shield-check" style="color: #ef4444; margin-right: 0.3rem;"></i> <span data-i18n="settings.adult_genre_tag_keywords_label">성인 장르/태그 키워드 (콘텐츠 등급)</span>
                                         </label>
-                                        <textarea id="setting-adult-genre-tag-keywords" name="ADULT_GENRE_TAG_KEYWORDS" rows="2" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: vertical;" placeholder="성인, 19금, BL, R18"></textarea>
+                                        <textarea id="setting-adult-genre-tag-keywords" name="ADULT_GENRE_TAG_KEYWORDS" rows="2" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: vertical;" placeholder="성인, 19금, BL, R18" data-i18n-placeholder="settings.gen_adult_keywords_placeholder"></textarea>
                                         <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.5;" data-i18n="settings.adult_genre_tag_keywords_desc">일반 도서 DB에서 <strong>장르 또는 태그에 포함되면 성인 등급(18세)으로 취급</strong>할 키워드를 <strong>콤마(,)로 구분</strong>해 입력하세요. 권한 관리 &gt; 콘텐츠 등급에서 사용자별 최대 열람 등급을 설정할 수 있습니다.</p>
                                     </div>
                                 </div>
@@ -180,15 +180,15 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-hard-drive" style="color: #38bdf8; font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">커버 저장 경로</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_cover_storage">커버 저장 경로</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                                     <div class="library-form-group">
                                         <label for="setting-cover-storage-root" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-folder-tree" style="color: #38bdf8; margin-right: 0.3rem;"></i> 커버 이미지 저장 루트 경로 (절대경로)
+                                            <i class="lc lc-folder-tree" style="color: #38bdf8; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_cover_root_label">커버 이미지 저장 루트 경로 (절대경로)</span>
                                         </label>
-                                        <input type="text" id="setting-cover-storage-root" name="COVER_STORAGE_ROOT" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;" placeholder="비워두면 기본값(./covers) 사용">
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.5;">
+                                        <input type="text" id="setting-cover-storage-root" name="COVER_STORAGE_ROOT" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;" placeholder="비워두면 기본값(./covers) 사용" data-i18n-placeholder="settings.gen_cover_root_placeholder">
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.5;" data-i18n="settings.gen_cover_root_desc">
                                             비워두면 기존과 동일하게 프로젝트 내 <code>./covers</code>에 저장됩니다. 다른 마운트된
                                             디스크로 바꾸려면 그 경로의 절대경로를 입력하세요. <strong style="color: #fbbf24;">Docker
                                             환경이면 이 경로를 컨테이너 안에도 별도 볼륨으로 마운트해야 합니다</strong> (라이브러리
@@ -199,7 +199,7 @@
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;">
                                         <button type="button" data-role="cover-storage-migrate" class="btn-toggle" style="background: color-mix(in srgb, #38bdf8 70%, black); color: #fff; border: none; padding: 0.55rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                            <i class="lc lc-truck"></i> 기존 커버 파일을 새 경로로 이관
+                                            <i class="lc lc-truck"></i> <span data-i18n="settings.gen_cover_migrate_btn">기존 커버 파일을 새 경로로 이관</span>
                                         </button>
                                         <span id="cover-storage-migrate-result" style="font-size: 0.82rem; color: var(--app-text-muted);"></span>
                                     </div>
@@ -212,10 +212,10 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid color-mix(in srgb, var(--app-accent) 20%, transparent); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-palette" style="color: var(--app-accent); font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">커스텀 테마</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_custom_theme">커스텀 테마</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                                    <p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0; line-height: 1.5;">
+                                    <p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0; line-height: 1.5;" data-i18n="settings.gen_custom_theme_desc">
                                         서버의 <code>themes/</code> 디렉토리에 규격에 맞는 <code>.yaml</code> 파일을 넣으면
                                         "내 설정" 탭의 테마 선택 목록에 자동으로 나타납니다. 작성 규격은
                                         <code>themes/README.md</code>를 참고하세요. 파일을 새로 넣거나 수정했다면
@@ -223,7 +223,7 @@
                                     </p>
                                     <div style="display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;">
                                         <button type="button" data-role="custom-theme-rescan" class="btn-toggle" style="background: color-mix(in srgb, var(--app-accent) 70%, black); color: var(--app-accent-contrast); border: none; padding: 0.55rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.3rem;">
-                                            <i class="lc lc-rotate-cw"></i> 커스텀 테마 다시 스캔
+                                            <i class="lc lc-rotate-cw"></i> <span data-i18n="settings.gen_custom_theme_rescan_btn">커스텀 테마 다시 스캔</span>
                                         </button>
                                         <span id="custom-theme-rescan-result" style="font-size: 0.82rem; color: var(--app-text-muted);"></span>
                                     </div>
@@ -236,7 +236,7 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-microchip" style="color: #34d399; font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">시스템 및 메모리 리소스 설정</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_system">시스템 및 메모리 리소스 설정</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
@@ -273,13 +273,13 @@
                                         </label>
                                         <select id="setting-timezone" name="TIMEZONE" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; cursor: pointer;">
                                             <option value="UTC">UTC (Universal Coordinated Time)</option>
-                                            <option value="Asia/Seoul">Asia/Seoul (한국 표준시, KST)</option>
-                                            <option value="Asia/Tokyo">Asia/Tokyo (일본 표준시)</option>
-                                            <option value="Asia/Shanghai">Asia/Shanghai (중국 표준시)</option>
-                                            <option value="America/New_York">America/New_York (미국 동부 시간)</option>
-                                            <option value="America/Los_Angeles">America/Los_Angeles (미국 태평양 시간)</option>
-                                            <option value="Europe/London">Europe/London (런던 시간)</option>
-                                            <option value="Europe/Paris">Europe/Paris (파리 시간)</option>
+                                            <option value="Asia/Seoul" data-i18n="settings.gen_tz_seoul">Asia/Seoul (한국 표준시, KST)</option>
+                                            <option value="Asia/Tokyo" data-i18n="settings.gen_tz_tokyo">Asia/Tokyo (일본 표준시)</option>
+                                            <option value="Asia/Shanghai" data-i18n="settings.gen_tz_shanghai">Asia/Shanghai (중국 표준시)</option>
+                                            <option value="America/New_York" data-i18n="settings.gen_tz_new_york">America/New_York (미국 동부 시간)</option>
+                                            <option value="America/Los_Angeles" data-i18n="settings.gen_tz_los_angeles">America/Los_Angeles (미국 태평양 시간)</option>
+                                            <option value="Europe/London" data-i18n="settings.gen_tz_london">Europe/London (런던 시간)</option>
+                                            <option value="Europe/Paris" data-i18n="settings.gen_tz_paris">Europe/Paris (파리 시간)</option>
                                         </select>
                                         <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.timezone_desc">자동 스캔 등 "몇 시에 실행할지" 크론 예약 시각에만 적용됩니다. 스캔완료시각 등 화면에 표시되는 타임스탬프의 기준시간대를 바꾸려면 docker-compose.yml의 TZ 환경변수를 함께 설정하세요.</p>
                                     </div>
@@ -292,7 +292,7 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-shield-half" style="color: #f87171; font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">네트워크 및 보안 설정</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_network">네트워크 및 보안 설정</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
@@ -321,13 +321,13 @@
                                     <!-- MCP 쓰기 도구 허용 -->
                                     <div class="library-form-group" style="background: rgba(239, 68, 68, 0.05); padding: 1rem; border-radius: 6px; border: 1px dashed rgba(239, 68, 68, 0.3);">
                                         <label for="setting-mcp-write-enabled" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-square-pen" style="color: #ef4444; margin-right: 0.3rem;"></i> MCP 쓰기 도구 허용
+                                            <i class="lc lc-square-pen" style="color: #ef4444; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_mcp_write_label">MCP 쓰기 도구 허용</span>
                                         </label>
                                         <select id="setting-mcp-write-enabled" name="MCP_WRITE_ENABLED" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; cursor: pointer;">
-                                            <option value="0">비활성화 (기본값)</option>
-                                            <option value="1">활성화 (Claude 등 MCP 클라이언트가 도서 메타데이터를 직접 수정 가능)</option>
+                                            <option value="0" data-i18n="settings.disabled_default">비활성화 (기본값)</option>
+                                            <option value="1" data-i18n="settings.gen_mcp_write_on">활성화 (Claude 등 MCP 클라이언트가 도서 메타데이터를 직접 수정 가능)</option>
                                         </select>
-                                        <p style="font-size: 0.78rem; color: #f87171; margin: 0.6rem 0 0 0; line-height: 1.4;">
+                                        <p style="font-size: 0.78rem; color: #f87171; margin: 0.6rem 0 0 0; line-height: 1.4;" data-i18n="settings.gen_mcp_write_desc">
                                             <strong>[경고]</strong> MCP(tools/mcp_server.py)의 장르/태그 수정, 즐겨찾기 일괄 처리 등
                                             쓰기 도구를 허용합니다. 코어나 플러그인 코드/파일은 절대 건드리지 않으며 서재 DB 메타데이터만
                                             변경 가능합니다. 모든 변경은 <code>logs/mcp_write_audit.log</code>에 기록됩니다. 자세한 내용은
@@ -343,18 +343,18 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(167, 139, 250, 0.25); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-headphones" style="color: #a78bfa; font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">듣기 서버 미리 만들기</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_tts_pregen">듣기 서버 미리 만들기</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.2rem;">
                                     <div class="library-form-group">
                                         <label for="setting-tts-pregen-enabled" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-server" style="color: #a78bfa; margin-right: 0.3rem;"></i> 서버 미리 만들기 허용
+                                            <i class="lc lc-server" style="color: #a78bfa; margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_tts_pregen_label">서버 미리 만들기 허용</span>
                                         </label>
                                         <select id="setting-tts-pregen-enabled" name="TTS_PREGEN_ENABLED" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; cursor: pointer;">
-                                            <option value="0">비활성화 (기본값)</option>
-                                            <option value="1">활성화 (사용자가 지정한 도서를 오디오북으로 미리 생성)</option>
+                                            <option value="0" data-i18n="settings.disabled_default">비활성화 (기본값)</option>
+                                            <option value="1" data-i18n="settings.gen_tts_pregen_on">활성화 (사용자가 지정한 도서를 오디오북으로 미리 생성)</option>
                                         </select>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.6rem 0 0 0; line-height: 1.45;">
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.6rem 0 0 0; line-height: 1.45;" data-i18n="settings.gen_tts_pregen_desc">
                                             켜면 도서 메뉴와 듣기 화면에 "미리 만들기"가 나타납니다. 사용자가 미리 만들기를 요청한 도서만
                                             서버가 CPU로 합성해 아래 저장 경로에 두고, 이후 그 도서는 기기 배터리를 거의 쓰지 않고 듣습니다.
                                             한 번에 한 책씩 처리하며, 서버 CPU를 오래 씁니다(참고: 4코어 노트북 CPU·2스레드에서 20만 자 책 약 1시간).
@@ -363,33 +363,33 @@
                                         <p id="setting-tts-pregen-availability" style="font-size: 0.8rem; margin: 0.5rem 0 0 0; font-weight: 600;"></p>
                                     </div>
                                     <div class="library-form-group">
-                                        <label for="setting-tts-audio-root" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">음성 저장 경로 (절대 경로)</label>
-                                        <input type="text" id="setting-tts-audio-root" name="TTS_AUDIO_ROOT" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem;" placeholder="비워두면 기본값(설치 폴더/tts_audio) 사용">
-                                        <p style="font-size: 0.78rem; color: #f59e0b; margin: 0.4rem 0 0 0; line-height: 1.45;">
+                                        <label for="setting-tts-audio-root" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;" data-i18n="settings.gen_tts_audio_root_label">음성 저장 경로 (절대 경로)</label>
+                                        <input type="text" id="setting-tts-audio-root" name="TTS_AUDIO_ROOT" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem;" placeholder="비워두면 기본값(설치 폴더/tts_audio) 사용" data-i18n-placeholder="settings.gen_tts_audio_root_placeholder">
+                                        <p style="font-size: 0.78rem; color: #f59e0b; margin: 0.4rem 0 0 0; line-height: 1.45;" data-i18n="settings.gen_tts_audio_root_desc">
                                             <strong>Docker 사용자</strong>: 컨테이너를 다시 만들면 볼륨이 아닌 경로의 파일은 모두 사라지므로, 볼륨 위의 경로에서만 동작합니다.
                                             최신 <code>docker-compose.yml</code>에는 <code>./tts_audio:/app/tts_audio</code> 볼륨이 들어 있어 비워 두면 됩니다.
                                             예전 compose 파일이면 이 볼륨을 추가하거나, 이미 마운트한 다른 경로를 입력하세요. 경로를 바꾸면 기존 음성은 옮겨지지 않고 새로 만듭니다.
                                         </p>
                                     </div>
                                     <div class="library-form-group">
-                                        <label for="setting-tts-pregen-quality" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">음질</label>
+                                        <label for="setting-tts-pregen-quality" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;" data-i18n="settings.gen_tts_quality_label">음질</label>
                                         <select id="setting-tts-pregen-quality" name="TTS_PREGEN_QUALITY" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; cursor: pointer;">
-                                            <option value="standard">표준 (64kbps, 기본값)</option>
-                                            <option value="compact">절약 (32kbps · 24kHz, 용량 절반)</option>
+                                            <option value="standard" data-i18n="settings.gen_tts_quality_standard">표준 (64kbps, 기본값)</option>
+                                            <option value="compact" data-i18n="settings.gen_tts_quality_compact">절약 (32kbps · 24kHz, 용량 절반)</option>
                                         </select>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.45;">
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.45;" data-i18n="settings.gen_tts_quality_desc">
                                             절약은 용량이 절반이지만 ㅅ·ㅆ 같은 치찰음이 조금 뭉개집니다. 바꾸면 이후 새로 만드는 책부터 적용되며, 이미 만든 책은 그대로 둡니다.
                                         </p>
                                     </div>
                                     <div class="library-form-group">
-                                        <label for="setting-tts-pregen-threads" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">합성에 쓸 CPU 스레드 수</label>
+                                        <label for="setting-tts-pregen-threads" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;" data-i18n="settings.gen_tts_threads_label">합성에 쓸 CPU 스레드 수</label>
                                         <input type="number" id="setting-tts-pregen-threads" name="TTS_PREGEN_THREADS" min="1" max="16" value="2" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">많을수록 빠르지만 그동안 다른 서비스(스캔, 뷰어)가 느려질 수 있습니다. 기본값 2.</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_tts_threads_desc">많을수록 빠르지만 그동안 다른 서비스(스캔, 뷰어)가 느려질 수 있습니다. 기본값 2.</p>
                                     </div>
                                     <div class="library-form-group">
-                                        <label for="setting-tts-pregen-disk-gb" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">음성 캐시 최대 용량 (GB, 일반·성인 각각)</label>
+                                        <label for="setting-tts-pregen-disk-gb" style="font-weight: 600; color: var(--app-text-secondary); font-size: 0.85rem; margin-bottom: 0.4rem; display: block;" data-i18n="settings.gen_tts_disk_label">음성 캐시 최대 용량 (GB, 일반·성인 각각)</label>
                                         <input type="number" id="setting-tts-pregen-disk-gb" name="TTS_PREGEN_DISK_GB" min="1" max="10000" value="10" style="width: 100%; max-width: 480px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none;">
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">넘으면 오래 안 들은 책부터 통째로 지웁니다. 표준 음질 기준 1시간 분량이 약 29MB입니다(20만 자 책 약 150~200MB, 긴 장편은 수 GB).</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_tts_disk_desc">넘으면 오래 안 들은 책부터 통째로 지웁니다. 표준 음질 기준 1시간 분량이 약 29MB입니다(20만 자 책 약 150~200MB, 긴 장편은 수 GB).</p>
                                     </div>
                                 </div>
                             </div>
@@ -400,11 +400,11 @@
                             <div style="background: rgba(var(--app-panel-rgb), 0.4); border: 1px solid rgba(192, 132, 252, 0.2); border-radius: 8px; padding: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.6rem;">
                                     <i class="lc lc-film" style="color: var(--app-accent-hover); font-size: 1.1rem;"></i>
-                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;">영상 강좌 트랜스코딩 설정 (실험적)</h4>
+                                    <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1rem; font-weight: 700;" data-i18n="settings.gen_section_video">영상 강좌 트랜스코딩 설정 (실험적)</h4>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 1.25rem;">
 
-                                    <div style="background: rgba(192, 132, 252, 0.08); border: 1px dashed rgba(192, 132, 252, 0.3); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.8rem; color: var(--app-text-muted); line-height: 1.7;">
+                                    <div style="background: rgba(192, 132, 252, 0.08); border: 1px dashed rgba(192, 132, 252, 0.3); border-radius: 6px; padding: 0.8rem 1rem; font-size: 0.8rem; color: var(--app-text-muted); line-height: 1.7;" data-i18n="settings.gen_video_policy">
                                         <strong style="color: var(--app-accent-hover);">자동 재생 정책 (수동 스위치 없음)</strong><br>
                                         1) 브라우저가 원본을 직접 재생할 수 있으면(mp4/webm + H.264/VP8/VP9 + AAC/Opus 등) 항상 원본을 그대로 스트리밍합니다.<br>
                                         2) 직접 재생이 안 되는 파일(MKV 컨테이너 등)만 아래 ffmpeg 폴백을 자동으로 거칩니다.<br>
@@ -415,25 +415,25 @@
                                     <!-- VAAPI 지원 여부 체크 -->
                                     <div class="library-form-group">
                                         <label style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-microchip" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> 하드웨어 가속(VAAPI) 사용 가능 여부 점검
+                                            <i class="lc lc-microchip" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_vaapi_check_label">하드웨어 가속(VAAPI) 사용 가능 여부 점검</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center; max-width: 480px; width: 100%; flex-wrap: wrap;">
                                             <input type="text" id="setting-vaapi-device-path" name="FFMPEG_VAAPI_DEVICE" value="/dev/dri/renderD128" style="flex: 1; min-width: 200px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem;">
                                             <button type="button" id="btn-check-vaapi" style="background: linear-gradient(135deg, var(--app-accent) 0%, color-mix(in srgb, var(--app-accent) 70%, black) 100%); color: var(--app-accent-contrast); border: none; padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.3rem; height: 38px;">
-                                                <i class="lc lc-search"></i> 지금 점검
+                                                <i class="lc lc-search"></i> <span data-i18n="settings.gen_vaapi_check_btn">지금 점검</span>
                                             </button>
                                         </div>
                                         <div id="vaapi-check-result" style="display: none; margin-top: 0.6rem; padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; font-family: monospace; max-width: 700px; max-height: 260px; overflow-y: auto;"></div>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">서버(컨테이너)에서 ffmpeg가 VAAPI 하드웨어 가속을 실제로 사용할 수 있는지(빌드 지원 + 인코더 + <code>/dev/dri</code> 디바이스 패스스루 + vainfo 드라이버 응답)를 단계별로 점검합니다. 도커라면 <code>docker-compose.yml</code>에 <code>devices: - /dev/dri:/dev/dri</code>가 있어야 디바이스가 잡힙니다. <strong style="color: var(--app-accent-hover);">점검 버튼을 누르면 이 서버 경로 값도 함께 저장되고, 결과가 즉시 실제 스트리밍 판단에도 반영됩니다.</strong></p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_vaapi_check_desc">서버(컨테이너)에서 ffmpeg가 VAAPI 하드웨어 가속을 실제로 사용할 수 있는지(빌드 지원 + 인코더 + <code>/dev/dri</code> 디바이스 패스스루 + vainfo 드라이버 응답)를 단계별로 점검합니다. 도커라면 <code>docker-compose.yml</code>에 <code>devices: - /dev/dri:/dev/dri</code>가 있어야 디바이스가 잡힙니다. <strong style="color: var(--app-accent-hover);">점검 버튼을 누르면 이 서버 경로 값도 함께 저장되고, 결과가 즉시 실제 스트리밍 판단에도 반영됩니다.</strong></p>
                                     </div>
 
                                     <!-- CPU/기타 GPU 폴백 인코딩 파라미터 -->
                                     <div class="library-form-group">
                                         <label for="setting-ffmpeg-transcode-args" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-terminal" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> 기본 폴백 인코딩 파라미터 (VAAPI 미감지 시 사용)
+                                            <i class="lc lc-terminal" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_ffmpeg_args_label">기본 폴백 인코딩 파라미터 (VAAPI 미감지 시 사용)</span>
                                         </label>
                                         <textarea id="setting-ffmpeg-transcode-args" name="FFMPEG_TRANSCODE_ARGS" rows="2" style="width: 100%; max-width: 700px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: vertical;" placeholder="-c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k"></textarea>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.6;">
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0; line-height: 1.6;" data-i18n="settings.gen_ffmpeg_args_desc">
                                             비워두면 기본값(<code>-c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 128k</code>, CPU 소프트웨어 인코딩)을 사용합니다. 입력/출력 파일 인자는 서버가 자동으로 붙이므로 중간 인코딩 옵션만 적으세요.<br>
                                             <strong style="color: var(--app-accent-hover);">NVIDIA GPU(NVENC, 예: P600 등)가 있다면</strong> VAAPI 전용 자동 판별은 별도로 만들지 않았으니, 이 필드에 직접 NVENC 옵션을 넣으면 됩니다(호스트에 NVIDIA 드라이버 + <code>nvidia-container-toolkit</code> 설치 및 <code>docker-compose.yml</code>의 NVIDIA GPU 예약 설정 활성화가 선행되어야 함):<br>
                                             <code>-c:v h264_nvenc -preset p4 -tune ll -c:a aac -b:a 128k</code><br>
@@ -444,10 +444,10 @@
                                     <!-- VAAPI 폴백 인코딩 파라미터 -->
                                     <div class="library-form-group">
                                         <label for="setting-ffmpeg-vaapi-args" style="font-weight: 700; color: var(--app-text-primary); font-size: 0.9rem; margin-bottom: 0.4rem; display: block;">
-                                            <i class="lc lc-microchip" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> VAAPI 폴백 인코딩 파라미터 (VAAPI 감지 시)
+                                            <i class="lc lc-microchip" style="color: var(--app-accent-hover); margin-right: 0.3rem;"></i> <span data-i18n="settings.gen_vaapi_args_label">VAAPI 폴백 인코딩 파라미터 (VAAPI 감지 시)</span>
                                         </label>
                                         <textarea id="setting-ffmpeg-vaapi-args" name="FFMPEG_VAAPI_ARGS" rows="2" style="width: 100%; max-width: 700px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.6rem 0.8rem; border-radius: 6px; outline: none; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: vertical;" placeholder="-vf format=nv12,hwupload -c:v h264_vaapi -qp 24 -c:a aac -b:a 128k"></textarea>
-                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;">비워두면 기본값(<code>-vf format=nv12,hwupload -c:v h264_vaapi -qp 24 -c:a aac -b:a 128k</code>)을 사용합니다. <code>-vaapi_device</code> 옵션은 위 디바이스 경로 값을 서버가 자동으로 붙이므로 여기엔 적지 않아도 됩니다.</p>
+                                        <p style="font-size: 0.78rem; color: var(--app-text-muted); margin: 0.4rem 0 0 0;" data-i18n="settings.gen_vaapi_args_desc">비워두면 기본값(<code>-vf format=nv12,hwupload -c:v h264_vaapi -qp 24 -c:a aac -b:a 128k</code>)을 사용합니다. <code>-vaapi_device</code> 옵션은 위 디바이스 경로 값을 서버가 자동으로 붙이므로 여기엔 적지 않아도 됩니다.</p>
                                     </div>
                                 </div>
                             </div>

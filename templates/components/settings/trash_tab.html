@@ -2,23 +2,23 @@
 <div id="settings-tab-trash" class="settings-tab-content" style="display: none; flex-direction: column; gap: 1rem;">
     <div class="trash-header-container" style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 0.75rem 1rem; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <label style="font-size: 0.875rem; color: var(--app-text-muted); font-weight: 500;">DB 선택:</label>
+            <label style="font-size: 0.875rem; color: var(--app-text-muted); font-weight: 500;" data-i18n="settings.trash_db_label">DB 선택:</label>
             <select id="trash-db-type" data-role="trash-db-type" style="background: var(--app-input-bg); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.35rem 1.5rem 0.35rem 0.75rem; border-radius: 6px; font-size: 0.875rem; outline: none; cursor: pointer;">
-                <option value="general">일반 도서 DB</option>
-                <option value="adult">성인 도서 DB</option>
-                <option value="audiobook">오디오북 DB</option>
-                <option value="video">영상강좌 DB</option>
+                <option value="general" data-i18n="settings.trash_db_general">일반 도서 DB</option>
+                <option value="adult" data-i18n="settings.trash_db_adult">성인 도서 DB</option>
+                <option value="audiobook" data-i18n="settings.trash_db_audiobook">오디오북 DB</option>
+                <option value="video" data-i18n="settings.trash_db_video">영상강좌 DB</option>
             </select>
         </div>
         <div class="trash-header-buttons" style="display: flex; gap: 0.5rem;">
             <button class="btn btn-secondary" data-role="trash-restore-selected" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem; font-size: 0.825rem; border-radius: 6px;">
-                <i class="lc lc-rotate-ccw"></i> 선택 복구
+                <i class="lc lc-rotate-ccw"></i> <span data-i18n="settings.trash_restore_selected">선택 복구</span>
             </button>
             <button class="btn btn-danger-outline" data-role="trash-delete-selected" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem; font-size: 0.825rem; border-radius: 6px;">
-                <i class="lc lc-trash"></i> 선택 삭제
+                <i class="lc lc-trash"></i> <span data-i18n="settings.trash_delete_selected">선택 삭제</span>
             </button>
             <button class="btn btn-danger" data-role="trash-empty-all" style="display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.8rem; font-size: 0.825rem; border-radius: 6px; background: #ef4444; border: none;">
-                <i class="lc lc-trash-2"></i> 휴지통 비우기
+                <i class="lc lc-trash-2"></i> <span data-i18n="settings.trash_empty_all">휴지통 비우기</span>
             </button>
         </div>
     </div>
@@ -32,11 +32,11 @@
                         <th style="padding: 0.75rem 1rem; width: 40px; text-align: center;">
                             <input type="checkbox" id="trash-select-all" data-role="trash-select-all" style="cursor: pointer; width: 15px; height: 15px; accent-color: #3b82f6;">
                         </th>
-                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted);">도서명</th>
-                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted);">원래 경로</th>
-                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 130px;">카테고리</th>
-                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 160px;">감지 시각</th>
-                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 120px; text-align: center;">제어</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted);" data-i18n="settings.trash_col_title">도서명</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted);" data-i18n="settings.trash_col_path">원래 경로</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 130px;" data-i18n="settings.trash_col_category">카테고리</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 160px;" data-i18n="settings.trash_col_detected">감지 시각</th>
+                        <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--app-text-muted); width: 120px; text-align: center;" data-i18n="settings.trash_col_actions">제어</th>
                     </tr>
                 </thead>
                 <tbody id="trash-list-body">
@@ -45,8 +45,8 @@
             </table>
             <div id="trash-empty-state" style="display: none; padding: 3rem 1rem; text-align: center; color: var(--app-text-muted);">
                 <i class="lc lc-archive-restore" style="font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5;"></i>
-                <p style="font-size: 0.95rem; margin: 0;">휴지통이 비어있습니다.</p>
-                <p style="font-size: 0.8rem; margin: 0.25rem 0 0 0; color: #475569;">스캔 도중 물리적으로 유실된 도서가 여기에 표시됩니다.</p>
+                <p style="font-size: 0.95rem; margin: 0;" data-i18n="settings.trash_empty_title">휴지통이 비어있습니다.</p>
+                <p style="font-size: 0.8rem; margin: 0.25rem 0 0 0; color: #475569;" data-i18n="settings.trash_empty_desc">스캔 도중 물리적으로 유실된 도서가 여기에 표시됩니다.</p>
             </div>
         </div>
     </div>

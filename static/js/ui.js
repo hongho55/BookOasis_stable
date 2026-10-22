@@ -368,7 +368,7 @@ export function createBookCard(item, options = {}) {
   const currentUser = state.currentUser || window.currentUser || {};
   const isAdminUser = String(currentUser.role || '').trim().toLowerCase() === 'admin';
   const infoBtnHtml = (isAdminUser && isBookCard && !item.is_author_group && card.dataset.bookId)
-    ? `<button type="button" class="btn-card-info-toggle" data-role="card-info-toggle" title="정보" aria-label="정보"><i class="lc lc-ellipsis"></i></button>`
+    ? `<button type="button" class="btn-card-info-toggle" data-role="card-info-toggle" title="정보" aria-label="정보"><i class="lc lc-info" aria-hidden="true"></i></button>`
     : '';
 
   const lazyPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";

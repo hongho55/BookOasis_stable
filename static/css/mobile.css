@@ -23,7 +23,10 @@
     flex-direction: column;
     gap: 0; /* 사이드바는 모바일에서 높이 0(로고 앱바 숨김, 드로어/팝업은 fixed)이라 간격이 빈 줄로만 남는다 */
     /* 좌우도 노치 여백을 더한다 - 가로 모드에서 콘텐츠가 노치/둥근 모서리 아래로 들어가지 않게 */
-    padding: calc(0.5rem + env(safe-area-inset-top, 0px)) calc(0.75rem + env(safe-area-inset-right, 0px)) calc(4.5rem + env(safe-area-inset-bottom, 0px)) calc(0.75rem + env(safe-area-inset-left, 0px));
+    /* 아래쪽은 0: 예전 4.5rem+홈 인디케이터 여백은 스크롤 영역 밖의 빈 띠라, iOS 사파리(떠 있는 하단 툴바)에서
+       카드 그리드가 툴바보다 한참 위에서 잘려 답답해 보였다(2026-10-22 커뮤니티 제보). 이제 스크롤 영역이 화면 끝까지
+       내려가 툴바 뒤로 비쳐 보이고, 마지막 줄이 툴바에 가리지 않게 하는 여백은 .library-main-content가 맡는다. */
+    padding: calc(0.5rem + env(safe-area-inset-top, 0px)) calc(0.75rem + env(safe-area-inset-right, 0px)) 0 calc(0.75rem + env(safe-area-inset-left, 0px));
 }
 
 /* 2. 좌측 사이드바 -> 얇은 상단 앱바(☰ 로고 ⋯) + 좌측 슬라이드 드로어 */
@@ -522,7 +525,9 @@ body.sidebar-drawer-open .sidebar-drawer-backdrop {
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    /* 끝까지 스크롤했을 때 마지막 줄이 사파리 하단 툴바(떠 있는 유리 막대)·홈 인디케이터 위로 올라오게 */
+    /* iOS 26 사파리 툴바는 화면 아래 약 142px(홈 인디케이터 34px 포함)를 덮는다 - 112+34=146px로 그 위에 맞춘다 */
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* 컨텍스트 메뉴 닫기 버튼 모바일 가독성 강화 */
