@@ -67,7 +67,7 @@ def main():
     out = os.path.join(OUT_DIR, 'readings-v1.json')  # /static/lib는 1년 immutable 캐시 — 내용을 바꾸면 파일 이름의 버전도 올린다
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(dict(sorted(table.items())), f, ensure_ascii=False, separators=(',', ':'))
-    print(f'{len(table)}자 → {out} ({os.path.getsize(out) // 1024}KB)')
+    print(f'{len(table)} characters -> {out} ({os.path.getsize(out) // 1024}KB)')
 
 
 if __name__ == '__main__':

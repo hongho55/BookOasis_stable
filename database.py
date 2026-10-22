@@ -225,9 +225,9 @@ class SQLiteConnectionPool:
                         try:
                             conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
                             checkpoint_done = True
-                            print(f"[DB-Shutdown] WAL 체크포인트 완료: {self.db_path}")
+                            print(f"[DB-Shutdown] WAL checkpoint done: {self.db_path}")
                         except Exception as ckpt_err:
-                            print(f"[DB-Shutdown] WAL 체크포인트 실패 (무시하고 계속): {ckpt_err}")
+                            print(f"[DB-Shutdown] WAL checkpoint failed (ignored, continuing): {ckpt_err}")
                     try:
                         conn.force_close()
                         closed_count += 1
@@ -236,7 +236,7 @@ class SQLiteConnectionPool:
                 except queue.Empty:
                     break
             self.allocated = max(0, self.allocated - closed_count)
-        print(f"[DB-Shutdown] 커넥션 {closed_count}개 정리 완료: {self.db_path}")
+        print(f"[DB-Shutdown] Closed {closed_count} connections: {self.db_path}")
 
 _pools = {'general': None, 'adult': None, 'audiobook': None, 'video': None}
 _pools_lock = threading.Lock()
@@ -278,21 +278,21 @@ def shutdown_all_pools():
         return  # 중복 호출 방지
     _shutdown_in_progress = True
     
-    print("[DB-Shutdown] 모든 DB 커넥션 풀 종료 시작...")
+    print("[DB-Shutdown] Closing all DB connection pools...")
     with _pools_lock:
         for db_type, pool in _pools.items():
             if pool is not None:
                 try:
                     pool.shutdown()
                 except Exception as e:
-                    print(f"[DB-Shutdown] {db_type} SQLite 풀 종료 중 오류: {e}")
+                    print(f"[DB-Shutdown] Error closing {db_type} SQLite pool: {e}")
         for db_type, pool in _mariadb_pools.items():
             if pool is not None:
                 try:
                     pool.shutdown()
                 except Exception as e:
-                    print(f"[DB-Shutdown] {db_type} MariaDB 풀 종료 중 오류: {e}")
-    print("[DB-Shutdown] 모든 DB 커넥션 풀 종료 완료.")
+                    print(f"[DB-Shutdown] Error closing {db_type} MariaDB pool: {e}")
+    print("[DB-Shutdown] All DB connection pools closed.")
 
 def _get_pool_size_raw():
     global _cached_pool_size
@@ -419,7 +419,7 @@ class MariadbCursorWrapper:
                     except Exception:
                         exists = False
                     if not exists:
-                        print(f"[DB ERROR] executescript CREATE TABLE 실패 ({m.group(1)}): {e}")
+                        print(f"[DB ERROR] executescript CREATE TABLE failed ({m.group(1)}): {e}")
 
     def fetchone(self):
         row = self._cursor.fetchone()

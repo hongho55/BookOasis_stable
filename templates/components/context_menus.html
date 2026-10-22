@@ -17,7 +17,7 @@
 <div id="book-context-menu" class="context-menu" style="display: none;">
     <div class="context-menu-header">
         <span class="context-menu-title">도서 메뉴</span>
-        <button type="button" class="context-menu-close-btn" data-role="book-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text">닫기</span></button>
+        <button type="button" class="context-menu-close-btn" data-role="book-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text" data-i18n="common.close">닫기</span></button>
     </div>
     <ul class="context-menu-list">
         <li class="context-menu-item" id="ctx-scan-book" data-role="book-context-action" data-action="scan"><i class="lc lc-barcode" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.scan_book_now">이 책 즉시 스캔 (표지/메타)</span></li>
@@ -27,11 +27,11 @@
         <li class="context-menu-item" id="ctx-add-to-collection" data-role="book-context-action" data-action="add-to-collection"><i class="fa-solid fa-bookmark" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.add_to_collection">컬렉션에 추가</span></li>
         <li class="context-menu-item" id="ctx-add-series-to-collection" data-role="book-context-action" data-action="add-series-to-collection"><i class="lc lc-book-marked" style="color: #38bdf8;"></i> <span data-i18n="context_menu.add_series_to_collection">이 시리즈를 컬렉션에 추가</span></li>
         <li class="context-menu-item" id="ctx-unread-book" data-role="book-context-action" data-action="mark-unread"><i class="lc lc-eye-off" style="color: #ef4444;"></i> <span data-i18n="context_menu.mark_as_unread">읽지 않은 상태로 변경 (0%)</span></li>
-        <li class="context-menu-item" id="ctx-cover-align-book" data-role="book-context-action" data-action="cover-align" style="display: none;"><i class="lc lc-align-left" style="color: #38bdf8;"></i> <span>커버 정렬 (이중 스캔본용)</span></li>
-        <li class="context-menu-item" id="ctx-page-turn-book" data-role="book-context-action" data-action="page-turn" style="display: none;"><i class="lc lc-book-open" style="color: #f59e0b;"></i> <span>페이지 넘김으로 보기 (실험적)</span></li>
+        <li class="context-menu-item" id="ctx-cover-align-book" data-role="book-context-action" data-action="cover-align" style="display: none;"><i class="lc lc-align-left" style="color: #38bdf8;"></i> <span data-i18n="context_menu.cover_align">커버 정렬 (이중 스캔본용)</span></li>
+        <li class="context-menu-item" id="ctx-page-turn-book" data-role="book-context-action" data-action="page-turn" style="display: none;"><i class="lc lc-book-open" style="color: #f59e0b;"></i> <span data-i18n="context_menu.page_turn">페이지 넘김으로 보기 (실험적)</span></li>
         <li class="context-menu-item" id="ctx-tts-book" data-role="book-context-action" data-action="tts" style="display: none;"><i class="lc lc-headphones" style="color: #a78bfa;"></i> <span data-i18n="context_menu.tts_listen">음성으로 듣기</span></li>
         <li class="context-menu-item" id="ctx-tts-pregen-book" data-role="book-context-action" data-action="tts-pregen" style="display: none;"><i class="lc lc-server" style="color: #a78bfa;"></i> <span data-i18n="context_menu.tts_pregen">음성 미리 만들기</span></li>
-        <li class="context-menu-item context-menu-close-item" data-role="book-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span>닫기</span></li>
+        <li class="context-menu-item context-menu-close-item" data-role="book-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span data-i18n="common.close">닫기</span></li>
     </ul>
 </div>
 
@@ -39,13 +39,13 @@
 <div id="video-context-menu" class="context-menu" style="display: none;">
     <div class="context-menu-header">
         <span class="context-menu-title" id="video-ctx-title">강좌 메뉴</span>
-        <button type="button" class="context-menu-close-btn" data-role="video-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text">닫기</span></button>
+        <button type="button" class="context-menu-close-btn" data-role="video-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text" data-i18n="common.close">닫기</span></button>
     </div>
     <ul class="context-menu-list">
-        <li class="context-menu-item" data-role="video-context-action" data-action="open-detail"><i class="lc lc-info" style="color: #38bdf8;"></i> <span>상세보기</span></li>
+        <li class="context-menu-item" data-role="video-context-action" data-action="open-detail"><i class="lc lc-info" style="color: #38bdf8;"></i> <span data-i18n="context_menu.open_detail">상세보기</span></li>
         <li class="context-menu-item" data-role="video-context-action" data-action="toggle-favorite"><i class="fa-solid fa-star" style="color: #eab308;"></i> <span id="video-ctx-favorite-label">즐겨찾기 추가</span></li>
-        <li class="context-menu-item" data-role="video-context-action" data-action="add-to-collection"><i class="lc lc-folder-plus" style="color: var(--app-accent-hover);"></i> <span>컬렉션에 추가</span></li>
-        <li class="context-menu-item context-menu-close-item" data-role="video-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span>닫기</span></li>
+        <li class="context-menu-item" data-role="video-context-action" data-action="add-to-collection"><i class="lc lc-folder-plus" style="color: var(--app-accent-hover);"></i> <span data-i18n="context_menu.add_to_collection">컬렉션에 추가</span></li>
+        <li class="context-menu-item context-menu-close-item" data-role="video-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span data-i18n="common.close">닫기</span></li>
     </ul>
 </div>
 
@@ -53,11 +53,11 @@
 <div id="author-group-context-menu" class="context-menu" style="display: none;">
     <div class="context-menu-header">
         <span class="context-menu-title" id="author-group-ctx-title">작가 메뉴</span>
-        <button type="button" class="context-menu-close-btn" data-role="author-group-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text">닫기</span></button>
+        <button type="button" class="context-menu-close-btn" data-role="author-group-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text" data-i18n="common.close">닫기</span></button>
     </div>
     <ul class="context-menu-list">
-        <li class="context-menu-item" data-role="author-group-context-action" data-action="add-to-collection"><i class="fa-solid fa-bookmark" style="color: var(--app-accent);"></i> <span>이 작가의 모든 작품을 컬렉션에 추가</span></li>
-        <li class="context-menu-item context-menu-close-item" data-role="author-group-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span>닫기</span></li>
+        <li class="context-menu-item" data-role="author-group-context-action" data-action="add-to-collection"><i class="fa-solid fa-bookmark" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.add_author_to_collection">이 작가의 모든 작품을 컬렉션에 추가</span></li>
+        <li class="context-menu-item context-menu-close-item" data-role="author-group-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span data-i18n="common.close">닫기</span></li>
     </ul>
 </div>
 
@@ -65,13 +65,13 @@
 <div id="volume-cover-align-context-menu" class="context-menu" style="display: none;">
     <div class="context-menu-header">
         <span class="context-menu-title">커버 정렬</span>
-        <button type="button" class="context-menu-close-btn" data-role="volume-cover-align-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text">닫기</span></button>
+        <button type="button" class="context-menu-close-btn" data-role="volume-cover-align-context-close" aria-label="닫기"><span class="context-menu-close-icon">&times;</span><span class="context-menu-close-text" data-i18n="common.close">닫기</span></button>
     </div>
     <ul class="context-menu-list">
-        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="left"><i class="lc lc-align-left" style="color: var(--app-accent);"></i> <span>왼쪽 정렬</span></li>
-        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="center"><i class="lc lc-align-center" style="color: var(--app-accent);"></i> <span>중앙 정렬</span></li>
-        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="right"><i class="lc lc-align-right" style="color: var(--app-accent);"></i> <span>오른쪽 정렬</span></li>
-        <li class="context-menu-item context-menu-close-item" data-role="volume-cover-align-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span>닫기</span></li>
+        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="left"><i class="lc lc-align-left" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.align_left">왼쪽 정렬</span></li>
+        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="center"><i class="lc lc-align-center" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.align_center">중앙 정렬</span></li>
+        <li class="context-menu-item" data-role="volume-cover-align-context-action" data-align="right"><i class="lc lc-align-right" style="color: var(--app-accent);"></i> <span data-i18n="context_menu.align_right">오른쪽 정렬</span></li>
+        <li class="context-menu-item context-menu-close-item" data-role="volume-cover-align-context-close"><i class="lc lc-x" style="color: #f87171;"></i> <span data-i18n="common.close">닫기</span></li>
     </ul>
 </div>
 

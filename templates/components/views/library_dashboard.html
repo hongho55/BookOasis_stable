@@ -14,7 +14,7 @@
         <div class="section-nav-btns">
             <button data-scroll-row-nav="dashboard-history-row" data-dir="left" class="btn-nav-arrow" data-i18n-title="common.prev" title="이전"><i class="lc lc-chevron-left"></i></button>
             <button data-scroll-row-nav="dashboard-history-row" data-dir="right" class="btn-nav-arrow" data-i18n-title="common.next" title="다음"><i class="lc lc-chevron-right"></i></button>
-            <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.recent" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
+            <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.recent" title="홈 화면에서 위젯 제거" data-i18n-title="dashboard.widget_remove"><i class="lc lc-x"></i></button>
         </div>
     </div>
     <div class="dashboard-row-container" id="dashboard-history-row">
@@ -30,7 +30,7 @@
         <div class="section-nav-btns">
             <button data-scroll-row-nav="dashboard-new-row" data-dir="left" class="btn-nav-arrow" data-i18n-title="common.prev" title="이전"><i class="lc lc-chevron-left"></i></button>
             <button data-scroll-row-nav="dashboard-new-row" data-dir="right" class="btn-nav-arrow" data-i18n-title="common.next" title="다음"><i class="lc lc-chevron-right"></i></button>
-            <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.new" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
+            <button type="button" class="home-widget-remove-btn" data-remove-widget-id="core.new" title="홈 화면에서 위젯 제거" data-i18n-title="dashboard.widget_remove"><i class="lc lc-x"></i></button>
         </div>
     </div>
     <div class="dashboard-row-container" id="dashboard-new-row">
@@ -55,19 +55,19 @@
 {%- if w.frame == 'none' -%}
 {# frame:'none'(배너 등): 제목줄 없이 내용만, 제거 버튼은 오른쪽 위에 겹침 - dashboard.js와 같은 마크업 #}
 <div class="plugin-card home-widget-slot home-widget-slot--frameless{{ layout_class }}" id="home-widget-{{ w.id }}" data-widget-id="{{ w.id }}" data-widget-kind="plugin" data-plugin-id="{{ w.plugin_id }}" data-limit="{{ w.limit }}"{% if w.hidden %} style="display:none;"{% endif %}>
-    <button type="button" class="home-widget-remove-btn" data-remove-widget-id="{{ w.id }}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
+    <button type="button" class="home-widget-remove-btn" data-remove-widget-id="{{ w.id }}" title="홈 화면에서 위젯 제거" data-i18n-title="dashboard.widget_remove"><i class="lc lc-x"></i></button>
     <div id="home-widget-content-{{ w.id }}" class="plugin-widget-body"></div>
 </div>
 {%- else -%}
 <div class="plugin-card home-widget-slot{{ layout_class }}" id="home-widget-{{ w.id }}" data-widget-id="{{ w.id }}" data-widget-kind="plugin" data-plugin-id="{{ w.plugin_id }}" data-limit="{{ w.limit }}"{% if w.hidden %} style="display:none;"{% endif %}>
     <h4 class="plugin-card-header">
         <span class="plugin-card-header-title"><i class="{{ (w.icon or 'lc lc-puzzle') | bo_icon }}"></i><span class="plugin-card-header-title-text">{{ w.title }}</span></span>
-        <span class="plugin-card-provider">제공: {{ w.provider or w.title }}</span>
-        <button type="button" class="home-widget-remove-btn" data-remove-widget-id="{{ w.id }}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
+        <span class="plugin-card-provider"><span data-i18n="dashboard.provided_by">제공</span>: {{ w.provider or w.title }}</span>
+        <button type="button" class="home-widget-remove-btn" data-remove-widget-id="{{ w.id }}" title="홈 화면에서 위젯 제거" data-i18n-title="dashboard.widget_remove"><i class="lc lc-x"></i></button>
     </h4>
     {% if w.subtitle %}<div class="plugin-widget-subtitle">{{ w.subtitle }}</div>{% endif %}
     <div id="home-widget-content-{{ w.id }}" class="plugin-widget-body">
-        <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> 위젯 데이터를 불러오는 중...</div>
+        <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> <span data-i18n="dashboard.widget_loading">위젯 데이터를 불러오는 중...</span></div>
     </div>
 </div>
 {%- endif -%}
@@ -118,8 +118,8 @@
          home-widget-stack--plugin-mode 클래스에 연동된 CSS 인접 형제 선택자로만 제어한다
          (JS가 모드 전환 시 그 클래스만 토글하면 이 바도 자동으로 같이 보이고/숨는다). -->
     <div id="home-widget-lock-bar" class="home-widget-lock-bar">
-        <button type="button" id="home-widget-lock-toggle" class="home-widget-lock-toggle" data-locked="1" title="위젯 배치 잠금/해제">
-            <i class="lc lc-lock"></i> <span>배치 잠금</span>
+        <button type="button" id="home-widget-lock-toggle" class="home-widget-lock-toggle" data-locked="1" title="위젯 배치 잠금/해제" data-i18n-title="dashboard.widget_lock_title">
+            <i class="lc lc-lock"></i> <span data-i18n="dashboard.widget_locked">배치 잠금</span>
         </button>
     </div>
 
@@ -128,7 +128,7 @@
          dashboard.js의 renderHomeWidgetCatalog()가 /api/media/home-layout 결과로 다시 그린다. -->
     <div id="home-widget-catalog" class="home-widget-catalog"{% if not home_layout.catalog %} style="display: none;"{% else %} style="display: flex;"{% endif %}>
 {% if home_layout.catalog %}
-        <span class="home-widget-catalog-label"><i class="lc lc-plus"></i> 위젯 추가:</span>
+        <span class="home-widget-catalog-label"><i class="lc lc-plus"></i> <span data-i18n="dashboard.widget_add">위젯 추가</span>:</span>
 {% for c in home_layout.catalog %}
         <button type="button" class="home-widget-catalog-btn" data-add-widget-id="{{ c.id }}">
             <i class="{{ (c.icon or 'lc lc-puzzle') | bo_icon }}"></i> {{ c.title }}

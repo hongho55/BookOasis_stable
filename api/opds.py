@@ -494,7 +494,7 @@ def opds_download_book(db_type: str, book_id: int):
     import time
     import traceback
     start_t = time.time()
-    print(f"[OPDS-Debug] 📥 /opds/download 시작 - db_type={db_type}, book_id={book_id}")
+    print(f"[OPDS-Debug] 📥 /opds/download start - db_type={db_type}, book_id={book_id}")
 
     is_adult = (db_type == 'adult')
     auth_user = _get_authenticated_user(is_adult=is_adult)
@@ -503,10 +503,10 @@ def opds_download_book(db_type: str, book_id: int):
         # (Moon+ Reader가 다운로드 확인 후 재요청 시 인증 정보 없이 보내는 문제 해결)
         dl_token = request.args.get('token', '')
         if dl_token and _verify_download_token(db_type, book_id, dl_token):
-            print(f"[OPDS-Debug] 🔑 토큰 인증 성공 - db_type={db_type}, book_id={book_id}")
+            print(f"[OPDS-Debug] 🔑 Token authenticated - db_type={db_type}, book_id={book_id}")
             auth_user = {'id': 0, 'username': 'token_auth', 'role': 'admin'}
         else:
-            print(f"[OPDS-Debug] ❌ 인증 실패 (401 반환) - db_type={db_type}, book_id={book_id}")
+            print(f"[OPDS-Debug] ❌ Authentication failed (returning 401) - db_type={db_type}, book_id={book_id}")
             return _unauthorized()
 
 
@@ -514,20 +514,20 @@ def opds_download_book(db_type: str, book_id: int):
         from repositories.book_repository import BookRepository
         row = BookRepository.get_book_basic_info(db_type, book_id)
     except Exception as db_err:
-        print(f"[OPDS-Debug] ❌ DB 조회 에러: {db_err}\n{traceback.format_exc()}")
+        print(f"[OPDS-Debug] ❌ DB lookup error: {db_err}\n{traceback.format_exc()}")
         return jsonify({'error': str(db_err)}), 500
 
     if not row:
-        print(f"[OPDS-Debug] ❌ DB 도서 미존재 (404) - book_id={book_id}")
+        print(f"[OPDS-Debug] ❌ Book not found in DB (404) - book_id={book_id}")
         return jsonify({'error': _t('api.err_book_not_found')}), 404
 
     file_path = row['file_path']
     file_exists = os.path.exists(file_path)
     file_size_mb = (os.path.getsize(file_path) / (1024 * 1024)) if file_exists else 0
-    print(f"[OPDS-Debug] 🔍 DB 조회 성공 - file_path='{file_path}', 존재={file_exists}, 크기={file_size_mb:.2f}MB")
+    print(f"[OPDS-Debug] 🔍 DB lookup ok - file_path='{file_path}', exists={file_exists}, size={file_size_mb:.2f}MB")
 
     if not file_exists:
-        print(f"[OPDS-Debug] ❌ 실물 파일 미존재 (404) - '{file_path}'")
+        print(f"[OPDS-Debug] ❌ File not found on disk (404) - '{file_path}'")
         return jsonify({'error': _t('api.err_file_not_found')}), 404
 
     from services.opds_service import _guess_mime_type
@@ -569,7 +569,7 @@ def opds_download_book(db_type: str, book_id: int):
     except Exception as kosync_err:
         print(f"[OPDS-Debug] kosync document digest skipped: {kosync_err}")
 
-    print(f"[OPDS-Debug] 🚀 파일 전송 준비 - mime_type={mime_type}, raw_filename='{filename}', ascii_filename='{ascii_filename}'")
+    print(f"[OPDS-Debug] 🚀 Preparing file transfer - mime_type={mime_type}, raw_filename='{filename}', ascii_filename='{ascii_filename}'")
     try:
         # download_name=ascii_filename: Flask Content-Disposition에 ASCII만 포함 (한글/# 방지)
         # etag=False: Flask 자동 ETag 비활성화 (파일 경로 기반 ETag에 한글 포함 방지)
@@ -581,9 +581,9 @@ def opds_download_book(db_type: str, book_id: int):
             as_attachment=False,
             download_name=ascii_filename,
         )
-        print(f"[OPDS-Debug] ✅ send_file 생성 성공 (소요시간: {(time.time() - start_t)*1000:.1f}ms)")
+        print(f"[OPDS-Debug] ✅ send_file created (took {(time.time() - start_t)*1000:.1f}ms)")
     except Exception as sf_err:
-        print(f"[OPDS-Debug] ⚠️ send_file 실패 -> stream_file_safely Fallback: {sf_err}\n{traceback.format_exc()}")
+        print(f"[OPDS-Debug] ⚠️ send_file failed -> stream_file_safely fallback: {sf_err}\n{traceback.format_exc()}")
         from utils.safe_file_response import stream_file_safely
         response = stream_file_safely(file_path, mimetype=mime_type, chunk_size=4096 * 1024)
 

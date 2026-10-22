@@ -31,26 +31,26 @@ function buildCronFromHelper(mode, timeVal, weekdayVal, monthdayVal) {
   const hh = String(hour);
 
   if (mode === 'daily') {
-    return { cron: `${mm} ${hh} * * *`, summary: `매일 ${pad2(hour)}:${pad2(minute)} 실행` };
+    return { cron: `${mm} ${hh} * * *`, summary: i18n.t('scheduler.helper_daily', { time: `${pad2(hour)}:${pad2(minute)}` }) };
   }
   if (mode === 'weekdays') {
-    return { cron: `${mm} ${hh} * * 1-5`, summary: `평일(월~금) ${pad2(hour)}:${pad2(minute)} 실행` };
+    return { cron: `${mm} ${hh} * * 1-5`, summary: i18n.t('scheduler.helper_weekdays', { time: `${pad2(hour)}:${pad2(minute)}` }) };
   }
   if (mode === 'weekend') {
-    return { cron: `${mm} ${hh} * * 0,6`, summary: `주말(일/토) ${pad2(hour)}:${pad2(minute)} 실행` };
+    return { cron: `${mm} ${hh} * * 0,6`, summary: i18n.t('scheduler.helper_weekend', { time: `${pad2(hour)}:${pad2(minute)}` }) };
   }
   if (mode === 'weekly_once') {
     const day = Math.min(6, Math.max(0, parseInt(weekdayVal, 10) || 0));
-    const dayLabel = ['일', '월', '화', '수', '목', '금', '토'][day] || '일';
-    return { cron: `${mm} ${hh} * * ${day}`, summary: `매주 ${dayLabel}요일 ${pad2(hour)}:${pad2(minute)} 실행` };
+    const dayLabel = i18n.t(`settings.sched_${['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][day] || 'sun'}`);
+    return { cron: `${mm} ${hh} * * ${day}`, summary: i18n.t('scheduler.helper_weekly', { day: dayLabel, time: `${pad2(hour)}:${pad2(minute)}` }) };
   }
   if (mode === 'monthly') {
     const day = Math.min(31, Math.max(1, parseInt(monthdayVal, 10) || 1));
-    return { cron: `${mm} ${hh} ${day} * *`, summary: `매월 ${day}일 ${pad2(hour)}:${pad2(minute)} 실행` };
+    return { cron: `${mm} ${hh} ${day} * *`, summary: i18n.t('scheduler.helper_monthly', { day, time: `${pad2(hour)}:${pad2(minute)}` }) };
   }
   return {
     cron: '',
-    summary: '직접 입력 모드입니다. 아래 Cron 입력칸을 수정하세요.'
+    summary: i18n.t('scheduler.helper_custom')
   };
 }
 
@@ -120,8 +120,8 @@ function refreshCronHelperSummary() {
   if (mode === 'custom') {
     const currentCron = els.cronInput ? String(els.cronInput.value || '').trim() : '';
     els.summary.textContent = currentCron
-      ? `직접 입력 Cron: ${currentCron}`
-      : '직접 입력 모드입니다. 아래 Cron 입력칸을 수정하세요.';
+      ? i18n.t('scheduler.helper_custom_cron', { cron: currentCron })
+      : i18n.t('scheduler.helper_custom');
     return;
   }
 

@@ -323,13 +323,16 @@ class CategoryService:
         책을 서빙할 때 필요한 로컬 마운트 루트만 확보돼 있으면 된다 — 마운트 루트를
         열람 때마다 실시간으로 알아낼 방법이 없어(로컬 디스크 경로를 읽어 서빙해야 함)
         여기서 반드시 막아야 한다."""
-        from utils.drive_helper import has_gdrive_share_line
+        from utils.drive_helper import has_gdrive_share_line, gdrive_link_beta_enabled
         if not has_gdrive_share_line(physical_path):
             return
+        if not gdrive_link_beta_enabled():
+            # 화면에서만 숨기면 API로 직접 저장할 수 있으므로 서버에서도 막는다.
+            raise ValueError('구글 드라이브 공유 링크 카테고리는 클로즈 베타 기능입니다. 서버 .env에 GDRIVE_LINK_BETA=true를 설정해야 사용할 수 있습니다.')
         if not gdrive_copy_remote:
             raise ValueError('구글 드라이브 공유 링크가 포함된 카테고리는 연결할 리모트를 반드시 선택해야 합니다. 개인 rclone Drive 리모트 없이는 사용할 수 없습니다.')
-        if not gdrive_view_local_mirror_path:
-            raise ValueError('리모트의 로컬 마운트 루트를 확보하지 못했습니다. 리모트가 실제로 마운트돼 있는지 확인하거나 직접 입력해 주세요.')
+        # 로컬 마운트 루트는 더 이상 필수가 아니다 — 뷰어 사본은 리모트로 서버 로컬 캐시에 직접 받는다
+        # (gdrive_view_copy_service.py). 입력된 값은 그대로 저장만 한다.
 
     @staticmethod
     def add_library(db_type, name, physical_path, is_remote=0, rclone_rc_url=None, icon='fa-book', color='#94a3b8', hide_cover=0, group_id=None, gdrive_copy_remote=None, gdrive_view_local_mirror_path=None, cover_aspect_ratio='4:3', hide_title=0, content_kind=None):
@@ -465,6 +468,15 @@ class CategoryService:
         t_chunks = time.perf_counter()
 
         CategoryRepository.delete_library_finalize(db_type, library_id)
+        try:
+            # gdrive 링크 카테고리의 메타데이터 미러(스캔 캐시)와 뷰어 사본도 같이 치운다 — 원본 Drive와 무관한 로컬 캐시.
+            import shutil
+            from utils.drive_helper import gdrive_meta_mirror_dir
+            shutil.rmtree(gdrive_meta_mirror_dir(db_type, library_id), ignore_errors=True)
+            from services.gdrive_view_copy_service import view_cache_root
+            shutil.rmtree(view_cache_root(db_type, library_id), ignore_errors=True)
+        except Exception as e:
+            print(f"[CategoryService] gdrive metadata mirror cleanup failed (lib={library_id}): {e}")
         from services.problem_service import ProblemService
         ProblemService.on_library_deleted(db_type, library_id)
         try:

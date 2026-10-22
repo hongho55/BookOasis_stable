@@ -44,6 +44,12 @@ function initReportsDelegation() {
   window.__reportsDelegationBound = true;
 }
 
+// 지워진 카테고리는 서버(scanner_queue_repository)가 '카테고리 #N'으로 내려준다 - 서버 문구는 MCP 등도 쓰므로 화면에서만 번역
+function formatHistoryLibraryName(name) {
+  const m = /^카테고리 #(\d+)$/.exec(String(name || ''));
+  return m ? i18n.t('settings.rep_deleted_category', { id: m[1] }) : name;
+}
+
 // 스캔 에러 리포트 탭 초기화 및 라이브러리 목록 적재
 export async function initReportsTab() {
   initReportsDelegation();
@@ -88,7 +94,7 @@ export async function loadScanHistory() {
   tbody.innerHTML = `
     <tr>
       <td colspan="6" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-        <i class="lc lc-loader-circle lc-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> 최근 스캔 이력을 불러오는 중...
+        <i class="lc lc-loader-circle lc-spin" style="margin-right: 0.3rem; color: var(--app-accent);"></i> ${i18n.t('settings.rep_loading')}
       </td>
     </tr>
   `;
@@ -101,7 +107,7 @@ export async function loadScanHistory() {
       tbody.innerHTML = `
         <tr>
           <td colspan="6" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-            <i class="lc lc-info" style="margin-right: 0.3rem;"></i> 최근 기록된 스캔 작업 이력이 없습니다.
+            <i class="lc lc-info" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_empty')}
           </td>
         </tr>
       `;
@@ -111,27 +117,27 @@ export async function loadScanHistory() {
     tbody.innerHTML = data.history.map(item => {
       const isCron = item.trigger_type === 'cron';
       const triggerBadge = isCron
-        ? `<span style="display: inline-block; padding: 0.2rem 0.5rem; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 4px; font-size: 0.75rem; font-weight: 600;">크론 자동</span>`
-        : `<span style="display: inline-block; padding: 0.2rem 0.5rem; background: color-mix(in srgb, var(--app-accent) 15%, transparent); color: var(--app-accent-hover); border: 1px solid color-mix(in srgb, var(--app-accent) 30%, transparent); border-radius: 4px; font-size: 0.75rem; font-weight: 600;">수동 실행</span>`;
+        ? `<span style="display: inline-block; padding: 0.2rem 0.5rem; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${i18n.t('settings.rep_type_cron')}</span>`
+        : `<span style="display: inline-block; padding: 0.2rem 0.5rem; background: color-mix(in srgb, var(--app-accent) 15%, transparent); color: var(--app-accent-hover); border: 1px solid color-mix(in srgb, var(--app-accent) 30%, transparent); border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${i18n.t('settings.rep_type_manual')}</span>`;
 
-      let statusBadge = `<span style="color: var(--app-text-muted);">대기</span>`;
+      let statusBadge = `<span style="color: var(--app-text-muted);">${i18n.t('settings.rep_status_pending')}</span>`;
       if (item.status === 'completed') {
-        statusBadge = `<span style="color: #4ade80; font-weight: 600;"><i class="lc lc-circle-check"></i> 완료</span>`;
+        statusBadge = `<span style="color: #4ade80; font-weight: 600;"><i class="lc lc-circle-check"></i> ${i18n.t('settings.rep_status_done')}</span>`;
       } else if (item.status === 'running') {
-        statusBadge = `<span style="color: #38bdf8; font-weight: 600;"><i class="lc lc-loader-circle lc-spin"></i> 스캔중</span>`;
+        statusBadge = `<span style="color: #38bdf8; font-weight: 600;"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('settings.rep_status_running')}</span>`;
       } else if (item.status === 'failed') {
-        statusBadge = `<span style="color: #f87171; font-weight: 600;"><i class="lc lc-triangle-alert"></i> 실패</span>`;
+        statusBadge = `<span style="color: #f87171; font-weight: 600;"><i class="lc lc-triangle-alert"></i> ${i18n.t('settings.rep_status_failed')}</span>`;
       } else if (item.status === 'cancelled' || item.status === 'canceled') {
-        statusBadge = `<span style="color: #f59e0b; font-weight: 600;"><i class="lc lc-ban"></i> 취소</span>`;
+        statusBadge = `<span style="color: #f59e0b; font-weight: 600;"><i class="lc lc-ban"></i> ${i18n.t('settings.rep_status_cancelled')}</span>`;
       }
 
       const startedAt = item.started_at || item.enqueue_at || '-';
-      const finishedAt = item.finished_at || (item.status === 'running' ? '진행 중...' : '-');
+      const finishedAt = item.finished_at || (item.status === 'running' ? i18n.t('settings.rep_in_progress') : '-');
       const relativeTime = formatRelativeTime(item.finished_at || item.started_at || item.enqueue_at);
 
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); hover: background: rgba(255,255,255,0.02);">
-          <td style="padding: 0.8rem 1rem; font-weight: 600; color: var(--app-text-primary);">${item.library_name}</td>
+          <td style="padding: 0.8rem 1rem; font-weight: 600; color: var(--app-text-primary);">${formatHistoryLibraryName(item.library_name)}</td>
           <td style="padding: 0.8rem 1rem; text-align: center; color: var(--app-accent); font-weight: 600; font-size: 0.82rem;">${relativeTime}</td>
           <td style="padding: 0.8rem 1rem; text-align: center; color: var(--app-text-muted); font-family: monospace; font-size: 0.8rem;">${startedAt}</td>
           <td style="padding: 0.8rem 1rem; text-align: center; color: var(--app-text-muted); font-family: monospace; font-size: 0.8rem;">${finishedAt}</td>
@@ -178,11 +184,11 @@ export async function loadReportList() {
     const res = await api.fetchScanReports(libraryId, state.currentLibraryType || 'general');
     if (res.success && res.reports) {
       if (res.reports.length === 0) {
-        fileSelect.innerHTML = '<option value="">-- 리포트 없음 --</option>';
+        fileSelect.innerHTML = `<option value="">-- ${i18n.t('settings.rep_no_report')} --</option>`;
         tableBody.innerHTML = `
           <tr>
             <td colspan="3" style="padding: 2rem; text-align: center; color: #4ade80; font-weight: 600;">
-              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> 해당 카테고리에는 감지된 스캔 오류 내역이 없습니다. (정상)
+              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_category_clean')}
             </td>
           </tr>
         `;
@@ -192,7 +198,7 @@ export async function loadReportList() {
       res.reports.forEach(rep => {
         const option = document.createElement('option');
         option.value = rep.filename;
-        option.textContent = `${rep.timestamp} (오류: ${rep.errors_count}건)`;
+        option.textContent = `${rep.timestamp} (${i18n.t('settings.rep_error_count', { count: rep.errors_count })})`;
         fileSelect.appendChild(option);
       });
       
@@ -217,7 +223,7 @@ export async function loadReportDetail() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-text-muted);">
-          <i class="lc lc-info" style="margin-right: 0.3rem;"></i> 리포트를 선택하여 상세 오류 내역을 확인하십시오.
+          <i class="lc lc-info" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_select_report')}
         </td>
       </tr>
     `;
@@ -227,7 +233,7 @@ export async function loadReportDetail() {
   tableBody.innerHTML = `
     <tr>
       <td colspan="3" style="padding: 2rem; text-align: center; color: var(--app-accent);">
-        <i class="lc lc-loader-circle lc-spin lc-lg" style="margin-right: 0.3rem;"></i> 리포트 상세 로딩 중...
+        <i class="lc lc-loader-circle lc-spin lc-lg" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_detail_loading')}
       </td>
     </tr>
   `;
@@ -240,7 +246,7 @@ export async function loadReportDetail() {
         tableBody.innerHTML = `
           <tr>
             <td colspan="3" style="padding: 2rem; text-align: center; color: #4ade80; font-weight: 600;">
-              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> 감지된 오류 내역이 비어 있습니다.
+              <i class="lc lc-circle-check" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_detail_empty')}
             </td>
           </tr>
         `;
@@ -255,7 +261,7 @@ export async function loadReportDetail() {
       tableBody.innerHTML = `
         <tr>
           <td colspan="3" style="padding: 2rem; text-align: center; color: #ef4444; font-weight: 600;">
-            <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> 리포트 세부 데이터 구조가 올바르지 않습니다.
+            <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_detail_bad_format')}
           </td>
         </tr>
       `;
@@ -265,7 +271,7 @@ export async function loadReportDetail() {
     tableBody.innerHTML = `
       <tr>
         <td colspan="3" style="padding: 2rem; text-align: center; color: #ef4444; font-weight: 600;">
-          <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> 리포트 상세 데이터를 불러오지 못했습니다.
+          <i class="lc lc-triangle-alert" style="margin-right: 0.3rem;"></i> ${i18n.t('settings.rep_detail_load_failed')}
         </td>
       </tr>
     `;
@@ -346,7 +352,7 @@ function renderReportPage() {
     let paginationHtml = '';
     
     if (currentReportPage > 1) {
-      paginationHtml += `<button data-role="report-page" data-page="${currentReportPage - 1}" class="btn-toggle" style="padding: 0.4rem 0.8rem; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-muted); border-radius: 4px; cursor: pointer;">이전</button>`;
+      paginationHtml += `<button data-role="report-page" data-page="${currentReportPage - 1}" class="btn-toggle" style="padding: 0.4rem 0.8rem; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-muted); border-radius: 4px; cursor: pointer;">${i18n.t('common.prev')}</button>`;
     }
     
     const maxPagesToShow = 5;
@@ -365,7 +371,7 @@ function renderReportPage() {
     }
     
     if (currentReportPage < totalPages) {
-      paginationHtml += `<button data-role="report-page" data-page="${currentReportPage + 1}" class="btn-toggle" style="padding: 0.4rem 0.8rem; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-muted); border-radius: 4px; cursor: pointer;">다음</button>`;
+      paginationHtml += `<button data-role="report-page" data-page="${currentReportPage + 1}" class="btn-toggle" style="padding: 0.4rem 0.8rem; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-muted); border-radius: 4px; cursor: pointer;">${i18n.t('common.next')}</button>`;
     }
     
     paginationContainer.innerHTML = paginationHtml;

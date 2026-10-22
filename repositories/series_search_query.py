@@ -3,18 +3,30 @@ import re
 AUTHOR_PREFIX = '작가:'
 TOPIC_PREFIX = '주제:'
 COVER_ARTIST_PREFIX = '그림작가:'
-COVER_ARTIST_PREFIX_ALIASES = ('cover_artist:',)
+
+# 검색 접두어: 검색 필드 → 언어별 접두어. 화면 언어와 상관없이 전부 받는다(영어 화면에서 '작가:'를 쳐도 된다).
+# 새 언어는 해당 필드 튜플에 접두어를 추가하면 된다 - 대소문자 무시, 전각 콜론(：)도 같은 것으로 본다.
+# 화면 안내문(검색창 placeholder)은 i18n header.search_placeholder에서 언어별로 보여 준다.
+SEARCH_PREFIXES = {
+    'cover_artist': (COVER_ARTIST_PREFIX, 'cover_artist:', 'artist:', 'illustrator:', '作画:', 'イラスト:'),
+    'topic': (TOPIC_PREFIX, 'topic:', 'テーマ:'),
+    'author': (AUTHOR_PREFIX, 'author:', '著者:', '作者:'),
+}
+
+# 긴 접두어부터 맞춰 본다 - 한 접두어가 다른 접두어로 시작하더라도 더 구체적인 쪽이 이기게
+_PREFIX_TABLE = sorted(
+    ((prefix.lower(), field) for field, prefixes in SEARCH_PREFIXES.items() for prefix in prefixes),
+    key=lambda item: len(item[0]),
+    reverse=True,
+)
 
 
 def parse_series_search_query(search_query):
     query = str(search_query or '').strip()
-    for prefix in (COVER_ARTIST_PREFIX, *COVER_ARTIST_PREFIX_ALIASES):
-        if query.lower().startswith(prefix.lower()):
-            return 'cover_artist', query[len(prefix):].strip()
-    if query.startswith(TOPIC_PREFIX):
-        return 'topic', query[len(TOPIC_PREFIX):].strip()
-    if query.startswith(AUTHOR_PREFIX):
-        return 'author', query[len(AUTHOR_PREFIX):].strip()
+    folded = query.replace('：', ':').lower()
+    for prefix, field in _PREFIX_TABLE:
+        if folded.startswith(prefix):
+            return field, query[len(prefix):].strip()
     return 'title', query
 
 

@@ -618,7 +618,7 @@ if not IS_WORKER:
     def _graceful_shutdown(signum=None, frame=None):
         """SIGTERM/SIGINT 수신 시 스케줄러 및 자식 프로세스 중지, DB 풀 안전 종료"""
         sig_name = signal.Signals(signum).name if signum else 'atexit'
-        print(f"\n[Graceful-Shutdown] {sig_name} 수신, 서버 종료 프로세스 시작...")
+        print(f"\n[Graceful-Shutdown] {sig_name} received, starting server shutdown...")
         
         # ── [Redis 캐시 강제 Flush 동기화] ──
         try:
@@ -631,11 +631,11 @@ if not IS_WORKER:
         global _worker_process
         if _worker_process is not None and _worker_process.poll() is None:
             try:
-                print("[Graceful-Shutdown] 스캐너 워커 자식 프로세스 종료 중...")
+                print("[Graceful-Shutdown] Stopping scanner worker child process...")
                 _worker_process.terminate()
                 _worker_process.wait(timeout=5)
             except Exception as pe:
-                print(f"[Graceful-Shutdown] 워커 프로세스 종료 오류: {pe}")
+                print(f"[Graceful-Shutdown] Error stopping worker process: {pe}")
 
         # 실행 중인 독립 lazy_scanner 프로세스 감지 시 SIGTERM 및 안전 마감 대기
         try:
@@ -645,7 +645,7 @@ if not IS_WORKER:
                 try:
                     cmd = proc.info.get('cmdline')
                     if cmd and proc.info['pid'] != current_pid and any('lazy_scanner.py' in arg for arg in cmd):
-                        print(f"[Graceful-Shutdown] 🛑 백그라운드 레이지 스캐너 감지 (PID: {proc.info['pid']}). SIGTERM 송신 후 대기...")
+                        print(f"[Graceful-Shutdown] 🛑 Background lazy scanner found (PID: {proc.info['pid']}). Sending SIGTERM and waiting...")
                         proc.terminate()
                         proc.wait(timeout=5)
                 except Exception:
@@ -657,10 +657,10 @@ if not IS_WORKER:
             if hasattr(SchedulerService, 'stop_scheduler'):
                 SchedulerService.stop_scheduler()
         except Exception as e:
-            print(f"[Graceful-Shutdown] 스케줄러 중지 중 오류 (무시): {e}")
+            print(f"[Graceful-Shutdown] Error stopping the scheduler (ignored): {e}")
             
         shutdown_all_pools()
-        print("[Graceful-Shutdown] 종료 완료.")
+        print("[Graceful-Shutdown] Shutdown complete.")
         if signum is not None:
             raise SystemExit(0)
 

@@ -449,6 +449,13 @@ export function loadComicPage() {
     loadTrace.log('scroll-mode loading overlay shown');
 
     wrapper.innerHTML = '';
+    if (!comicTotalPages) {
+      // 페이지 수를 못 구하면 이미지가 하나도 안 만들어져 로딩 오버레이가 영영 안 닫힌다.
+      loadTrace.log('no pages - aborting scroll render');
+      hideViewerLoading();
+      showViewerError('Error', 'Failed to load image');
+      return;
+    }
     const fragment = document.createDocumentFragment();
     const imgElements = [];
     let firstLoaded = false;

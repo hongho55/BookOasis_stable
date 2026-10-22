@@ -27,7 +27,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 except Exception as env_error:
-    print(f"[경고] .env 로드 실패: {env_error}", file=sys.stderr)
+    print(f"[WARN] Failed to load .env: {env_error}", file=sys.stderr)
 
 import database
 from repositories.reading_progress_repository import ReadingProgressRepository
@@ -72,77 +72,77 @@ def scalar(db_type, sql):
 def redis_report(db_type, user_id, limit, hide):
     client = get_redis_client()
     if client is None:
-        return 'Redis 미사용 (요청마다 DB 조회)'
+        return 'Redis not used (DB query on every request)'
     key = make_key(f"cache:history:v8:{db_type}:{user_id}:{limit}:{int(hide)}")
     try:
         ttl = client.ttl(key)
     except Exception as error:
-        return f'Redis 조회 실패: {error}'
+        return f'Redis lookup failed: {error}'
     if ttl is None or ttl < 0:
-        return 'Redis 연결됨, 이 사용자의 히스토리 캐시는 현재 없음(다음 홈 진입은 DB 조회)'
-    return f'Redis 캐시 있음 (남은 수명 {ttl}초, 그동안 홈 진입은 캐시 응답)'
+        return 'Redis connected; no history cache for this user right now (next home visit queries the DB)'
+    return f'Redis cache present ({ttl}s left; home visits get the cached response until then)'
 
 
 def main():
-    parser = argparse.ArgumentParser(description='홈 진입 요청(히스토리/신규/합계) 응답 시간 진단 (읽기 전용)')
+    parser = argparse.ArgumentParser(description='Diagnoses response times of home requests (history/new/total), read-only')
     parser.add_argument('--db-type', default='general', choices=['general', 'adult', 'audiobook', 'video'])
-    parser.add_argument('--user-id', type=int, default=None, help='생략하면 진행 기록이 많은 사용자 상위 3명')
-    parser.add_argument('--repeat', type=int, default=3, help='측정 반복 횟수 (첫 실행과 이후 중앙값을 따로 보고)')
+    parser.add_argument('--user-id', type=int, default=None, help='If omitted, the top 3 users with the most reading progress')
+    parser.add_argument('--repeat', type=int, default=3, help='Number of repeats (first run and the median afterwards are reported separately)')
     args = parser.parse_args()
     db_type, repeat = args.db_type, max(2, args.repeat)
 
     engine = 'MariaDB' if database.is_mariadb_mode() else 'SQLite'
-    print(f"엔진: {engine} | db_type: {db_type} | 반복: {repeat}회")
+    print(f"Engine: {engine} | db_type: {db_type} | repeats: {repeat}")
 
     books_table = {'audiobook': 'audiobooks', 'video': 'videos'}.get(db_type, 'books')
-    print(f"{books_table} 행 수: {scalar(db_type, f'SELECT COUNT(*) FROM {books_table}'):,}")
+    print(f"{books_table} rows: {scalar(db_type, f'SELECT COUNT(*) FROM {books_table}'):,}")
 
     users = [(args.user_id, None)] if args.user_id is not None else top_users(db_type, 3)
     if not users:
-        print('진행 기록이 있는 사용자가 없어 히스토리 측정을 건너뜁니다.')
+        print('No user has reading progress; skipping the history measurement.')
         users = [(1, 0)]
 
     limit_setting = ReadingProgressRepository.get_settings_value(db_type, 'RECENT_BOOKS_LIMIT')
     limit = max(1, min(int(limit_setting), 100)) if limit_setting and str(limit_setting).isdigit() else 30
     hide_default = ReadingProgressRepository.get_settings_value(db_type, 'HIDE_COMPLETED_IN_HISTORY') == '1'
-    print(f"히스토리 표시 개수 설정: {limit}, 완독 숨김 설정: {'켬' if hide_default else '끔'}")
+    print(f"History display limit: {limit}, hide finished: {'on' if hide_default else 'off'}")
     print('-' * 78)
 
     worst_history = 0.0
     for user_id, progress_rows in users:
-        label = f"사용자 {user_id}" + (f" (진행 기록 {progress_rows:,}건)" if progress_rows is not None else '')
+        label = f"User {user_id}" + (f" ({progress_rows:,} progress rows)" if progress_rows is not None else '')
         print(label)
         for hide in (False, True):
             first, median, rows = timed(
                 lambda: ReadingProgressRepository.fetch_reading_history(db_type, user_id, limit, hide), repeat
             )
             worst_history = max(worst_history, first)
-            print(f"  히스토리 DB 조회 [완독 숨김 {'켬' if hide else '끔'}]: 첫 실행 {first:8.1f} ms | 이후 중앙값 {median:8.1f} ms | {len(rows)}행")
+            print(f"  History DB query [hide finished {'on' if hide else 'off'}]: first run {first:8.1f} ms | median after {median:8.1f} ms | {len(rows)} rows")
         print(f"  {redis_report(db_type, user_id, limit, hide_default)}")
 
     sample_user = users[0][0]
     first, median, rows = timed(
         lambda: ReadingProgressRepository.fetch_recently_added_all(db_type, sample_user), repeat
     )
-    print(f"신규 추가 DB 조회: 첫 실행 {first:8.1f} ms | 이후 중앙값 {median:8.1f} ms | {len(rows)}행")
+    print(f"New additions DB query: first run {first:8.1f} ms | median after {median:8.1f} ms | {len(rows)} rows")
     worst_new = first
 
     first, median, _ = timed(
         lambda: SeriesRepository.fetch_grouping_totals(db_type, 'all', user_id=sample_user, role='admin'), repeat
     )
-    print(f"전체 합계 DB 조회: 첫 실행 {first:8.1f} ms | 이후 중앙값 {median:8.1f} ms")
+    print(f"Total count DB query: first run {first:8.1f} ms | median after {median:8.1f} ms")
     worst_totals = first
 
     print('-' * 78)
     # 브라우저는 세 요청을 병렬로 보내므로 홈이 채워지는 시간은 가장 느린 요청이 정한다.
     slowest = max(worst_history, worst_new, worst_totals)
-    print(f"캐시가 모두 비었을 때 홈 진입 대기 시간 ≈ 가장 느린 요청 {slowest:.0f} ms")
+    print(f"Home wait time with all caches empty ≈ slowest request {slowest:.0f} ms")
     if slowest < 300:
-        print('판정: 캐시 없이도 빠릅니다. 클라이언트 캐시 없이 재진입해도 체감 지연이 없을 것으로 보입니다.')
+        print('Verdict: fast even without cache. Re-entering without a client cache should not feel slow.')
     elif slowest < 1500:
-        print('판정: 캐시가 비었을 때 다소 느립니다. Redis 캐시가 유지되는지(위 Redis 항목)와 함께 보세요.')
+        print('Verdict: somewhat slow with empty caches. Also check that the Redis cache is kept (Redis item above).')
     else:
-        print('판정: 캐시가 비었을 때 느립니다. 가장 느린 항목의 쿼리를 확인해야 합니다.')
+        print('Verdict: slow with empty caches. Check the query of the slowest item.')
 
 
 if __name__ == '__main__':

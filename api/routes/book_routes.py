@@ -339,7 +339,7 @@ def download_book(book_id):
         )
     except Exception as e:
         import traceback
-        print(f"[Download API] 오류:\n{traceback.format_exc()}")
+        print(f"[Download API] Error:\n{traceback.format_exc()}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @book_routes_bp.route('/api/media/unlock-metadata', methods=['POST'])

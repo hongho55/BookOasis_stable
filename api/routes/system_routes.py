@@ -112,7 +112,9 @@ def health():
 def index():
     settings = {}
     view_log_enabled = os.environ.get('VIEW_LOG', 'false').lower() == 'true'
-    develop_mode = os.environ.get('DEVELOP', 'false').lower() == 'true'
+    # 템플릿 변수명은 그대로 두되, 실제로는 구글 드라이브 링크 기능(클로즈 베타) 노출 여부다.
+    from utils.drive_helper import gdrive_link_beta_enabled
+    develop_mode = gdrive_link_beta_enabled()
 
     # 홈 대시보드 "플러그인 배치 모드"가 켜진 사용자는, 코어 3섹션이 기본 배치로 먼저
     # 그려졌다가 JS가 뒤늦게 재배치/카드 삽입을 하면서 눈에 띄는 리플로우가 생겼었다.
@@ -125,7 +127,7 @@ def index():
         from services.home_dashboard_service import HomeDashboardService
         home_layout = HomeDashboardService.get_layout(session.get('user_id'), 'general', role=session.get('role'))
     except Exception as e:
-        print(f"[Index] 홈 대시보드 초기 레이아웃 계산 실패, 클래식 레이아웃으로 폴백: {e}")
+        print(f"[Index] Failed to compute the initial home dashboard layout, falling back to the classic layout: {e}")
         home_layout = {'mode': 'classic', 'widgets': [], 'catalog': []}
 
     return render_template(

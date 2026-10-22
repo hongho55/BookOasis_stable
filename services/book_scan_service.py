@@ -70,7 +70,7 @@ class BookScanService:
                 book = BookScanRepository.get_book_basic_info_raw(db_type, book_id)
                 before[book_id] = _cover_snapshot(covers_dir, book.get('cover_image') if book else None)
             except Exception as lookup_error:
-                print(f"[BookScanService WARNING] 문서 표지 사전 조회 실패 (book_id={book_id}): {lookup_error}")
+                print(f"[BookScanService WARNING] Failed to pre-check document cover (book_id={book_id}): {lookup_error}")
                 before[book_id] = (None, None)
 
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -84,7 +84,7 @@ class BookScanService:
         if task_id is not None:
             command.extend(['--task-id', str(int(task_id))])
 
-        print(f"[BookScanService] 문서 표지 격리 스캔 시작: IDs={ids}, DB={db_type}")
+        print(f"[BookScanService] Starting isolated document cover scan: IDs={ids}, DB={db_type}")
         returncode = None
         timed_out = False
         try:
@@ -99,7 +99,7 @@ class BookScanService:
             returncode = result.returncode
         except subprocess.TimeoutExpired:
             timed_out = True
-            print(f"[BookScanService ERROR] 문서 표지 격리 스캔이 제한 시간을 넘겨 종료했습니다: IDs={ids}")
+            print(f"[BookScanService ERROR] Isolated document cover scan exceeded the time limit and was stopped: IDs={ids}")
         except Exception as error:
             message = f'PDF 격리 스캐너 실행 실패: {error}'
             print(f"[BookScanService ERROR] {message}")
@@ -124,18 +124,18 @@ class BookScanService:
                              'summary': '', 'release_date': ''},
                         )
                     except Exception as sync_error:
-                        print(f"[BookScanService WARNING] 시리즈 표지 동기화 실패 (book_id={book_id}): {sync_error}")
+                        print(f"[BookScanService WARNING] Failed to sync series cover (book_id={book_id}): {sync_error}")
                 else:
                     outcomes[book_id] = None
             except Exception as check_error:
-                print(f"[BookScanService WARNING] 문서 표지 결과 확인 실패 (book_id={book_id}): {check_error}")
+                print(f"[BookScanService WARNING] Failed to check document cover result (book_id={book_id}): {check_error}")
                 outcomes[book_id] = None
 
         try:
             redis_delete_pattern(f"cache:recent_added*:{db_type}:*")
             redis_delete_pattern(f"cache:history*:{db_type}:*")
         except Exception as cache_error:
-            print(f"[BookScanService WARNING] 레디스 캐시 소거 실패: {cache_error}")
+            print(f"[BookScanService WARNING] Failed to clear Redis cache: {cache_error}")
 
         successful_count = sum(1 for cover in outcomes.values() if cover)
         message = f'PDF 표지 스캔 완료 · 표지 추출 {successful_count}/{len(ids)}권'
@@ -165,7 +165,7 @@ class BookScanService:
     @staticmethod
     def scan_single_book(db_type, book_id):
         """지정된 단일 도서(book_id)의 메타데이터와 표지 이미지를 즉시 재스캔하여 동기화합니다."""
-        print(f"[BookScanService] 단일 도서 스캔 요청 시작: DB={db_type}, ID={book_id}")
+        print(f"[BookScanService] Single book scan requested: DB={db_type}, ID={book_id}")
         if db_type == 'audiobook':
             return BookScanService.scan_single_audiobook(book_id)
         # 방금 폴더에 넣은 cover.jpg 등을 이번 즉시 스캔이 바로 보도록 폴더 표지 조회 캐시를 비운다.
@@ -175,14 +175,14 @@ class BookScanService:
             # 1. 도서 기본 정보 조회
             book = BookScanRepository.get_book_basic_info_raw(db_type, book_id)
             if not book:
-                print(f"[BookScanService ERROR] DB에서 book_id={book_id}를 찾을 수 없습니다.")
+                print(f"[BookScanService ERROR] book_id={book_id} not found in DB.")
                 return False, "존재하지 않는 도서입니다.", None
                 
             file_path = book['file_path']
             library_id = book['library_id']
             series_name = book['series_name']
             file_format = book['file_format']
-            print(f"[BookScanService] 대상 도서 매칭 성공: Title='{book['title']}', Path='{file_path}'")
+            print(f"[BookScanService] Matched target book: Title='{book['title']}', Path='{file_path}'")
             
             # gdrive:// 가상 경로(마운트가 아닌 순수 등록 링크)는 os.path.exists로 확인할 수 없으므로,
             # 실제 바이트를 로컬 디스크 캐시로 받아온 뒤 그 로컬 경로를 이후 처리에 그대로 사용한다.
@@ -196,7 +196,7 @@ class BookScanService:
                 from utils.drive_helper import resolve_gdrive_local_path
                 resolved = resolve_gdrive_local_path(file_path)
                 if resolved == file_path:
-                    print(f"[BookScanService ERROR] gdrive 원격 파일 다운로드 실패: {file_path}")
+                    print(f"[BookScanService ERROR] Failed to download remote gdrive file: {file_path}")
                     return False, "원격(Google Drive) 파일을 받아오지 못했습니다.", None
                 file_path = resolved
             else:
@@ -204,7 +204,7 @@ class BookScanService:
                 check_path = os.path.dirname(file_path) if is_imgdir else file_path
 
                 if not os.path.exists(check_path):
-                    print(f"[BookScanService ERROR] 물리 파일/디렉토리가 경로에 존재하지 않음: {check_path}")
+                    print(f"[BookScanService ERROR] File/folder does not exist at path: {check_path}")
                     return False, f"서버에 물리 파일/디렉토리가 존재하지 않습니다: {check_path}", None
 
             # PDF는 파서가 세그폴트/OOM을 일으킬 수 있어 API/큐 워커 안에서 직접 열지 않고, 격리된
@@ -216,35 +216,35 @@ class BookScanService:
 
             # 부모 폴더 경로
             parent_dir = os.path.dirname(file_path)
-            print(f"[BookScanService] 부모 폴더 디렉토리 수색: '{parent_dir}'")
+            print(f"[BookScanService] Searching parent folder: '{parent_dir}'")
             
             # 2. 로컬 메타데이터 파일 탐색
             merged_meta = merge_local_metadata(parent_dir)
             # cover_b64_map은 파일별 Base64 커버 원본을 통째로 담고 있어 그대로 출력하면
             # 로그 파일 용량을 불필요하게 낭비하므로, 개수만 요약해서 남긴다.
             meta_summary = {k: (f"<{len(v)} items>" if k == 'cover_b64_map' else v) for k, v in merged_meta.items()}
-            print(f"[BookScanService] 파싱된 로컬 메타데이터: {meta_summary}")
+            print(f"[BookScanService] Parsed local metadata: {meta_summary}")
             
             # 3. 커버 이미지 결정 (Force 재추출 강제 지정)
             cover_image = None
             filename = os.path.basename(file_path)
             if filename in merged_meta['cover_b64_map']:
-                print(f"[BookScanService] YAML cover_b64_map 매칭 발견, Base64 추출 진행")
+                print(f"[BookScanService] Found a YAML cover_b64_map match, extracting Base64")
                 cover_image = extract_cover_from_b64(filename, merged_meta['cover_b64_map'][filename], force=True, library_id=library_id)
             if not cover_image:
-                print(f"[BookScanService] get_series_cover_fallback 실행 시도 (Force=True)")
+                print(f"[BookScanService] Trying get_series_cover_fallback (Force=True)")
                 cover_image = get_series_cover_fallback(series_name, parent_dir, force=True, filename=filename, library_id=library_id)
                 
-            print(f"[BookScanService] 최종 매핑된 커버 이미지명: {cover_image}")
+            print(f"[BookScanService] Final mapped cover image name: {cover_image}")
             
             # 4. 오프셋 재수집 (ZIP/CBZ인 경우)
             offsets_data = []
             if file_format in ('zip', 'cbz'):
-                print(f"[BookScanService] ZIP/CBZ 포맷 오프셋 재생성 진행...")
+                print(f"[BookScanService] Regenerating ZIP/CBZ offsets...")
                 offsets_data = collect_zip_offsets_data(file_path)
                 
             # 5. DB 업데이트 실행
-            print(f"[BookScanService] DB 업데이트 트랜잭션 쿼리 빌드")
+            print(f"[BookScanService] Building DB update transaction query")
             
             # 시리즈명은 (gdrive 로컬 캐시 경로가 아니라) 원본 가상/실제 경로의 폴더 구조에서 유도한다.
             series_parent_dir = os.path.dirname(original_file_path)
@@ -278,13 +278,13 @@ class BookScanService:
                         db_type, book_id, embedded_metadata
                     )
                     if embedded_filled:
-                        print(f"[BookScanService] 파일 내장 메타데이터로 빈 칸 채움: {', '.join(embedded_filled)}")
+                        print(f"[BookScanService] Filled empty fields from embedded file metadata: {', '.join(embedded_filled)}")
             except Exception as embedded_error:
-                print(f"[BookScanService WARNING] 파일 내장 메타데이터 반영 실패(무시): {embedded_error}")
+                print(f"[BookScanService WARNING] Failed to apply embedded file metadata (ignored): {embedded_error}")
             
             if offsets_data:
                 count = BookScanRepository.sync_book_offsets_transaction(db_type, book_id, offsets_data)
-                print(f"[BookScanService] 오프셋 DB 데이터 {count}건 동기화 처리")
+                print(f"[BookScanService] Synced {count} offset rows to DB")
 
             # 대시보드 "신규 추가 도서"/최근기록 레디스 캐시가 갱신 전(빈 커버) 상태로
             # 굳어버리지 않도록, DB 반영 직후 관련 캐시를 함께 소거한다.
@@ -292,12 +292,12 @@ class BookScanService:
                 redis_delete_pattern(f"cache:recent_added*:{db_type}:*")
                 redis_delete_pattern(f"cache:history*:{db_type}:*")
             except Exception as cache_err:
-                print(f"[BookScanService WARNING] 레디스 캐시 소거 실패: {cache_err}")
+                print(f"[BookScanService WARNING] Failed to clear Redis cache: {cache_err}")
 
-            print(f"[BookScanService SUCCESS] '{filename}' 단독 재스캔 처리 최종 완료.")
+            print(f"[BookScanService SUCCESS] Single rescan of '{filename}' complete.")
             filled_note = f" (파일 내장 메타 {len(embedded_filled)}개 채움)" if embedded_filled else ""
             return True, f"'{filename}' 도서 스캔 및 메타데이터 동기화 완료!{filled_note}", cover_image
             
         except Exception as e:
-            print(f"[BookScanService ERROR] 처리 중 예외 발생: {str(e)}")
+            print(f"[BookScanService ERROR] Exception during processing: {str(e)}")
             return False, f"도서 스캔 실패: {str(e)}", None

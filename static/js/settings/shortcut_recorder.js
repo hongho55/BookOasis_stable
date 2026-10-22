@@ -25,8 +25,8 @@ export function initShortcutRecorderEvents() {
   btnRecord.addEventListener('click', () => {
     if (isRecordingShortcut) return;
     isRecordingShortcut = true;
-    btnRecord.innerText = '입력 대기...';
-    displayEl.value = '원하는 단축키 조합을 누르세요...';
+    btnRecord.innerText = i18n.t('settings.keys_waiting_input');
+    displayEl.value = i18n.t('settings.keys_press_combo');
 
     const onKeyDown = (e) => {
       e.preventDefault();
@@ -65,7 +65,7 @@ export function initShortcutRecorderEvents() {
 
         // 대기 종료
         isRecordingShortcut = false;
-        btnRecord.innerText = '기록 시작';
+        btnRecord.innerText = i18n.t('settings.keys_record_start');
         window.removeEventListener('keydown', onKeyDown, true);
       }
     };

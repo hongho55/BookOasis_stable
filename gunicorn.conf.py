@@ -33,7 +33,7 @@ def worker_exit(server, worker):
     try:
         atexit._run_exitfuncs()
     except Exception as e:
-        print(f"[Gunicorn] worker_exit 정리 중 오류 (무시): {e}", file=sys.stderr)
+        print(f"[Gunicorn] Error during worker_exit cleanup (ignored): {e}", file=sys.stderr)
 
     for stream in (sys.stdout, sys.stderr):
         try:

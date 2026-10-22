@@ -195,6 +195,6 @@ def read_embedded_metadata(file_path, file_format=None):
         else:
             return {}
     except Exception as error:
-        print(f"[EmbeddedMetadata] 내장 메타데이터 읽기 실패(무시): {os.path.basename(str(file_path))}: {error}")
+        print(f"[EmbeddedMetadata] Failed to read embedded metadata (ignored): {os.path.basename(str(file_path))}: {error}")
         return {}
     return {field: str(raw[field]).strip() for field in fields if raw.get(field) and str(raw[field]).strip()}

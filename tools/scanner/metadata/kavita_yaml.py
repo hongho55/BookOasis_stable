@@ -308,7 +308,7 @@ def parse_kavita_yaml(folder_path, files=None, is_remote=False):
             if realigned:
                 data = yaml.load(realigned_content, Loader=SafeLoader) or {}
                 parsed_ok = True
-                print(f"[Scanner] YAML 시퀀스 형제 키 들여쓰기 보정으로 파싱 복구 성공: {folder_path}")
+                print(f"[Scanner] Recovered YAML parsing by fixing sibling-key indentation in a sequence: {folder_path}")
         except Exception:
             pass
 

@@ -87,6 +87,8 @@ export function computeBookMenuState(target, env = {}) {
   items['ctx-cover-align-book'] = {
     visible: !!target?.isVolumeDetail || (!isMulti && targetBookCount <= 1) || multiAllSingleBooks,
     labelText: multiAllSingleBooks ? `선택한 ${count}개 커버 정렬 (이중 스캔본용)` : '커버 정렬 (이중 스캔본용)',
+    labelKey: multiAllSingleBooks ? 'context_menu.cover_align_multi' : 'context_menu.cover_align',
+    labelVars: { count },
   };
 
   // 다중 선택이거나 영상 강좌(완독 처리 인프라 없음)일 때는 항상 "읽지 않음" 액션만 노출.
@@ -101,7 +103,8 @@ export function computeBookMenuState(target, env = {}) {
   } else {
     items['ctx-unread-book'] = isMulti
       ? { action: 'mark-unread', iconClass: 'lc lc-eye-off', iconColor: '#ef4444',
-          labelText: `선택한 ${count}개 작품을 읽지 않은 상태로 변경 (0%)` }
+          labelText: `선택한 ${count}개 작품을 읽지 않은 상태로 변경 (0%)`,
+          labelKey: 'context_menu.mark_multi_as_unread', labelVars: { count } }
       : { action: 'mark-unread', iconClass: 'lc lc-eye-off', iconColor: '#ef4444',
           labelKey: isSeries ? 'context_menu.mark_series_as_unread' : 'context_menu.mark_as_unread',
           labelFallback: isSeries ? '이 시리즈 전체를 읽지 않은 상태로 변경 (0%)' : '읽지 않은 상태로 변경 (0%)' };
@@ -112,5 +115,11 @@ export function computeBookMenuState(target, env = {}) {
     visible: env.metaSearchAvailable == null ? undefined : !!env.metaSearchAvailable,
   };
 
-  return { title: isMulti ? `도서 메뉴 (${count}개 선택)` : '도서 메뉴', items };
+  // title(한국어)은 테스트·대체문용, 화면은 titleKey/titleVars로 번역한다(book_context_menu.js)
+  return {
+    title: isMulti ? `도서 메뉴 (${count}개 선택)` : '도서 메뉴',
+    titleKey: isMulti ? 'context_menu.book_menu_multi' : 'context_menu.book_menu',
+    titleVars: { count },
+    items,
+  };
 }

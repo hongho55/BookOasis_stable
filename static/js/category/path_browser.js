@@ -86,64 +86,6 @@ export async function loadGdriveCopyRemotes(selectedRemote = '') {
   }
 }
 
-/**
- * 서버의 OS 마운트 테이블(/proc/mounts, 우선) 또는 rclone RC의 mount/listmounts(폴백)로
- * 이 리모트가 실제로 마운트된 로컬 루트를 자동 감지해 "이 리모트의 로컬 마운트 루트"
- * 입력칸을 채운다. 관리자가 이미 아는 정보(서버가 스스로 알아낼 수 있는 정보)를 다시
- * 타이핑하지 않게 하려는 목적 — 실패하면 조용히 넘어가거나(silent=true, 자동 트리거 시)
- * 토스트로 알려준다(silent=false, 버튼 클릭 시).
- */
-export function detectGdriveMountRoot(silent = false) {
-  const mirrorInput = document.getElementById('library-form-gdrive-view-mirror-path');
-  const rcloneUrlInput = document.getElementById('library-form-rclone-url');
-  const remoteInput = document.getElementById('library-form-gdrive-copy-remote');
-  if (!mirrorInput) return Promise.resolve(false);
-
-  if (!remoteInput || !remoteInput.value) {
-    if (!silent && typeof window.showToast === 'function') {
-      window.showToast('먼저 연결할 리모트를 선택해 주세요.', 'warning');
-    }
-    return Promise.resolve(false);
-  }
-
-  // 카테고리 모달의 물리 경로는 공유 소스 링크라 매칭 기준으로 쓸 수 없다 — remote_name만
-  // 으로 /proc/mounts를 조회하므로 물리 경로 없이도 감지가 가능하다.
-  if (!silent && typeof window.showToast === 'function') {
-    window.showToast('마운트 루트 감지 중...', 'info');
-  }
-
-  return fetch('/api/gdrive-copy/detect-mount-root', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: state.currentLibraryType,
-      rclone_rc_url: rcloneUrlInput ? rcloneUrlInput.value : '',
-      remote: remoteInput ? remoteInput.value : '',
-    }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && data.mount_root) {
-        mirrorInput.value = data.mount_root;
-        mirrorInput.dispatchEvent(new Event('input', { bubbles: true }));
-        if (!silent && typeof window.showToast === 'function') {
-          window.showToast(`✅ 마운트 루트 감지됨: ${data.mount_root}`, 'success');
-        }
-        return true;
-      }
-      if (!silent && typeof window.showToast === 'function') {
-        window.showToast(`❌ ${data.error || '자동 감지 실패 — 직접 입력해 주세요.'}`, 'error');
-      }
-      return false;
-    })
-    .catch(err => {
-      if (!silent && typeof window.showToast === 'function') {
-        window.showToast(`❌ 네트워크 오류: ${err.message}`, 'error');
-      }
-      return false;
-    });
-}
-
 export function validateGdriveCopyTarget() {
   const remoteEl = document.getElementById('library-form-gdrive-copy-remote');
   const destPathEl = document.getElementById('library-form-gdrive-copy-dest-path');
@@ -215,7 +157,7 @@ export async function refreshPathBrowser() {
   if (inputEl) {
     const candidatePath = inputEl.value.trim();
     if (candidatePath.length > MAX_PATH_BROWSER_INPUT_LENGTH) {
-      alert(`경로 입력은 최대 ${MAX_PATH_BROWSER_INPUT_LENGTH}자까지 허용됩니다.`);
+      alert(i18n.t('category.path_text_max', { n: MAX_PATH_BROWSER_INPUT_LENGTH }));
       return;
     }
     pathBrowserCurrentPath = candidatePath || pathBrowserCurrentPath;
@@ -232,7 +174,7 @@ export async function loadPathBrowserItems() {
   
   // UI 업데이트
   if (inputEl) inputEl.value = pathBrowserCurrentPath;
-  listEl.innerHTML = '<div style="text-align: center; color: var(--app-text-muted); padding: 2rem;">로딩 중...</div>';
+  listEl.innerHTML = `<div style="text-align: center; color: var(--app-text-muted); padding: 2rem;">${i18n.t('common.loading')}</div>`;
   
   try {
     const params = new URLSearchParams();
@@ -242,7 +184,7 @@ export async function loadPathBrowserItems() {
     const data = await response.json();
     
     if (!data.success) {
-      listEl.innerHTML = `<div style="color: #ef4444; padding: 1rem;">오류: ${data.error || '알 수 없는 오류'}</div>`;
+      listEl.innerHTML = `<div style="color: #ef4444; padding: 1rem;">${i18n.t('settings.trash_error', { error: data.error || i18n.t('settings.gen_unknown_error') })}</div>`;
       return;
     }
     
@@ -251,7 +193,7 @@ export async function loadPathBrowserItems() {
     if (inputEl) inputEl.value = pathBrowserCurrentPath;
     
     if (items.length === 0) {
-      listEl.innerHTML = '<div style="color: var(--app-text-muted); padding: 1rem; text-align: center;">하위 디렉토리가 없습니다.</div>';
+      listEl.innerHTML = `<div style="color: var(--app-text-muted); padding: 1rem; text-align: center;">${i18n.t('category.no_subdirs')}</div>`;
       return;
     }
     
@@ -285,7 +227,7 @@ export async function loadPathBrowserItems() {
     
   } catch (error) {
     console.error('[PathBrowser] 경로 탐색 오류:', error);
-    listEl.innerHTML = `<div style="color: #ef4444; padding: 1rem;">오류: ${error.message || '경로를 불러올 수 없습니다.'}</div>`;
+    listEl.innerHTML = `<div style="color: #ef4444; padding: 1rem;">${i18n.t('settings.trash_error', { error: error.message || i18n.t('category.path_load_failed') })}</div>`;
   }
 }
 
@@ -294,7 +236,7 @@ export function selectPathFromBrowser() {
   if (!pathEl) return;
   
   if (!pathBrowserCurrentPath) {
-    alert('경로를 선택하세요.');
+    alert(i18n.t('category.select_path'));
     return;
   }
   
@@ -308,16 +250,16 @@ export function selectPathFromBrowser() {
   }
 
   if (newPaths.length > MAX_LIBRARY_PATHS) {
-    alert(`경로는 최대 ${MAX_LIBRARY_PATHS}개까지 입력할 수 있습니다.`);
+    alert(i18n.t('category.paths_max', { n: MAX_LIBRARY_PATHS }));
     return;
   }
   if (newPaths.some(p => p.length > MAX_LIBRARY_PATH_LINE_LENGTH)) {
-    alert(`각 경로는 최대 ${MAX_LIBRARY_PATH_LINE_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('category.path_line_max', { n: MAX_LIBRARY_PATH_LINE_LENGTH }));
     return;
   }
   const joined = newPaths.join('\n');
   if (joined.length > MAX_LIBRARY_PATH_TEXT_LENGTH) {
-    alert(`경로 입력 길이는 최대 ${MAX_LIBRARY_PATH_TEXT_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('category.path_text_max', { n: MAX_LIBRARY_PATH_TEXT_LENGTH }));
     return;
   }
   

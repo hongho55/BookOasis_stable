@@ -125,7 +125,7 @@ def main() -> int:
     lucide_names = sorted({v for v in fa_map.values() if v} | set(table.get('extra', [])))
     missing = [n for n in lucide_names if n not in codepoints]
     if missing:
-        print(f'[lucide] Lucide {LUCIDE_VERSION}에 없는 이름: {missing}', file=sys.stderr)
+        print(f'[lucide] Names not in Lucide {LUCIDE_VERSION}: {missing}', file=sys.stderr)
         return 1
 
     os.makedirs(OUT_DIR, exist_ok=True)

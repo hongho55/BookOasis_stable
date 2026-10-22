@@ -378,16 +378,16 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
     wait_count = 0
     while is_db_tuning(db_type):
         print(f"[Scanner-Trigger] ⚠️ DB Tuning ({db_type}) in progress. Waiting 3 seconds... (elapsed: {wait_count * 3}s)")
-        write_scan_log("⚠️ 데이터베이스 최적화(튜닝) 작업이 진행 중입니다. 완료 시까지 일시 대기합니다.")
+        write_scan_log("⚠️ A database optimization (tuning) job is running. Waiting until it finishes.")
         time.sleep(10.0)
         wait_count += 1
         if wait_count > 40:  # 최대 2분 대기
             print(f"[Scanner-Trigger WARNING] DB Tuning wait timeout. Proceeding with scan anyway.")
-            write_scan_log("⚠️ 튜닝 대기 시간을 초과하여 스캔을 강제 진행합니다.")
+            write_scan_log("⚠️ Tuning wait timed out; starting the scan anyway.")
             break
 
     print(f"[Scanner-Trigger] 🚀 Immediate scan started: DB={db_type}, ID={library_id}, Path={physical_path}, Force={force}")
-    write_scan_log(f"스캔 기동 시작 - DB={db_type}, LibraryID={library_id}, Path='{physical_path}', Force={force}")
+    write_scan_log(f"Scan starting - DB={db_type}, LibraryID={library_id}, Path='{physical_path}', Force={force}")
 
     # VFS 갱신 단계도 사용자 관점에서는 스캔 진행 중이므로 즉시 scanning 상태로 전환
     try:
@@ -424,7 +424,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
             f"target_paths={target_paths}"
         )
         write_scan_log(
-            f"VFS 판단: remote_flag={library_is_remote}, flag_enabled={vfs_flag_enabled}, has_remote_paths={has_remote_paths}, has_rclone_vfs_paths={has_rclone_vfs_paths}, "
+            f"VFS decision: remote_flag={library_is_remote}, flag_enabled={vfs_flag_enabled}, has_remote_paths={has_remote_paths}, has_rclone_vfs_paths={has_rclone_vfs_paths}, "
             f"effective_refresh={should_vfs_refresh}, target_paths={target_paths}"
         )
         
@@ -432,10 +432,10 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
             vfs_refreshed_in_wrapper = True
             if has_rclone_vfs_paths and not (row_chk and row_chk['vfs_refresh_before_scan'] == 1):
                 print(f"[Scanner-Trigger] ⚠️ Remote paths detected while VFS flag is disabled. Forcing VFS refresh for data integrity.")
-                write_scan_log("⚠️ 원격 경로 감지됨. VFS 새로고침을 강제 실행합니다 (데이터 무결성 보장).")
+                write_scan_log("⚠️ Remote path detected. Forcing a VFS refresh (for data integrity).")
             else:
                 print(f"[Scanner-Trigger] VFS pre-refresh active. Attempting rclone cache update.")
-                write_scan_log("VFS 사전 새로고침 시도 (rclone API)")
+                write_scan_log("Trying VFS pre-refresh (rclone API)")
             
             import urllib.request
             import urllib.parse
@@ -468,7 +468,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
             if not rc_urls:
                 if initial_add_scan:
                     print(f"[Scanner-Trigger] Initial add scan has no configured RC URL. Skipping VFS refresh for library {library_id}.")
-                    write_scan_log("초기 자동 스캔: 설정된 Rclone RC 주소가 없어 VFS 사전 새로고침을 건너뜁니다.")
+                    write_scan_log("Initial automatic scan: no Rclone RC URL is set, skipping the VFS pre-refresh.")
                     vfs_refreshed_in_wrapper = False
                 else:
                     rc_urls = ["http://localhost:5572", "http://host.docker.internal:5572"]
@@ -483,7 +483,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                 remote_paths = list(dict.fromkeys([p for p in target_paths if is_rclone_vfs_path(p)]))
                 if not remote_paths:
                     print("[Scanner-Trigger] VFS refresh skipped: no rclone VFS paths resolved by detector. (likely SMB/NFS or forced setting only)")
-                    write_scan_log("VFS 새로고침 건너뜀: rclone VFS 경로로 판별된 대상이 없습니다. (SMB/NFS 또는 설정 강제 실행 케이스 가능)")
+                    write_scan_log("VFS refresh skipped: no targets were identified as rclone VFS paths. (May be SMB/NFS or a forced-refresh setting)")
                 
                 for r_path in remote_paths:
                     if not rc_urls:
@@ -495,7 +495,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                         scan_status = SchedulerRepository.get_library_scan_status(db_type, library_id)
                         if scan_status == 'cancelling':
                             print(f"[Scanner-Trigger] Scan cancellation detected during VFS refresh loop. Aborting VFS updates.")
-                            write_scan_log("스캔 취소 감지됨. VFS 갱신을 중단합니다.")
+                            write_scan_log("Scan cancel detected. Stopping the VFS refresh.")
                             break
                     except Exception as e_status:
                         print(f"[Scanner-Trigger WARNING] Failed to check status: {e_status}")
@@ -506,7 +506,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                     refreshed = False
                     for rel_idx, rel_path in enumerate(rel_paths, start=1):
                         print(f"[Scanner-Trigger] VFS refresh candidate path attempt: '{rel_path}' ({rel_idx}/{len(rel_paths)})")
-                        write_scan_log(f"VFS 갱신 후보 경로 시도: {rel_path} ({rel_idx}/{len(rel_paths)})")
+                        write_scan_log(f"Trying VFS refresh candidate path: {rel_path} ({rel_idx}/{len(rel_paths)})")
                         for rc_url in rc_urls:
                             try:
                                 parsed = urllib.parse.urlparse(rc_url)
@@ -539,8 +539,8 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                                             if ok:
                                                 print(f"[Scanner-Trigger] VFS update result (server={clean_rc_url}, path={rel_path}): {res_text}")
                                                 print(f"[Scanner-Trigger] VFS refresh candidate selected: '{rel_path}' ({rel_idx}/{len(rel_paths)})")
-                                                write_scan_log(f"VFS 갱신 완료 (server={clean_rc_url}, path={rel_path}): {res_text}")
-                                                write_scan_log(f"VFS 갱신 성공 후보 경로: {rel_path} ({rel_idx}/{len(rel_paths)})")
+                                                write_scan_log(f"VFS refresh done (server={clean_rc_url}, path={rel_path}): {res_text}")
+                                                write_scan_log(f"VFS refresh succeeded for candidate path: {rel_path} ({rel_idx}/{len(rel_paths)})")
                                                 refreshed = True
                                                 break
                                             print(f"[Scanner-Trigger WARNING] VFS update returned non-success payload (server={clean_rc_url}, path={rel_path}): {reason}")
@@ -554,7 +554,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                                     except urllib.error.URLError as http_ex:
                                         if attempt < 3 and is_connection_refused_error(http_ex):
                                             print(f"[Scanner-Trigger WARNING] VFS RC server not ready yet (source={rc_url_source}, server={clean_rc_url}, path={rel_path}, attempt={attempt}/3). Retrying shortly.")
-                                            write_scan_log(f"VFS RC 서버 연결 거부로 재시도합니다 (server={clean_rc_url}, path={rel_path}, attempt={attempt}/3)")
+                                            write_scan_log(f"VFS RC server refused the connection, retrying (server={clean_rc_url}, path={rel_path}, attempt={attempt}/3)")
                                             time.sleep(2.0)
                                             continue
                                         # 로그에 인증 정보 노출 방지
@@ -585,7 +585,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                                     break
                             except Exception as e_rc:
                                 print(f"[Scanner-Trigger ERROR] VFS RC URL processing error: {e_rc}")
-                                write_scan_log(f"VFS RC URL 처리 오류: {e_rc}")
+                                write_scan_log(f"VFS RC URL handling error: {e_rc}")
 
                         if refreshed:
                             break
@@ -594,16 +594,16 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                         continue
             except Exception as e_vfs:
                 print(f"[Scanner-Trigger ERROR] Error during VFS refresh: {e_vfs}")
-                write_scan_log(f"VFS 새로고침 오류: {e_vfs}")
+                write_scan_log(f"VFS refresh error: {e_vfs}")
         else:
             if not library_is_remote:
                 print("[Scanner-Trigger] VFS refresh skipped: remote drive flag is disabled.")
-                write_scan_log("VFS 새로고침 건너뜀: 원격 드라이브 설정이 비활성화되어 있습니다.")
+                write_scan_log("VFS refresh skipped: the remote drive setting is off.")
             else:
                 print("[Scanner-Trigger] VFS refresh skipped: disabled and no rclone VFS paths detected.")
-                write_scan_log("VFS 새로고침 건너뜀: 비활성 상태이며 rclone VFS 경로가 감지되지 않았습니다.")
+                write_scan_log("VFS refresh skipped: it is off and no rclone VFS path was detected.")
     except Exception as db_err:
-        print(f"[Scanner-Trigger] VFS 옵션 DB 조회 Error: {db_err}")
+        print(f"[Scanner-Trigger] Error reading VFS options from DB: {db_err}")
     
     # 내부 enum('book_scan') 대신 사용자에게 의미 있는 현재 단계를 먼저 표시한다.
     scan_progress_reporter('discover', count=0)
@@ -625,7 +625,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
             f"attempts={max_scan_attempts}, waits={retry_wait_seconds}"
         )
         write_scan_log(
-            f"재시도 정책: mode={retry_policy_label}, attempts={max_scan_attempts}, waits={retry_wait_seconds}"
+            f"Retry policy: mode={retry_policy_label}, attempts={max_scan_attempts}, waits={retry_wait_seconds}"
         )
 
         for attempt in range(1, max_scan_attempts + 1):
@@ -649,8 +649,8 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
                             f"Entering attempt {next_attempt} after {wait_sec:.1f}s."
                         )
                         write_scan_log(
-                            f"일시적 DB 경합 오류 지속 (attempt {attempt}/{max_scan_attempts}): {scan_err}. "
-                            f"{wait_sec:.1f}초 후 {next_attempt}회차 시도를 진행합니다."
+                            f"Transient DB contention error persists (attempt {attempt}/{max_scan_attempts}): {scan_err}. "
+                            f"Trying attempt {next_attempt} in {wait_sec:.1f}s."
                         )
                     time.sleep(wait_sec)
                     continue
@@ -665,7 +665,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
         except Exception as repo_err:
             print(f"[Scanner-Trigger WARNING] Secondary status update skipped (already committed atomically in engine): {repo_err}")
         
-        msg = f"스캔 성공 완료 - DB={db_type}, LibraryID={library_id}, 소요시간={duration:.2f}초"
+        msg = f"Scan completed - DB={db_type}, LibraryID={library_id}, elapsed={duration:.2f}s"
         print(f"[Scanner-Trigger] ✅ {msg}")
         write_scan_log(msg)
         # 알림센터 "최근 완료"용 결과 요약 (새 도서 수/에러 수) - 큐 워커가 scan_history에 남긴다.
@@ -679,7 +679,7 @@ def run_scan_job(db_type, db_path, library_id, physical_path, force=False, initi
         except Exception:
             pass
         
-        msg = f"스캔 실패 - DB={db_type}, LibraryID={library_id}, 소요시간={duration:.2f}초, 에러={e}"
+        msg = f"Scan failed - DB={db_type}, LibraryID={library_id}, elapsed={duration:.2f}s, error={e}"
         print(f"[Scanner-Trigger] ❌ {msg}")
         write_scan_log(msg)
         raise

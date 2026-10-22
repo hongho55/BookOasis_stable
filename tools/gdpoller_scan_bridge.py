@@ -32,13 +32,13 @@ import urllib.request
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--base-url', required=True, help='BookOasis 서버 URL (예: http://ip:5930)')
-    parser.add_argument('--token', required=True, help='.env의 WEBHOOK_TOKEN 값')
+    parser.add_argument('--base-url', required=True, help='BookOasis server URL (e.g. http://ip:5930)')
+    parser.add_argument('--token', required=True, help='WEBHOOK_TOKEN value from .env')
     parser.add_argument('--library-id', required=True, type=int)
     parser.add_argument('--type', default='general', choices=['general', 'adult'])
-    parser.add_argument('--root', required=True, help='gd-poller 관점에서의 라이브러리 물리 루트 경로')
-    parser.add_argument('--debounce', type=int, default=20, help='동일 폴더 중복 호출 억제 시간(초)')
-    parser.add_argument('--timeout', type=int, default=30, help='웹훅 요청 타임아웃(초)')
+    parser.add_argument('--root', required=True, help='Library physical root path as seen by gd-poller')
+    parser.add_argument('--debounce', type=int, default=20, help='Seconds to suppress duplicate calls for the same folder')
+    parser.add_argument('--timeout', type=int, default=30, help='Webhook request timeout (seconds)')
     parser.add_argument('action')
     parser.add_argument('kind', choices=['file', 'directory'])
     parser.add_argument('path')

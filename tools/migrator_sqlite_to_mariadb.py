@@ -55,7 +55,7 @@ from tools.db_schema_updater import MARIADB_CENTRAL_SCHEMA as MARIADB_SCHEMA_DDL
 
 def connect_mariadb(db_name=None):
     if pymysql is None:
-        raise RuntimeError("PyMySQL 패키지가 필요합니다: pip install PyMySQL")
+        raise RuntimeError("The PyMySQL package is required: pip install PyMySQL")
     return pymysql.connect(
         host=MARIADB_HOST,
         port=MARIADB_PORT,
@@ -112,7 +112,7 @@ def preflight_sqlite_sources(require_all=False):
     invalid = []
     for result in results:
         if not result['exists']:
-            print(f"  [-] {result['db_type']}: 원본 파일 없음 ({result['path']})")
+            print(f"  [-] {result['db_type']}: source file not found ({result['path']})")
             if require_all:
                 invalid.append(result['db_type'])
             continue
@@ -124,7 +124,7 @@ def preflight_sqlite_sources(require_all=False):
             invalid.append(result['db_type'])
 
     if invalid:
-        raise RuntimeError(f"SQLite 원본 사전검사 실패: {', '.join(invalid)}")
+        raise RuntimeError(f"SQLite source pre-check failed: {', '.join(invalid)}")
     return results
 
 
@@ -135,8 +135,8 @@ def confirm_reset(assume_yes=False):
         return False
     try:
         answer = input(
-            "MariaDB의 general/adult/audiobook DB를 모두 삭제합니다. "
-            "계속하려면 RESET을 입력하세요:\n> "
+            "This drops all MariaDB general/adult/audiobook DBs. "
+            "Type RESET to continue:\n> "
         ).strip()
     except EOFError:
         return False
@@ -151,9 +151,9 @@ def ensure_mariadb_databases(reset=False):
             dbname = config['mariadb_db']
             if reset:
                 cursor.execute(f"DROP DATABASE IF EXISTS `{dbname}`;")
-                print(f"  [!] 기존 MariaDB 데이터베이스 초기화(삭제) 완료: `{dbname}`")
+                print(f"  [!] Reset (dropped) the existing MariaDB database: `{dbname}`")
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{dbname}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;")
-            print(f"  [+] 데이터베이스 확인/생성 완료: `{dbname}`")
+            print(f"  [+] Database checked/created: `{dbname}`")
     finally:
         conn.close()
 
@@ -174,7 +174,7 @@ def init_schema(db_type, db_name):
         conn.close()
     if errors:
         raise RuntimeError(
-            f"{db_type} 중앙 스키마 적용 실패 ({len(errors)}건): {errors[0]}"
+            f"{db_type} failed to apply the central schema ({len(errors)} errors): {errors[0]}"
         )
 
 
@@ -254,7 +254,7 @@ def ensure_table_exists_in_mariadb(ma_conn, table_name, sq_conn, sqlite_table_na
             ma_cur.execute(
                 f"ALTER TABLE `{table_name}` ADD COLUMN `{name}` {mariadb_type(column)}"
             )
-            print(f"  [+] 누락 컬럼 추가: `{table_name}`.`{name}`")
+            print(f"  [+] Added missing column: `{table_name}`.`{name}`")
         ma_conn.commit()
     except Exception as e:
         print(f"  [!] Dynamic DDL Create Warning for table `{table_name}`: {e}")
@@ -278,11 +278,11 @@ def migrate_single_db(db_type, batch_size=1000, expect_exact_count=False):
     mariadb_db = config['mariadb_db']
 
     if not os.path.exists(sqlite_path):
-        print(f"  [-] SQLite DB 파일 없음 ({sqlite_path}); 스킵합니다.")
+        print(f"  [-] SQLite DB file not found ({sqlite_path}); skipping.")
         return {'db_type': db_type, 'skipped': True, 'rows': 0, 'tables': 0}
 
     print(f"\n==========================================")
-    print(f"🚀 [{db_type.upper()}] SQLite ➔ MariaDB 데이터 펌핑 시작")
+    print(f"🚀 [{db_type.upper()}] Starting SQLite -> MariaDB data transfer")
     print(f"   SQLite: {sqlite_path}")
     print(f"   MariaDB: {mariadb_db}")
     print(f"==========================================")
@@ -310,7 +310,7 @@ def migrate_single_db(db_type, batch_size=1000, expect_exact_count=False):
 
         for table in tables:
             if db_type == 'audiobook' and table == 'tracks' and 'audiobook_tracks' in tables:
-                print("  [!] 구형 `tracks`와 최신 `audiobook_tracks`가 모두 있어 구형 테이블은 건너뜁니다.")
+                print("  [!] Both the old `tracks` and the current `audiobook_tracks` exist; skipping the old table.")
                 continue
 
             target_table = resolve_target_table(db_type, table)
@@ -350,14 +350,14 @@ def migrate_single_db(db_type, batch_size=1000, expect_exact_count=False):
             target_count = ma_cur.fetchone()['count']
             if target_count < source_count or (expect_exact_count and target_count != source_count):
                 raise RuntimeError(
-                    f"`{table}` → `{target_table}` 행 수 검증 실패: "
+                    f"`{table}` -> `{target_table}` row count check failed: "
                     f"source={source_count}, target={target_count}"
                 )
 
             total_migrated_rows += migrated_count
             migrated_tables += 1
             print(
-                f"  [+] 테이블 `{table}` → `{target_table}`: {migrated_count:,}개 행 이관 완료 "
+                f"  [+] Table `{table}` -> `{target_table}`: migrated {migrated_count:,} rows "
                 f"(target={target_count:,})"
             )
     except Exception:
@@ -372,7 +372,7 @@ def migrate_single_db(db_type, batch_size=1000, expect_exact_count=False):
         sq_conn.close()
 
     elapsed = time.perf_counter() - start_time
-    print(f"✨ [{db_type.upper()}] 이관 마감: 총 {total_migrated_rows:,}개 행 이전 완료 (소요시간: {elapsed:.2f}초)")
+    print(f"✨ [{db_type.upper()}] Migration finished: {total_migrated_rows:,} rows moved (took {elapsed:.2f}s)")
     return {
         'db_type': db_type,
         'skipped': False,
@@ -383,37 +383,37 @@ def migrate_single_db(db_type, batch_size=1000, expect_exact_count=False):
 
 def main():
     parser = argparse.ArgumentParser(description="BookOasis SQLite to MariaDB Migrator Tool")
-    parser.add_argument('--reset', '--fresh', action='store_true', help="기존 MariaDB 데이터베이스를 완전히 삭제(초기화) 후 처음부터 깨끗이 이관합니다.")
-    parser.add_argument('--yes', action='store_true', help="--reset 삭제 확인을 비대화형으로 승인합니다.")
-    parser.add_argument('--batch-size', type=int, default=1000, help="한 번에 전송할 행 수 (기본값: 1000)")
+    parser.add_argument('--reset', '--fresh', action='store_true', help="Drops the existing MariaDB databases completely (reset) and migrates cleanly from scratch.")
+    parser.add_argument('--yes', action='store_true', help="Approves the --reset drop confirmation non-interactively.")
+    parser.add_argument('--batch-size', type=int, default=1000, help="Rows to send per batch (default: 1000)")
     args = parser.parse_args()
 
     if args.batch_size < 1:
-        parser.error('--batch-size는 1 이상이어야 합니다.')
+        parser.error('--batch-size must be at least 1.')
 
     print("==================================================")
-    print("  BookOasis SQLite ➔ MariaDB 1-Click 자동 마이그레이터")
+    print("  BookOasis SQLite -> MariaDB one-click migrator")
     if args.reset:
-        print("  ⚠️ [--reset 모드] 기존 MariaDB DB를 완전히 삭제 후 처음부터 이관합니다.")
+        print("  ⚠️ [--reset mode] Drops the existing MariaDB databases completely and migrates from scratch.")
     print("==================================================")
 
-    print("[*] SQLite 원본 사전검사")
+    print("[*] Pre-checking the SQLite sources")
     try:
         preflight_sqlite_sources(require_all=args.reset)
     except Exception as err:
-        print(f"\n[오류] {err}")
+        print(f"\n[ERROR] {err}")
         sys.exit(1)
 
     if args.reset and not confirm_reset(args.yes):
-        print("[취소] --reset 작업이 승인되지 않아 종료합니다.")
+        print("[CANCELLED] Exiting because the --reset operation was not approved.")
         sys.exit(1)
 
     try:
         ensure_mariadb_databases(reset=args.reset)
         prepare_mariadb_schemas()
     except Exception as err:
-        print(f"\n[오류] MariaDB 서버 접속 실패: {err}")
-        print("  .env 파일의 MARIADB_HOST, MARIADB_PORT, MARIADB_USER, MARIADB_PASSWORD 설정을 확인하세요.")
+        print(f"\n[ERROR] Failed to connect to the MariaDB server: {err}")
+        print("  Check MARIADB_HOST, MARIADB_PORT, MARIADB_USER and MARIADB_PASSWORD in .env.")
         sys.exit(1)
 
     try:
@@ -426,16 +426,16 @@ def main():
             for db_type in DB_MAP
         ]
     except Exception as err:
-        print(f"\n[오류] 데이터 이관 실패: {err}")
+        print(f"\n[ERROR] Data migration failed: {err}")
         sys.exit(1)
 
     migrated_rows = sum(report['rows'] for report in reports)
     migrated_tables = sum(report['tables'] for report in reports)
 
     print("\n==================================================")
-    print("🎉 모든 데이터베이스 이관이 완료되었습니다!")
-    print(f"   검증 완료: {migrated_tables}개 테이블, {migrated_rows:,}개 행")
-    print("   .env 파일에서 DB_ENGINE=mariadb 로 설정 후 미디어 서버를 시작하세요.")
+    print("🎉 All databases migrated!")
+    print(f"   Verified: {migrated_tables} tables, {migrated_rows:,} rows")
+    print("   Set DB_ENGINE=mariadb in .env, then start the media server.")
     print("==================================================")
 
 

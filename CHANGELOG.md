@@ -1,4 +1,11 @@
 # CHANGELOG
+## v3.0.2
+- (fix) 영어로 설정해도 한국어로 나오던 화면 문구 번역 — 환경설정 탭의 목록·상태·알림·확인 창(플러그인·권한·스캔 기록·휴지통·외부 도메인·사용자·스케줄·단축키), 상단 줄·계정 메뉴·KOReader 동기화, 홈 위젯, 도서 우클릭 메뉴, 카테고리 추가/수정 창·경로 탐색, 스케줄 도우미 | translate text that stayed Korean in English mode: lists, statuses, alerts and confirmations in settings (plugins, permissions, scan history, trash, external domains, users, schedule, shortcuts), the top bar, account menu and KOReader sync, home widgets, the book context menu, the category add/edit dialog and path browser, and the schedule helper
+- (improvement) 검색 접두어를 언어와 상관없이 사용 — 작가는 author:/著者:/作者:, 그림작가는 artist:/illustrator:/作画:, 주제는 topic:도 인식(대소문자 무시, 전각 콜론 허용), 영어 화면 검색창 안내는 영어 접두어로 표시 | search prefixes work in any language — author:/著者:/作者: for author, artist:/illustrator:/作画: for illustrator and topic: for topic are recognized alongside the Korean ones (case-insensitive, full-width colon allowed); the English search hint shows the English prefixes
+- (improvement) 서버 로그(logs/의 media_server·scanner·lazy_scanner·scan_history 등)와 관리용 명령줄 도구(db_recovery·migrator·진단 도구 등)의 출력을 영어로 통일 | server logs (media_server, scanner, lazy_scanner, scan_history, etc. in logs/) and the admin command-line tools (db_recovery, migrator, diagnostics, etc.) now print in English
+- (fix) 이름 없이 카테고리를 저장하거나 Lazy 스캐너 '지금 실행'을 누르면 알림에 번역 키 이름(category.name_required 등)이 그대로 보이던 문제 수정 | fix raw translation keys (e.g. category.name_required) showing in alerts when saving a category without a name or pressing the Lazy scanner 'Run now'
+- (fix) 크론 타임존 설명이 예전 문구(APScheduler 기준)로 보이던 문제 수정 | fix the cron time zone help showing outdated text (APScheduler baseline)
+
 ## v3.0.1
 - (fix) PC 홈에서 서재 선택 메뉴가 대시보드 통계 카드 아래로 가려지던 문제 수정 | fix the library picker menu showing beneath the home dashboard stat cards on desktop
 - (fix) 휴대폰(특히 iOS 사파리)에서 목록 아래쪽에 빈 띠가 남아 화면이 답답해 보이던 문제 수정 — 목록이 화면 끝까지 이어짐 | fix an empty strip at the bottom of lists on phones (notably iOS Safari) — lists now run to the bottom edge

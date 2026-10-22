@@ -95,19 +95,19 @@ def measure(only_file=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('--top', type=int, default=20, help='파일별 상위 몇 개를 보일지')
-    parser.add_argument('--file', help='이 파일만 측정 (저장소 기준 경로)')
+    parser.add_argument('--top', type=int, default=20, help='How many top files to show')
+    parser.add_argument('--file', help='Measure only this file (path relative to the repository)')
     args = parser.parse_args()
 
     values, per_file, per_file_tokens = measure(args.file)
-    print('토큰이 아닌 날값 기준')
-    print(f'{"속성":<12} {"선언":>6} {"서로 다른 값":>12}')
+    print('based on raw values, not tokens')
+    print(f'{"property":<12} {"decls":>6} {"distinct values":>12}')
     for group in GROUPS:
         counter = values[group]
         print(f'{group:<12} {sum(counter.values()):>6} {len(counter):>12}')
-    print(f'\n토큰 참조 var(--app-fs|fw|lh|space-*): {sum(per_file_tokens.values())}')
+    print(f'\ntoken references var(--app-fs|fw|lh|space-*): {sum(per_file_tokens.values())}')
 
-    print(f'\n파일별 선언 수 상위 {args.top} (선언 / 토큰 참조)')
+    print(f'\ntop {args.top} files by declarations (declarations / token references)')
     for rel, count in per_file.most_common(args.top):
         print(f'{count:>5} / {per_file_tokens[rel]:<4} {rel}')
 

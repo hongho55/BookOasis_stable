@@ -91,7 +91,7 @@ def ensure_hls_generation(episode_id, file_path, use_vaapi, device_path, extra_a
                 os.path.join(cache_dir, 'playlist.m3u8'),
             ]
         )
-        print(f"[Video-HLS][ep={episode_id}] 생성 시작 mode={'vaapi' if use_vaapi else 'cpu'} cmd={' '.join(cmd)}")
+        print(f"[Video-HLS][ep={episode_id}] Starting generation mode={'vaapi' if use_vaapi else 'cpu'} cmd={' '.join(cmd)}")
         proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         _active_processes[episode_id] = proc
 

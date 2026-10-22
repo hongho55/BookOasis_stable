@@ -228,7 +228,7 @@ def convert_and_copy_cover(source_cover_name, kavita_covers_dir, bookoasis_cover
 
 def run_kavita_to_bookoasis():
     print("\n==================================================")
-    print(" 🛠️  [Step 2] Kavita ➡️ BookOasis 이관 설정")
+    print(" 🛠️  [Step 2] Kavita -> BookOasis migration settings")
     print("==================================================")
     
     # 1. Kavita DB 경로 획득
@@ -236,46 +236,46 @@ def run_kavita_to_bookoasis():
     if not os.path.exists(default_kavita_db):
         default_kavita_db = "/home/az001a/Kavita/config/kavita.db"
         
-    kavita_db_input = input(f"Kavita DB 경로와 DB파일명을 입력하세요 (기본값: {default_kavita_db})\n> ").strip()
+    kavita_db_input = input(f"Enter the Kavita DB path and file name (default: {default_kavita_db})\n> ").strip()
     kavita_db_path = kavita_db_input if kavita_db_input else default_kavita_db
     
     if not os.path.exists(kavita_db_path):
-        print(f"❌ 에러: 지정된 경로에 kavita.db 파일이 존재하지 않습니다: {kavita_db_path}")
+        print(f"❌ Error: kavita.db does not exist at the given path: {kavita_db_path}")
         return
 
     # 2. Kavita Cover 경로 유추 및 획득
-    migrate_covers = prompt_yes_no("Kavita cover도 함께 가져오겠습니까?", True)
+    migrate_covers = prompt_yes_no("Also import Kavita covers?", True)
     kavita_covers_dir = None
     if migrate_covers:
         kavita_dir = os.path.dirname(kavita_db_path)
         default_covers_dir = os.path.join(kavita_dir, "covers").replace('\\', '/')
 
-        covers_input = input(f"Kavita cover 경로는 다음과 같습니다 : {default_covers_dir}\n맞으면 엔터, 수정하려면 경로 입력\n> ").strip()
+        covers_input = input(f"The Kavita cover path is: {default_covers_dir}\nPress Enter if correct, or type a path to change it\n> ").strip()
         kavita_covers_dir = covers_input if covers_input else default_covers_dir
 
     print("\n==================================================")
-    print(" 🛠️  [Step 3] BookOasis 루트 설정")
+    print(" 🛠️  [Step 3] BookOasis root settings")
     print("==================================================")
     
     # 3. BookOasis 루트 경로 획득
     default_oasis_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace('\\', '/')
-    oasis_root_input = input(f"BookOasis의 루트 경로를 입력하세요 ({default_oasis_root})\n맞으면 엔터, 수정하려면 1 입력\n> ").strip()
+    oasis_root_input = input(f"Enter the BookOasis root path ({default_oasis_root})\nPress Enter if correct, or type 1 to change it\n> ").strip()
     
     oasis_root = default_oasis_root
     if oasis_root_input == '1':
-        oasis_root = input("수정할 BookOasis 루트 경로를 입력하세요:\n> ").strip().replace('\\', '/')
+        oasis_root = input("Enter the BookOasis root path to use:\n> ").strip().replace('\\', '/')
 
     covers_dir = os.path.join(oasis_root, 'covers')
 
     try:
         ensure_target_schema()
     except Exception as init_error:
-        print(f"❌ 에러: BookOasis 데이터베이스 초기화/연결에 실패했습니다: {init_error}")
-        print(".env의 DB_ENGINE 및 MariaDB 접속 설정을 확인해 주세요.")
+        print(f"❌ Error: failed to initialize/connect to the BookOasis database: {init_error}")
+        print("Check DB_ENGINE and the MariaDB connection settings in .env.")
         return
 
     print("\n==================================================")
-    print(" 🚀 [Step 4] Kavita ➡️ BookOasis 이관 작업 실행")
+    print(" 🚀 [Step 4] Running the Kavita -> BookOasis migration")
     print("==================================================")
     
     kavita_conn = get_db_connection(kavita_db_path)
@@ -334,7 +334,7 @@ def run_kavita_to_bookoasis():
         kavita_cursor.execute(query)
         rows = kavita_cursor.fetchall()
         total_rows = len(rows)
-        print(f"[*] Kavita DB로부터 총 {total_rows}개의 도서 데이터를 로드했습니다.")
+        print(f"[*] Loaded {total_rows} books from the Kavita DB.")
         
         # 1차: 라이브러리 목록 매핑 및 생성
         library_paths_map = {}
@@ -371,7 +371,7 @@ def run_kavita_to_bookoasis():
             library_cache[lib_name] = lib_id
             
         general_conn.commit()
-        print("[+] 라이브러리 경로 매핑 및 설정 완료.")
+        print("[+] Library path mapping and setup done.")
         
         # 2차: 책 정보 이관 및 커버 이미지 변환
         migrated_books = 0
@@ -464,40 +464,40 @@ def run_kavita_to_bookoasis():
                     
             migrated_books += 1
             if migrated_books % 500 == 0 or migrated_books == total_rows:
-                print(f"[*] 진행도: {migrated_books} / {total_rows} 권 처리 완료...")
+                print(f"[*] Progress: {migrated_books} / {total_rows} books processed...")
                 general_conn.commit()
 
         general_conn.commit()
                 
         print("\n==================================================")
-        print(" ✨ 이관 결과 리포트")
+        print(" ✨ Migration report")
         print("==================================================")
-        print(f"- 이관 성공 도서 권수: {migrated_books} 권")
-        print(f"- 대상 데이터베이스 엔진: {get_target_engine_name()}")
+        print(f"- Books migrated: {migrated_books}")
+        print(f"- Target database engine: {get_target_engine_name()}")
         if migrate_covers:
-            print(f"- WebP 변환 성공 표지: {success_covers} 개")
+            print(f"- Covers converted to WebP: {success_covers}")
         else:
-            print("- 표지 가져오기: 건너뜀")
-        print("이관 작업이 성공적으로 종료되었습니다.")
+            print("- Cover import: skipped")
+        print("Migration finished successfully.")
         
     except Exception as ex:
         try:
             general_conn.rollback()
         except Exception:
             pass
-        print(f"❌ 이관 중 예외 발생: {ex}")
+        print(f"❌ Exception during migration: {ex}")
     finally:
         kavita_conn.close()
         general_conn.close()
 
 def run_bookoasis_to_bookoasis():
     print("\n==================================================")
-    print(" 🛠️  [Step 2] BookOasis ➡️ BookOasis 경로 교체 설정")
+    print(" 🛠️  [Step 2] BookOasis -> BookOasis path replacement settings")
     print("==================================================")
     
     # 1. BookOasis 루트 경로 획득
     default_oasis_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace('\\', '/')
-    oasis_root_input = input(f"BookOasis의 루트 경로를 입력하세요 ({default_oasis_root})\n맞으면 엔터, 수정하려면 경로 입력\n> ").strip()
+    oasis_root_input = input(f"Enter the BookOasis root path ({default_oasis_root})\nPress Enter if correct, or type a path to change it\n> ").strip()
     oasis_root = oasis_root_input if oasis_root_input else default_oasis_root
     
     covers_dir = os.path.join(oasis_root, 'covers')
@@ -505,31 +505,31 @@ def run_bookoasis_to_bookoasis():
     try:
         ensure_target_schema()
     except Exception as init_error:
-        print(f"❌ 에러: BookOasis 데이터베이스 초기화/연결에 실패했습니다: {init_error}")
+        print(f"❌ Error: failed to initialize/connect to the BookOasis database: {init_error}")
         return
 
     # 2. 경로 교체 규칙 획득
-    old_prefix = input("교체 대상 기존 경로 프리픽스(Old Prefix)를 입력하세요:\n예: /home/az001a/Script/media_server\n> ").strip()
-    new_prefix = input("신규 경로 프리픽스(New Prefix)를 입력하세요:\n예: C:/project/media_server\n> ").strip()
+    old_prefix = input("Enter the old path prefix to replace (Old Prefix):\ne.g. /home/az001a/Script/media_server\n> ").strip()
+    new_prefix = input("Enter the new path prefix (New Prefix):\ne.g. C:/project/media_server\n> ").strip()
     
     if not old_prefix or not new_prefix:
-        print("❌ 에러: 교체할 이전/이후 경로는 비워둘 수 없습니다.")
+        print("❌ Error: the old/new paths to replace cannot be empty.")
         return
 
-    print(f"\n대상 DB 엔진: {get_target_engine_name()}")
-    print(f"기존 경로: {old_prefix}")
-    print(f"신규 경로: {new_prefix}")
-    if not prompt_yes_no("위 규칙으로 일반/성인/오디오북 경로를 변경하겠습니까?", False):
-        print("경로 변경을 취소했습니다.")
+    print(f"\nTarget DB engine: {get_target_engine_name()}")
+    print(f"Old path: {old_prefix}")
+    print(f"New path: {new_prefix}")
+    if not prompt_yes_no("Change the general/adult/audiobook paths using the rule above?", False):
+        print("Path change cancelled.")
         return
 
     print("\n==================================================")
-    print(" 🚀 [Step 3] 경로 교체 및 커버 해시 리네이밍 실행")
+    print(" 🚀 [Step 3] Replacing paths and renaming cover hashes")
     print("==================================================")
     
     target_db_types = ('general', 'adult', 'audiobook')
     for db_type in target_db_types:
-        print(f"\n[*] 데이터베이스 처리 중: {db_type} ({get_target_engine_name()})")
+        print(f"\n[*] Processing database: {db_type} ({get_target_engine_name()})")
 
         conn = get_target_connection(db_type)
         cursor = conn.cursor()
@@ -542,7 +542,7 @@ def run_bookoasis_to_bookoasis():
                 if lib['physical_path'] and old_prefix in lib['physical_path']:
                     updated_path = lib['physical_path'].replace(old_prefix, new_prefix)
                     cursor.execute("UPDATE libraries SET physical_path = ? WHERE id = ?", (updated_path, lib['id']))
-                    print(f"  └ 라이브러리 [{lib['name']}] 경로 변경: {lib['physical_path']} -> {updated_path}")
+                    print(f"  └ Library [{lib['name']}] path changed: {lib['physical_path']} -> {updated_path}")
             
             if db_type == 'audiobook':
                 cursor.execute("SELECT id, folder_path FROM audiobooks")
@@ -574,8 +574,8 @@ def run_bookoasis_to_bookoasis():
 
                 conn.commit()
                 print(
-                    f"  [+] 완료: 오디오북 {updated_audiobooks_count}개 폴더 경로 및 "
-                    f"트랙 {updated_tracks_count}개 파일 경로 수정."
+                    f"  [+] Done: updated {updated_audiobooks_count} audiobook folder paths and "
+                    f"{updated_tracks_count} track file paths."
                 )
                 continue
 
@@ -625,7 +625,7 @@ def run_bookoasis_to_bookoasis():
                             os.rename(old_phys_path, new_phys_path)
                             renamed_covers_count += 1
                         except Exception as e:
-                            print(f"  └ [물리 커버 리네임 실패] {old_cover_filename} -> {new_cover_filename}: {e}")
+                            print(f"  └ [Cover file rename failed] {old_cover_filename} -> {new_cover_filename}: {e}")
                             
                 # DB 데이터 업데이트 쿼리 반영
                 cursor.execute(
@@ -635,31 +635,31 @@ def run_bookoasis_to_bookoasis():
                 updated_books_count += 1
                 
             conn.commit()
-            print(f"  [+] 완료: {updated_books_count}권의 도서 경로 수정 및 {renamed_covers_count}개의 표지 해시 파일 리네이밍 성공.")
+            print(f"  [+] Done: updated {updated_books_count} book paths and renamed {renamed_covers_count} cover hash files.")
             
         except Exception as e:
             try:
                 conn.rollback()
             except Exception:
                 pass
-            print(f"❌ {db_type} 처리 중 에러 발생: {e}")
+            print(f"❌ Error while processing {db_type}: {e}")
         finally:
             conn.close()
             
     print("\n==================================================")
-    print(" ✨ 경로 및 커버 교체 작업이 성공적으로 종결되었습니다.")
+    print(" ✨ Path and cover replacement finished successfully.")
     print("==================================================")
 
 def main():
     print("==================================================")
-    print(" 📊 BookOasis 데이터 이관 및 관리 시스템 (v2.0)")
+    print(" 📊 BookOasis data migration and management (v2.0)")
     print("==================================================")
-    print(" [Step 1] 마이그레이션 모드를 선택하세요:")
-    print(f"  현재 대상 DB 엔진: {get_target_engine_name()}")
-    print("  1. Kavita ➡️ BookOasis 이관 (SQLite/MariaDB)")
-    print("  2. BookOasis ➡️ BookOasis (일반/성인/오디오북 경로 교체)")
+    print(" [Step 1] Choose a migration mode:")
+    print(f"  Current target DB engine: {get_target_engine_name()}")
+    print("  1. Kavita -> BookOasis migration (SQLite/MariaDB)")
+    print("  2. BookOasis -> BookOasis (replace general/adult/audiobook paths)")
     
-    choice = input("\n>> 원하는 메뉴 번호를 입력 후 엔터 (기본값: 1)\n> ").strip()
+    choice = input("\n>> Enter a menu number and press Enter (default: 1)\n> ").strip()
     if not choice:
         choice = '1'
         
@@ -668,7 +668,7 @@ def main():
     elif choice == '2':
         run_bookoasis_to_bookoasis()
     else:
-        print("❌ 잘못된 메뉴 선택입니다. 종료합니다.")
+        print("❌ Invalid menu choice. Exiting.")
 
 if __name__ == '__main__':
     main()

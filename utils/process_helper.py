@@ -43,9 +43,9 @@ def is_scanner_worker_pid_alive(pid):
 
             if os.path.normcase(os.path.normpath(proc_cwd)) != os.path.normcase(os.path.normpath(_APP_DIR)):
                 print(
-                    f"[ProcessHelper WARNING] PID {pid}에 scanner_worker.py 프로세스가 있지만 "
-                    f"작업 디렉터리가 이 설치본과 다릅니다 (found='{proc_cwd}', expected='{_APP_DIR}'). "
-                    f"PID 재사용으로 다른 설치본(예: 테스트 Docker 컨테이너)의 워커를 우리 워커로 오인할 뻔했습니다 - 다른 프로세스로 간주합니다."
+                    f"[ProcessHelper WARNING] PID {pid} is a scanner_worker.py process, but "
+                    f"its working directory differs from this install (found='{proc_cwd}', expected='{_APP_DIR}'). "
+                    f"Because of PID reuse, a worker from another install (e.g. a test Docker container) was almost mistaken for ours - treating it as a different process."
                 )
                 return False
 

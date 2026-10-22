@@ -8,7 +8,7 @@ gdrive_view_copy_routes.py – 구글 드라이브 "책 단위 사전복사(뷰�
 1권만 자동으로 복사하는 흐름을 다룬다. 지금까지는 뷰어 스트림 경로 안에서만 호출돼
 플러그인이 상태를 조회하거나(뷰어를 열지 않고) 미리 복사를 트리거할 방법이 없었다.
 
-실험적 기능이라 다른 gdrive API와 동일하게 DEVELOP=true + admin_required로 가드한다.
+클로즈 베타 기능이라 다른 gdrive API와 동일하게 GDRIVE_LINK_BETA=true(또는 DEVELOP=true) + admin_required로 가드한다.
 """
 import os
 from flask import Blueprint, request, jsonify
@@ -18,7 +18,8 @@ gdrive_view_copy_bp = Blueprint('gdrive_view_copy', __name__)
 
 
 def _develop_mode_enabled():
-    return os.environ.get('DEVELOP', 'false').lower() == 'true'
+    from utils.drive_helper import gdrive_link_beta_enabled
+    return gdrive_link_beta_enabled()
 
 
 def _normalize_db_type(value):

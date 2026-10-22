@@ -2,7 +2,7 @@
 """
 gdrive_copy_routes.py – 구글 드라이브 서버사이드 복사(2단계: 리모트 감지/선택/검증) 라우터
 
-실험적 기능이라 DEVELOP=true 환경에서만 라우트 자체를 노출한다 (다른 gdrive 관련 기능이
+클로즈 베타 기능이라 GDRIVE_LINK_BETA=true(또는 기존 DEVELOP=true) 환경에서만 라우트 자체를 노출한다 (다른 gdrive 관련 기능이
 템플릿 레벨에서만 숨겨지는 것과 달리, 이 라우트는 OAuth 자격증명을 다루므로 서버 측에서도 가드).
 """
 import os
@@ -15,7 +15,8 @@ gdrive_copy_bp = Blueprint('gdrive_copy', __name__)
 
 
 def _develop_mode_enabled():
-    return os.environ.get('DEVELOP', 'false').lower() == 'true'
+    from utils.drive_helper import gdrive_link_beta_enabled
+    return gdrive_link_beta_enabled()
 
 
 @gdrive_copy_bp.route('/api/gdrive-copy/remotes', methods=['GET'])
@@ -75,12 +76,12 @@ def detect_gdrive_copy_mount_root():
     if not remote_name:
         return jsonify({'success': False, 'error': '리모트를 선택해 주세요.'}), 400
 
-    print(f"[GdriveCopy-MountDetect] 요청 수신: type='{db_type}', remote='{remote_name}', physical_path='{physical_path}', rclone_rc_url(요청값)='{rclone_rc_url}'")
+    print(f"[GdriveCopy-MountDetect] Request received: type='{db_type}', remote='{remote_name}', physical_path='{physical_path}', rclone_rc_url(requested)='{rclone_rc_url}'")
 
     try:
         from tools.scanner.vfs import detect_mount_root, resolve_rc_urls
         rc_urls = resolve_rc_urls(db_type, {'rclone_rc_url': rclone_rc_url})
-        print(f"[GdriveCopy-MountDetect] 최종 조회 대상 RC URL 목록: {rc_urls}")
+        print(f"[GdriveCopy-MountDetect] RC URLs to query: {rc_urls}")
         mount_root = detect_mount_root(remote_name, physical_path, rc_urls)
         if mount_root:
             return jsonify({'success': True, 'mount_root': mount_root})

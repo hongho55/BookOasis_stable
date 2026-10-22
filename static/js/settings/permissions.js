@@ -48,7 +48,7 @@ async function sendBulkPermissionChanges(entries) {
     const data = await res.json();
     if (!data.success) {
       validEntries.forEach(entry => { entry.chk.checked = entry.prevChecked; });
-      alert('변경에 실패했습니다: ' + (data.error || '알 수 없는 오류'));
+      alert(i18n.t('settings.perm_change_failed', { error: data.error || i18n.t('settings.gen_unknown_error') }));
       return;
     }
     const errors = data.errors || [];
@@ -57,11 +57,11 @@ async function sendBulkPermissionChanges(entries) {
         const entry = validEntries[err.index];
         if (entry) entry.chk.checked = entry.prevChecked;
       });
-      alert(`${errors.length}건 변경에 실패했습니다. (성공 ${data.applied || 0}건)`);
+      alert(i18n.t('settings.perm_bulk_partial_fail', { failed: errors.length, applied: data.applied || 0 }));
     }
   } catch (err) {
     validEntries.forEach(entry => { entry.chk.checked = entry.prevChecked; });
-    alert('네트워크 오류가 발생했습니다.');
+    alert(i18n.t('settings.perm_network_error'));
   }
 }
 
@@ -111,9 +111,9 @@ function openCopyPermissionPanel(triggerBtn) {
   `).join('');
 
   panel.innerHTML = `
-    <div style="font-size:0.78rem; font-weight:700; margin-bottom:0.5rem; color: var(--app-text-primary);">이 사용자 권한을 복사할 대상</div>
+    <div style="font-size:0.78rem; font-weight:700; margin-bottom:0.5rem; color: var(--app-text-primary);">${i18n.t('settings.perm_copy_target')}</div>
     ${listHTML}
-    <button type="button" class="permission-copy-apply" style="margin-top:0.6rem; width:100%; padding:0.4rem; border-radius:6px; border:none; background: var(--app-accent, #a855f7); color:#fff; font-weight:700; cursor:pointer;">적용</button>
+    <button type="button" class="permission-copy-apply" style="margin-top:0.6rem; width:100%; padding:0.4rem; border-radius:6px; border:none; background: var(--app-accent, #a855f7); color:#fff; font-weight:700; cursor:pointer;">${i18n.t('settings.perm_apply')}</button>
   `;
 
   document.body.appendChild(panel);
@@ -148,7 +148,7 @@ function applyPermissionCopy(table, sourceUserId, targetUserIds) {
   if (entries.length) {
     sendBulkPermissionChanges(entries);
   } else {
-    alert('변경할 항목이 없습니다 (이미 동일한 권한입니다).');
+    alert(i18n.t('settings.perm_nothing_to_change'));
   }
 }
 
@@ -316,13 +316,14 @@ function renderSessionTabs(sessions) {
   document.querySelectorAll('.permission-session-tab').forEach(btn => {
     const sessionId = btn.getAttribute('data-permission-session');
     if (sessionTitleMap.has(sessionId)) {
-      btn.textContent = sessionTitleMap.get(sessionId);
+      // 서버 이름은 한국어 고정이라 번역 키(settings.perm_tab_<id>)를 먼저 쓰고, 키가 없는 세션만 서버 이름
+      btn.textContent = i18n.t(`settings.perm_tab_${sessionId}`, {}, sessionTitleMap.get(sessionId));
     }
   });
 }
 
 function renderMatrixHeader(headerRow, users) {
-  let headerHTML = '<th style="padding:1rem; width:25%;">카테고리 이름</th>';
+  let headerHTML = `<th style="padding:1rem; width:25%;">${i18n.t('settings.perm_col_category_name')}</th>`;
   users.forEach(user => {
     const isAdmin = user.username === 'admin';
     headerHTML += `
@@ -332,8 +333,8 @@ function renderMatrixHeader(headerRow, users) {
         ${isAdmin ? '' : `
         <div style="display:flex; gap:0.3rem; justify-content:center; flex-wrap:wrap;">
           <button type="button" class="permission-col-toggle-all" data-user-id="${user.id}"
-                  style="font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">전체선택/해제</button>
-          <button type="button" class="permission-copy-btn" data-user-id="${user.id}" title="이 사용자 권한을 다른 사용자에게 복사"
+                  style="font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">${i18n.t('settings.perm_toggle_all')}</button>
+          <button type="button" class="permission-copy-btn" data-user-id="${user.id}" title="${i18n.t('settings.perm_copy_title')}"
                   style="font-size:0.68rem; padding:0.15rem 0.5rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">
             <i class="lc lc-copy"></i>
           </button>
@@ -352,7 +353,7 @@ function renderMatrixBody(users, categories, permissions, targetDb) {
         <td style="padding:1rem; color: var(--app-text-primary);">
           <i class="lc lc-folder" style="color: var(--app-text-muted); margin-right:0.5rem;"></i>${cat.name}
           <button type="button" class="permission-row-toggle-all" data-library-id="${cat.id}" data-db-type="${cat.db_type || targetDb}"
-                  style="margin-left:0.5rem; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">전체선택/해제</button>
+                  style="margin-left:0.5rem; font-size:0.65rem; padding:0.1rem 0.4rem; border-radius:4px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color: var(--app-text-muted); cursor:pointer;">${i18n.t('settings.perm_toggle_all')}</button>
         </td>
     `;
 
@@ -392,7 +393,7 @@ function renderAdultBody(users) {
           <label style="display:inline-flex; align-items:center; gap:0.5rem; color:var(--app-accent-hover); font-weight:700;">
             <input type="checkbox" class="permission-chk-adult" data-user-id="${user.id}" ${isChecked} ${isDisabled}
                    style="cursor:pointer; width:1.2rem; height:1.2rem; accent-color:var(--app-accent);">
-            <span>성인 서재 접근 허용</span>
+            <span>${i18n.t('settings.perm_col_adult_access')}</span>
           </label>
         </td>
       </tr>
@@ -412,7 +413,7 @@ function renderDownloadBody(users) {
           <label style="display:inline-flex; align-items:center; gap:0.5rem; color:var(--app-accent-hover); font-weight:700;">
             <input type="checkbox" class="permission-chk-download" data-user-id="${user.id}" ${isChecked} ${isDisabled}
                    style="cursor:pointer; width:1.2rem; height:1.2rem; accent-color:var(--app-accent);">
-            <span>파일 다운로드 허용</span>
+            <span>${i18n.t('settings.perm_col_download')}</span>
           </label>
         </td>
       </tr>
@@ -434,11 +435,11 @@ function renderContentRatingBody(users) {
         <td style="padding:0.9rem 1rem; text-align:center;">
           <select class="permission-select-content-rating" data-user-id="${user.id}" ${isDisabled}
                   style="cursor:pointer; padding:0.4rem 0.7rem; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background: rgba(var(--app-panel-rgb), 0.6); color: var(--app-text-primary); font-weight:700;">
-            <option value="0" ${currentLevel === 0 ? 'selected' : ''}>전체이용가</option>
-            <option value="15" ${currentLevel === 15 ? 'selected' : ''}>15세이상</option>
-            <option value="18" ${currentLevel === 18 ? 'selected' : ''}>18세이상(성인)</option>
-            <option value="19" ${currentLevel === 19 ? 'selected' : ''}>성인망가 (R18)</option>
-            <option value="20" ${currentLevel === 20 ? 'selected' : ''}>포르노 (Adult Only 18+)</option>
+            <option value="0" ${currentLevel === 0 ? 'selected' : ''}>${i18n.t('settings.perm_rating_all')}</option>
+            <option value="15" ${currentLevel === 15 ? 'selected' : ''}>${i18n.t('settings.perm_rating_15')}</option>
+            <option value="18" ${currentLevel === 18 ? 'selected' : ''}>${i18n.t('settings.perm_rating_18')}</option>
+            <option value="19" ${currentLevel === 19 ? 'selected' : ''}>${i18n.t('settings.perm_rating_19')}</option>
+            <option value="20" ${currentLevel === 20 ? 'selected' : ''}>${i18n.t('settings.perm_rating_20')}</option>
           </select>
         </td>
       </tr>
@@ -475,11 +476,11 @@ function bindPermissionEvents() {
         });
         const data = await res.json();
         if (!data.success) {
-          alert('변경에 실패했습니다: ' + data.error);
+          alert(i18n.t('settings.perm_change_failed', { error: data.error }));
           e.target.checked = !hasAdultAccess;
         }
       } catch (err) {
-        alert('네트워크 오류가 발생했습니다.');
+        alert(i18n.t('settings.perm_network_error'));
         e.target.checked = !hasAdultAccess;
       }
     });
@@ -498,11 +499,11 @@ function bindPermissionEvents() {
         });
         const data = await res.json();
         if (!data.success) {
-          alert('변경에 실패했습니다: ' + data.error);
+          alert(i18n.t('settings.perm_change_failed', { error: data.error }));
           e.target.checked = !hasDownloadAccess;
         }
       } catch (err) {
-        alert('네트워크 오류가 발생했습니다.');
+        alert(i18n.t('settings.perm_network_error'));
         e.target.checked = !hasDownloadAccess;
       }
     });
@@ -522,13 +523,13 @@ function bindPermissionEvents() {
         });
         const data = await res.json();
         if (!data.success) {
-          alert('변경에 실패했습니다: ' + data.error);
+          alert(i18n.t('settings.perm_change_failed', { error: data.error }));
           e.target.value = prevLevel;
         } else {
           e.target.dataset.prevValue = newLevel;
         }
       } catch (err) {
-        alert('네트워크 오류가 발생했습니다.');
+        alert(i18n.t('settings.perm_network_error'));
         e.target.value = prevLevel;
       }
     });
@@ -543,7 +544,7 @@ function bindPermissionEvents() {
 
       const parsedUserId = parseInt(userIdRaw, 10);
       if (!Number.isFinite(parsedUserId)) {
-        alert('변경에 실패했습니다: user_id 값이 올바르지 않습니다.');
+        alert(i18n.t('settings.perm_change_failed', { error: i18n.t('settings.perm_bad_user_id') }));
         e.target.checked = !hasAccess;
         return;
       }
@@ -569,11 +570,11 @@ function bindPermissionEvents() {
         });
         const data = await res.json();
         if (!data.success) {
-          alert('변경에 실패했습니다: ' + data.error);
+          alert(i18n.t('settings.perm_change_failed', { error: data.error }));
           e.target.checked = !hasAccess;
         }
       } catch (err) {
-        alert('네트워크 오류가 발생했습니다.');
+        alert(i18n.t('settings.perm_network_error'));
         e.target.checked = !hasAccess;
       }
     });

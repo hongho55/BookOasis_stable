@@ -370,6 +370,18 @@ class BookRepository:
         return dict(row) if row else None
 
     @staticmethod
+    def fill_missing_cover(db_type, book_id, cover_image):
+        """표지가 비어 있는 도서에만 표지를 채운다 (잠긴 메타데이터·이미 있는 표지는 건드리지 않음)."""
+        with database.connection(db_type) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE books SET cover_image = ?, cover_updated_at = CURRENT_TIMESTAMP "
+                "WHERE id = ? AND (cover_image IS NULL OR cover_image = '') AND COALESCE(metadata_locked, 0) = 0",
+                (cover_image, book_id))
+            conn.commit()
+            return cursor.rowcount > 0
+
+    @staticmethod
     def update_book_pages(db_type, book_id, total_pages):
         conn = database.get_connection(db_type)
         cursor = conn.cursor()

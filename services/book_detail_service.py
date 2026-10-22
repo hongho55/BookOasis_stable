@@ -457,11 +457,11 @@ class BookDetailService:
                     redis_delete_pattern("cache:history*:audiobook:*")
                     redis_delete_pattern("cache:recent_added*:audiobook:*")
                 except Exception as cache_err:
-                    print(f"[BookDetailService WARNING] 오디오북 레디스 캐시 소거 실패: {cache_err}")
+                    print(f"[BookDetailService WARNING] Failed to clear audiobook Redis cache: {cache_err}")
 
                 return True, f'"{series_name}" 메타정보가 성공적으로 수정되었습니다.'
             except Exception as e:
-                print(f"[BookDetailService] 오디오북 메타정보 수정 에러: {e}")
+                print(f"[BookDetailService] Error updating audiobook metadata: {e}")
                 if dest_path:  # DB에 반영되지 않은 표지 파일을 남기지 않는다
                     try:
                         os.remove(dest_path)
@@ -490,7 +490,7 @@ class BookDetailService:
                 
                 cover_file.save(dest_path)
                 cover_image_url = f"/api/media/covers/{library_id}/{cover_filename}"
-                print(f"[BookDetailService] 시리즈 대표 표지 수동 업로드 완료: {dest_path} -> {cover_image_url}")
+                print(f"[BookDetailService] Series cover uploaded manually: {dest_path} -> {cover_image_url}")
             
             # 3. 시리즈 메타 정보 일괄 업데이트
             BookRepository.update_media_detail(db_type, series_name, author, isbn, publisher, summary, link, genre, tags, series_alias=series_alias, cover_image_url=cover_image_url, books_lv=books_lv, publication_status=publication_status)
@@ -502,9 +502,9 @@ class BookDetailService:
                 redis_delete_pattern(f"cache:history*:{db_type}:*")
                 redis_delete_pattern(f"cache:recent_added*:{db_type}:*")
             except Exception as cache_err:
-                print(f"[BookDetailService WARNING] 레디스 캐시 소거 실패: {cache_err}")
+                print(f"[BookDetailService WARNING] Failed to clear Redis cache: {cache_err}")
 
             return True, f'"{series_name}" 메타정보가 성공적으로 수정되었습니다.'
         except Exception as e:
-            print(f"[BookDetailService] 메타정보 수정 에러: {e}")
+            print(f"[BookDetailService] Error updating metadata: {e}")
             return False, f'DB 업데이트 오류: {str(e)}'

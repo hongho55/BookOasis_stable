@@ -58,24 +58,24 @@ def _find_forbidden_calls_in_source(source, filename):
     try:
         tree = ast.parse(source, filename=filename)
     except SyntaxError as e:
-        return [f"{filename}: 소스 파싱 실패 ({e})"]
+        return [f"{filename}: failed to parse source ({e})"]
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name == 'subprocess' or alias.name.startswith('subprocess.'):
-                    hits.append(f"{filename}:{node.lineno}: subprocess import 발견")
+                    hits.append(f"{filename}:{node.lineno}: subprocess import found")
         elif isinstance(node, ast.ImportFrom):
             if node.module and (node.module == 'subprocess' or node.module.startswith('subprocess.')):
-                hits.append(f"{filename}:{node.lineno}: subprocess import 발견")
+                hits.append(f"{filename}:{node.lineno}: subprocess import found")
         elif isinstance(node, ast.Call):
             func = node.func
             if isinstance(func, ast.Attribute) and func.attr in _FORBIDDEN_OS_PROCESS_CALLS:
                 if isinstance(func.value, ast.Name) and func.value.id == 'os':
-                    hits.append(f"{filename}:{node.lineno}: os.{func.attr}() 호출 발견")
+                    hits.append(f"{filename}:{node.lineno}: os.{func.attr}() call found")
             elif isinstance(func, ast.Name) and func.id in ('__import__',):
                 if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == 'subprocess':
-                    hits.append(f"{filename}:{node.lineno}: __import__('subprocess') 발견")
+                    hits.append(f"{filename}:{node.lineno}: __import__('subprocess') found")
 
     return hits
 
@@ -547,7 +547,7 @@ class MetadataFactory:
             from repositories.metadata_repository import MetadataRepository 
             db_settings = MetadataRepository.get_all_settings('general')
         except Exception as e:
-            print(f"[MetadataFactory] DB 설정 사전 load failed: {e}")
+            print(f"[MetadataFactory] Failed to preload DB settings: {e}")
 
         seen_ids = set()
         for provider_name, target_class in cls._discover_provider_classes():
@@ -615,7 +615,7 @@ class MetadataFactory:
             from repositories.metadata_repository import MetadataRepository
             db_settings = MetadataRepository.get_all_settings('general')
         except Exception as e:
-            print(f"[MetadataFactory] DB 설정 사전 load failed: {e}")
+            print(f"[MetadataFactory] Failed to preload DB settings: {e}")
 
         seen_ids = set()
         for provider_name, target_class in cls._discover_provider_classes():

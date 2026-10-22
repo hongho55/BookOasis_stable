@@ -54,10 +54,10 @@ export async function loadDashboardData() {
 
   // 탭 타입 전환 시 이전 탭의 카드를 즉시 지우고 로딩 스피너로 초기화 (1~2초 잔상 현상 방지)
   if (isTypeSwitched || (historyRow && !historyRow.children.length)) {
-    if (historyRow) historyRow.innerHTML = '<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> 최근 항목을 불러오는 중...</div>';
+    if (historyRow) historyRow.innerHTML = `<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('dashboard.recent_loading')}</div>`;
   }
   if (isTypeSwitched || (newRow && !newRow.children.length)) {
-    if (newRow) newRow.innerHTML = '<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> 신규 항목을 불러오는 중...</div>';
+    if (newRow) newRow.innerHTML = `<div class="loading-spinner"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('dashboard.new_loading')}</div>`;
   }
   
   try {
@@ -130,8 +130,8 @@ export async function loadDashboardData() {
   } catch (e) {
     if (requestToken !== dashboardLoadToken) return;
     console.error('대시보드 데이터 로드 오류:', e);
-    if (historyRow) historyRow.innerHTML = '<div class="loading-spinner">서버 연결 오류</div>';
-    if (newRow) newRow.innerHTML = '<div class="loading-spinner">서버 연결 오류</div>';
+    if (historyRow) historyRow.innerHTML = `<div class="loading-spinner">${i18n.t('dashboard.server_error')}</div>`;
+    if (newRow) newRow.innerHTML = `<div class="loading-spinner">${i18n.t('dashboard.server_error')}</div>`;
   } finally {
     if (requestToken === dashboardLoadToken) {
       state.isLoading = false;
@@ -208,8 +208,8 @@ function applyHomeWidgetLockUi(locked) {
   btn.setAttribute('data-locked', locked ? '1' : '0');
   btn.classList.toggle('home-widget-lock-toggle--unlocked', !locked);
   btn.innerHTML = locked
-    ? '<i class="lc lc-lock"></i> <span>배치 잠금</span>'
-    : '<i class="lc lc-lock-open"></i> <span>배치 편집 중</span>';
+    ? `<i class="lc lc-lock"></i> <span>${i18n.t('dashboard.widget_locked')}</span>`
+    : `<i class="lc lc-lock-open"></i> <span>${i18n.t('dashboard.widget_editing')}</span>`;
   // 잠금 중엔 위젯 제거(×) 버튼도 숨긴다 (style.css .home-widget-stack--locked) - 드래그만 막고 ×는 보였다
   document.getElementById('home-widget-stack')?.classList.toggle('home-widget-stack--locked', locked);
 }
@@ -392,7 +392,7 @@ export async function loadHomeDashboardLayout(targetType, { allowSsr = false } =
       layoutClass = span >= 3 ? ' home-widget-slot--span-3' : (span === 2 ? ' home-widget-slot--span-2' : '');
     }
 
-    const removeBtnHtml = `<button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>`;
+    const removeBtnHtml = `<button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="${i18n.t('dashboard.widget_remove')}"><i class="lc lc-x"></i></button>`;
     // frame:'none' 위젯(배너 등)은 제목줄 없이 내용만 - 제거 버튼은 오른쪽 위에 겹쳐 놓는다 (home_dashboard_service.py)
     if (widget.frame === 'none') {
       stack.insertAdjacentHTML('beforeend', `
@@ -410,12 +410,12 @@ export async function loadHomeDashboardLayout(targetType, { allowSsr = false } =
       <div class="plugin-card home-widget-slot${layoutClass}" id="home-widget-${widgetId}" data-widget-id="${widgetId}" data-widget-kind="plugin" data-plugin-id="${widget.plugin_id}" data-limit="${Number(widget.limit) || 10}"${widget.hidden ? ' style="display:none;"' : ''}>
           <h4 class="plugin-card-header">
               <span class="plugin-card-header-title"><i class="${iconClass}"></i><span class="plugin-card-header-title-text">${title}</span></span>
-              <span class="plugin-card-provider">제공: ${provider}</span>
-              <button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="홈 화면에서 위젯 제거"><i class="lc lc-x"></i></button>
+              <span class="plugin-card-provider">${i18n.t('dashboard.provided_by')}: ${provider}</span>
+              <button type="button" class="home-widget-remove-btn" data-remove-widget-id="${widgetId}" title="${i18n.t('dashboard.widget_remove')}"><i class="lc lc-x"></i></button>
           </h4>
           ${subtitle}
           <div id="${contentId}" class="plugin-widget-body">
-              <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> 위젯 데이터를 불러오는 중...</div>
+              <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('dashboard.widget_loading')}</div>
           </div>
       </div>
     `;
@@ -468,7 +468,7 @@ function renderHomeWidgetCatalog(catalog) {
 
   el.style.display = 'flex';
   el.innerHTML = `
-    <span class="home-widget-catalog-label"><i class="lc lc-plus"></i> 위젯 추가:</span>
+    <span class="home-widget-catalog-label"><i class="lc lc-plus"></i> ${i18n.t('dashboard.widget_add')}:</span>
     ${catalog.map((w) => `
       <button type="button" class="home-widget-catalog-btn" data-add-widget-id="${escapeHtml(w.id)}">
         <i class="${window.boIcon(w.icon || 'lc lc-puzzle')}"></i> ${escapeHtml(w.title || w.plugin_id || w.id)}
@@ -588,11 +588,11 @@ export async function loadDashboardPlugins(requestToken = null) {
           <div class="plugin-card" id="plugin-${widgetId}">
               <h4 class="plugin-card-header">
                   <span class="plugin-card-header-title"><i class="${iconClass}"></i><span class="plugin-card-header-title-text">${title}</span></span>
-                  <span class="plugin-card-provider">제공: ${provider}</span>
+                  <span class="plugin-card-provider">${i18n.t('dashboard.provided_by')}: ${provider}</span>
               </h4>
               ${subtitle}
               <div id="${contentId}" class="plugin-widget-body">
-                  <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> 위젯 데이터를 불러오는 중...</div>
+                  <div class="loading-spinner loading-spinner--widget"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('dashboard.widget_loading')}</div>
               </div>
           </div>
         `;
@@ -632,11 +632,11 @@ export async function loadDashboardPlugins(requestToken = null) {
                   <h3 class="section-title">
                     <i class="${iconClass}"></i> <span>${title}</span>
                   </h3>
-                  <span class="plugin-tab-provider">제공: ${provider}</span>
+                  <span class="plugin-tab-provider">${i18n.t('dashboard.provided_by')}: ${provider}</span>
                 </div>
                 ${subtitle}
                 <div id="${contentId}" class="plugin-tab-widget-body">
-                  <div class="loading-spinner loading-spinner--widget-grid"><i class="lc lc-loader-circle lc-spin"></i> 데이터를 불러오는 중...</div>
+                  <div class="loading-spinner loading-spinner--widget-grid"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('dashboard.data_loading')}</div>
                 </div>
               </div>
             </div>
@@ -778,7 +778,7 @@ async function loadDashboardWidgetData(pluginId, limit, contentId, requestToken)
       container.innerHTML = '';
       data.items.forEach(item => {
         if (item && (item.item_type === 'metric' || item.metric)) {
-          const metric = formatDashboardMetricText(item.metric || item.title || '통계');
+          const metric = formatDashboardMetricText(item.metric || item.title || i18n.t('dashboard.stats_fallback'));
           const value = formatDashboardMetricText(item.value || '-');
           const desc = formatDashboardMetricText(item.description || '');
           const metricHtml = `
@@ -793,9 +793,9 @@ async function loadDashboardWidgetData(pluginId, limit, contentId, requestToken)
         }
 
         const cover = item.cover || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=100&auto=format&fit=crop&q=60';
-        const title = escapeHtml(item.title || '제목 없음');
-        const author = escapeHtml(item.author || '저자 미상');
-        const publisher = escapeHtml(item.publisher || '출판사 미상');
+        const title = escapeHtml(item.title || i18n.t('dashboard.no_title'));
+        const author = escapeHtml(item.author || i18n.t('dashboard.unknown_author'));
+        const publisher = escapeHtml(item.publisher || i18n.t('dashboard.unknown_publisher'));
         const pubDate = escapeHtml(item.pubDate || '');
         const link = item.link || '#';
         const isExternal = link && link !== '#';
@@ -839,7 +839,7 @@ async function loadDashboardWidgetData(pluginId, limit, contentId, requestToken)
     }
   } catch (e) {
     console.error(`대시보드 위젯 로드 오류(${pluginId}):`, e);
-    container.innerHTML = '<div class="plugin-widget-error">서버 연결 오류</div>';
+    container.innerHTML = `<div class="plugin-widget-error">${i18n.t('dashboard.server_error')}</div>`;
   }
 }
 

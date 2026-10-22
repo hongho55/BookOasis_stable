@@ -78,7 +78,7 @@ def audit_file(filepath):
 
 def main():
     print("=" * 60)
-    print(" BookOasis MariaDB SQL 예약어 및 구문 전수 감사 & 자동 교정 도구")
+    print(" BookOasis MariaDB SQL reserved word and syntax audit & auto-fix tool")
     print("=" * 60)
 
     total_files = 0
@@ -97,8 +97,8 @@ def main():
                     total_changes += count
 
     print("\n==================================================")
-    print(f"✨ 전수 감사 결과: 총 {total_files}개 파이썬 파일 점검 완료.")
-    print(f"   수정된 파일: {modified_files}개 파일 (총 {total_changes}개 구문 교정 완료)")
+    print(f"✨ Audit result: checked {total_files} Python files.")
+    print(f"   Modified files: {modified_files} ({total_changes} statements fixed)")
     print("==================================================")
 
 if __name__ == '__main__':

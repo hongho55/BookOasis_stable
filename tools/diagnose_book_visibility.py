@@ -16,7 +16,7 @@ DEFAULT_DB_PATHS = {
 def open_read_only(db_path):
     absolute_path = Path(db_path).resolve()
     if not absolute_path.is_file():
-        raise FileNotFoundError(f'DB 파일을 찾을 수 없습니다: {absolute_path}')
+        raise FileNotFoundError(f'DB file not found: {absolute_path}')
     connection = sqlite3.connect(f'{absolute_path.as_uri()}?mode=ro', uri=True)
     connection.row_factory = sqlite3.Row
     return connection
@@ -79,25 +79,25 @@ def diagnose(db_path, query, user_id=None, library_id=None):
     try:
         user = find_user(connection, user_id)
         if user_id is not None and user is None:
-            print(f'[오류] users 테이블에서 user_id={user_id}를 찾지 못했습니다.')
+            print(f'[ERROR] user_id={user_id} not found in the users table.')
             return 2
 
         role = user['role'] if user else None
         rows = find_books(connection, query)
 
         print('=' * 88)
-        print('BookOasis 도서 노출 진단 (읽기 전용)')
+        print('BookOasis book visibility diagnosis (read-only)')
         print(f'DB       : {Path(db_path).resolve()}')
-        print(f'검색어   : {query}')
+        print(f'Query    : {query}')
         if user:
-            print(f'사용자   : {user["username"]} (id={user["id"]}, role={role})')
+            print(f'User     : {user["username"]} (id={user["id"]}, role={role})')
         else:
-            print('사용자   : 관리자 기준(권한 필터 없음)')
-        print(f'카테고리 : {library_id if library_id is not None else "전체"}')
+            print('User     : admin baseline (no permission filter)')
+        print(f'Category : {library_id if library_id is not None else "all"}')
         print('=' * 88)
 
         if not rows:
-            print('[결과] title/series_name/author/file_path 어디에도 검색어가 없습니다.')
+            print('[RESULT] The query is not in title/series_name/author/file_path.')
             return 1
 
         visible_count = 0
@@ -106,9 +106,9 @@ def diagnose(db_path, query, user_id=None, library_id=None):
             if row['is_deleted'] != 0:
                 reasons.append(f'is_deleted={row["is_deleted"]}')
             if library_id is not None and row['library_id'] != library_id:
-                reasons.append(f'선택 카테고리 불일치({row["library_id"]} != {library_id})')
+                reasons.append(f'Selected category mismatch ({row["library_id"]} != {library_id})')
             if not has_permission(connection, user_id, role, row['library_id']):
-                reasons.append('사용자 카테고리 권한 없음')
+                reasons.append('User has no permission for the category')
 
             visible = not reasons
             if visible:
@@ -116,23 +116,23 @@ def diagnose(db_path, query, user_id=None, library_id=None):
             series_name = row['series_name'] or '기타 단행본'
             group_dir = comparison_dir(row['file_path'], row['file_format'])
 
-            print(f'[{"노출" if visible else "제외"}] book_id={row["id"]}')
+            print(f'[{"visible" if visible else "excluded"}] book_id={row["id"]}')
             print(f'  title       : {row["title"]}')
             print(f'  series_name : {row["series_name"]}')
             print(f'  library     : {row["library_id"]} / {row["library_name"]}')
             print(f'  file_path   : {row["file_path"]}')
             print(f'  group_key   : ({row["library_id"]}, {series_name!r}, {group_dir!r})')
             if reasons:
-                print(f'  제외 원인   : {", ".join(reasons)}')
+                print(f'  Excluded by : {", ".join(reasons)}')
             elif query.lower() not in str(series_name).lower() and query.lower() in str(row['title'] or '').lower():
-                print('  참고        : 제목만 일치합니다. 구버전 검색은 이 행을 찾지 못합니다.')
+                print('  Note        : only the title matches. Older search versions do not find this row.')
             print('-' * 88)
 
-        print(f'[요약] DB 검색 {len(rows)}권 / 지정 사용자 목록 노출 {visible_count}권')
+        print(f'[SUMMARY] DB matches {len(rows)} / visible in the given user list {visible_count}')
         if visible_count > 0:
-            print('[판정] 서버 목록 SQL을 통과합니다. 배포 버전 또는 브라우저의 선로드 목록을 확인하세요.')
+            print('[VERDICT] Passes the server list SQL. Check the deployed version or the list preloaded in the browser.')
             return 0
-        print('[판정] 모든 행이 서버 목록 SQL 조건에서 제외됩니다. 위 제외 원인을 확인하세요.')
+        print('[VERDICT] Every row is excluded by the server list SQL. Check the exclusion reasons above.')
         return 1
     finally:
         connection.close()
@@ -140,13 +140,13 @@ def diagnose(db_path, query, user_id=None, library_id=None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='특정 도서가 사용자 목록 API 조건을 통과하는지 읽기 전용으로 진단합니다.'
+        description='Diagnoses, read-only, whether a book passes the conditions of the user list API.'
     )
-    parser.add_argument('query', help='도서 제목, 시리즈명, 작가 또는 경로 검색어')
-    parser.add_argument('--db', choices=('general', 'adult'), default='general', help='DB 종류')
-    parser.add_argument('--db-path', help='기본 경로 대신 사용할 SQLite DB 파일')
-    parser.add_argument('--user-id', type=int, help='비관리자 권한 필터를 재현할 사용자 ID')
-    parser.add_argument('--library-id', type=int, help='특정 카테고리 선택 조건을 재현할 library ID')
+    parser.add_argument('query', help='Search term: book title, series name, author or path')
+    parser.add_argument('--db', choices=('general', 'adult'), default='general', help='DB type')
+    parser.add_argument('--db-path', help='SQLite DB file to use instead of the default path')
+    parser.add_argument('--user-id', type=int, help='User ID whose non-admin permission filter to reproduce')
+    parser.add_argument('--library-id', type=int, help='Library ID whose category selection to reproduce')
     args = parser.parse_args()
 
     db_path = Path(args.db_path) if args.db_path else DEFAULT_DB_PATHS[args.db]
@@ -158,7 +158,7 @@ def main():
             library_id=args.library_id,
         )
     except (sqlite3.Error, OSError) as error:
-        print(f'[오류] 진단 실패: {error}')
+        print(f'[ERROR] Diagnosis failed: {error}')
         return 2
 
 

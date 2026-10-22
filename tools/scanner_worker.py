@@ -24,20 +24,20 @@ if __name__ == '__main__':
         env_path = os.path.join(BASE_DIR, '.env')
         load_dotenv(env_path)
     except Exception as env_err:
-        print(f"[Scanner-Worker] .env 로드 실패: {env_err}")
+        print(f"[Scanner-Worker] Failed to load .env: {env_err}")
 
     # ─── 유령 태스크 및 고착 스캔 상태 부팅 시점 자동 정화 ───
     try:
         from repositories.scanner_queue_repository import ScannerQueueRepository
         ScannerQueueRepository.startup_cleanup_ghost_tasks()
     except Exception as clean_err:
-        print(f"[Scanner-Worker] 부팅 시점 유령 태스크 정화 실패: {clean_err}")
+        print(f"[Scanner-Worker] Failed to clean up ghost tasks at startup: {clean_err}")
 
     # ─── 전용 워커가 없어 걸려 있던 경고(core.ensure_scanner_worker_running)를 지운다 ───
     try:
         from services.system_health_service import DEDICATED_WORKER_HEALTH_KEY, SystemHealthService
         SystemHealthService.record_success(DEDICATED_WORKER_HEALTH_KEY)
     except Exception as health_err:
-        print(f"[Scanner-Worker] 워커 상태 경고 해제 실패: {health_err}")
+        print(f"[Scanner-Worker] Failed to clear the worker health warning: {health_err}")
 
     run_scanner_worker_loop()

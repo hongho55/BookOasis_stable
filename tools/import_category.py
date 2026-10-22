@@ -208,10 +208,10 @@ def inspect_package(input_path):
         print(f"    [{idx}] {rp}")
     print("==========================================================")
     print(f"👉 Import Recommendations:")
-    print(f"   1) 신규 카테고리로 가져오기:")
-    print(f"      python tools/import_category.py -i \"{input_path}\" -p \"/path/to/target\" -n \"새 이름\"")
-    print(f"   2) 기존 카테고리에 병합(Merge)하기:")
-    print(f"      python tools/import_category.py -i \"{input_path}\" --merge-to <카테고리ID 또는 이름> -p \"/path/to/target\"")
+    print(f"   1) Import as a new category:")
+    print(f"      python tools/import_category.py -i \"{input_path}\" -p \"/path/to/target\" -n \"New name\"")
+    print(f"   2) Merge into an existing category:")
+    print(f"      python tools/import_category.py -i \"{input_path}\" --merge-to <category ID or name> -p \"/path/to/target\"")
     print("==========================================================")
 
     # 기존 DB 카테고리 목록 안내 (병합 참조용)
@@ -221,7 +221,7 @@ def inspect_package(input_path):
         print("----------------------------------------------------------")
         for el in existing_libs:
             paths_short = (el['physical_path'] or '').replace('\n', ' | ')
-            print(f"  • [{el['db_type'].upper()}] ID {el['id']:<3} | 이름: '{el['name']}' (경로: {paths_short})")
+            print(f"  • [{el['db_type'].upper()}] ID {el['id']:<3} | name: '{el['name']}' (path: {paths_short})")
         print("----------------------------------------------------------")
 
 
@@ -953,23 +953,23 @@ def main():
         description="BookOasis Category Import & Merge CLI Tool (Multi-path & Docker Supported)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-사용 예시 (Usage Examples):
+Usage examples:
 
-1. 패키지 내용 및 기존 DB 카테고리 미리보기 검사 (Inspect):
-   python tools/import_category.py -i 백업파일.oasis.zip --info
+1. Inspect the package and preview existing DB categories:
+   python tools/import_category.py -i backup.oasis.zip --info
 
-2. 신규 카테고리로 가져오기 (Import as New Category):
-   python tools/import_category.py -i 백업파일.oasis.zip -p "/volume1/mnt/만화" -n "이관된 만화함"
+2. Import as a new category:
+   python tools/import_category.py -i backup.oasis.zip -p "/volume1/mnt/comics" -n "Imported comics"
 
-3. 기존 카테고리에 병합(Merge)하기 (Category Merge into Existing):
-   # 카테고리 ID로 병합
-   python tools/import_category.py -i 백업파일.oasis.zip --merge-to 15 -p "/volume1/mnt/만화B"
+3. Merge into an existing category:
+   # merge by category ID
+   python tools/import_category.py -i backup.oasis.zip --merge-to 15 -p "/volume1/mnt/comicsB"
 
-   # 카테고리 이름으로 병합
-   python tools/import_category.py -i 백업파일.oasis.zip --merge-to "판타지 소설" -p "/volume1/mnt/소설B"
+   # merge by category name
+   python tools/import_category.py -i backup.oasis.zip --merge-to "Fantasy novels" -p "/volume1/mnt/novelsB"
 
-4. 도커(Docker) 환경 실행 예시:
-   docker exec -it bookoasis python tools/import_category.py -i /app/covers/백업.oasis.zip --merge-to 15 -p "/volume1/mnt/만화B"
+4. Running in Docker:
+   docker exec -it bookoasis python tools/import_category.py -i /app/covers/backup.oasis.zip --merge-to 15 -p "/volume1/mnt/comicsB"
 """
     )
     parser.add_argument("-i", "--input", type=str, required=True, help="Path to input .oasis.zip package")

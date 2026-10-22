@@ -216,7 +216,7 @@ def _stream_transcoded_video(file_path, video_id=None, episode_id=None):
                 events = sel.select(timeout=timeout)
                 if not events:
                     stage = 'STREAM-STALL' if got_first_chunk else 'FIRST-CHUNK-TIMEOUT'
-                    print(f"[Video-Transcode][vid={video_id} ep={episode_id}] {stage} 감지 ({timeout}s 무응답) - 프로세스 강제 종료")
+                    print(f"[Video-Transcode][vid={video_id} ep={episode_id}] {stage} detected (no response for {timeout}s) - killing the process")
                     break
                 # read1()을 사용해야 한다: 일반 read(n)은 BufferedReader가 n바이트를
                 # 채울 때까지 내부적으로 raw read를 반복 호출하므로, select()가 이미
@@ -365,7 +365,7 @@ def stream_video_episode(vid, eid):
             try:
                 VideoRepository.update_episode_probe_result(eid, vid, duration, width, height, computed_needs_transcode)
             except Exception as e:
-                print(f"[Video-Stream] JIT 코덱 분석 결과 저장 실패 (vid={vid} ep={eid}): {e}")
+                print(f"[Video-Stream] Failed to save JIT codec analysis result (vid={vid} ep={eid}): {e}")
             row['needs_transcode'] = computed_needs_transcode
 
     # needs_transcode는 DB에 전역 1개 값으로 저장되어(요청자 브라우저와 무관), mkv 컨테이너가

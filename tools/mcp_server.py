@@ -28,7 +28,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv(os.path.join(BASE_DIR, '.env'))
 except Exception as env_err:
-    print(f"[MCP-Server] .env 로드 실패: {env_err}", file=sys.stderr)
+    print(f"[MCP-Server] Failed to load .env: {env_err}", file=sys.stderr)
 
 from mcp.server.mcpserver import MCPServer
 
@@ -117,6 +117,20 @@ def get_request_debug_summary(hours: float = 24, top: int = 20) -> dict:
     def _run():
         from services.request_debug_summary import summarize
         return summarize(hours if hours and hours > 0 else None, top)
+    return _quiet(_run)
+
+
+@mcp.tool()
+def get_gdrive_beta_summary(hours: float = 24, library_id: int = 0) -> dict:
+    """구글 드라이브 링크 카테고리(클로즈 베타) 상태를 로그로 요약합니다(읽기 전용).
+    scan: 카테고리별 스캔 횟수·전체/목록 조회 시간 분포·마지막 스캔(건너뛴/처리한 폴더, 신규, 삭제 보류)·신규 합계.
+    view: 책 열 때 사본 받기 횟수·실패율·종류별(zip/imgdir 등) 시간과 크기 분포·최근 실패 사유·다음 화 미리 받기·열 때 만든 표지 수.
+    cache: 용량/만료 정리 내역과 지금 캐시 사용량. active_warnings: 목록 조회/메타데이터 받기 실패로 열린 관리자 경고.
+    hours=0이면 남아 있는 로그 전체, library_id=0이면 전체 카테고리. 기능이 꺼져 있으면 beta_enabled=false
+    (서버 .env에 GDRIVE_LINK_BETA=true 필요)."""
+    def _run():
+        from services.gdrive_beta_summary import summarize
+        return summarize(hours if hours and hours > 0 else None, library_id or None)
     return _quiet(_run)
 
 

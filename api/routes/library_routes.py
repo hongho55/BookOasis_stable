@@ -467,6 +467,6 @@ def move_media_library():
     except ValueError as e:
         return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
-        print(f"[API ERROR] 카테고리 이관 실패: {e}")
+        print(f"[API ERROR] Category transfer failed: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 

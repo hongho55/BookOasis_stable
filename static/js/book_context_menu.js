@@ -90,10 +90,17 @@ function hasActiveSearchPlugin() {
   return cachedSearchPlugins === null ? null : cachedSearchPlugins.some(p => p.enabled);
 }
 
+// 번역 키가 있으면 번역, 없거나 번역 파일에 없으면(키 그대로 돌아옴) 대체문
+function translateOr(key, vars, fallback) {
+  if (!key || !window.i18n?.t) return fallback;
+  const text = window.i18n.t(key, vars || {});
+  return text && text !== key ? text : fallback;
+}
+
 // menu_rules.js가 계산한 항목 상태를 DOM에 반영한다.
 function applyBookMenuState(bookMenu, menuState) {
   const menuTitle = bookMenu.querySelector('.context-menu-title');
-  if (menuTitle) menuTitle.textContent = menuState.title;
+  if (menuTitle) menuTitle.textContent = translateOr(menuState.titleKey, menuState.titleVars, menuState.title);
 
   Object.entries(menuState.items).forEach(([elementId, item]) => {
     const el = document.getElementById(elementId);
@@ -113,7 +120,7 @@ function applyBookMenuState(bookMenu, menuState) {
     if (!label) return;
     if (item.labelKey) {
       if (item.setI18n) label.dataset.i18n = item.labelKey;
-      label.textContent = window.i18n?.t(item.labelKey) || item.labelFallback || label.textContent;
+      label.textContent = translateOr(item.labelKey, item.labelVars, item.labelFallback || item.labelText || label.textContent);
     } else if (item.labelText != null) {
       label.textContent = item.labelText;
     }

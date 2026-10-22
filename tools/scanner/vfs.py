@@ -164,14 +164,14 @@ def detect_mount_root_from_proc_mounts(remote_name, physical_path=None):
     — 그 경우 detect_mount_root_via_rc()로 폴백."""
     remote_name = (remote_name or '').strip().rstrip(':')
     if not remote_name:
-        print("[Vfs-MountDetect] remote_name이 비어 있어 /proc/mounts 조회를 건너뜀")
+        print("[Vfs-MountDetect] remote_name is empty, skipping the /proc/mounts lookup")
         return None
 
     try:
         with open('/proc/mounts', 'r', encoding='utf-8', errors='replace') as f:
             lines = f.readlines()
     except OSError as e:
-        print(f"[Vfs-MountDetect] /proc/mounts 읽기 실패(도커 등 마운트 네임스페이스가 다르면 정상): {e}")
+        print(f"[Vfs-MountDetect] Failed to read /proc/mounts (normal when the mount namespace differs, e.g. Docker): {e}")
         return None
 
     physical_path_norm = (physical_path or '').strip().replace('\\', '/').rstrip('/') or None
@@ -186,13 +186,13 @@ def detect_mount_root_from_proc_mounts(remote_name, physical_path=None):
         if source_remote != remote_name:
             continue
         mountpoint = _unescape_proc_mounts_field(mountpoint_raw).rstrip('/')
-        print(f"[Vfs-MountDetect] /proc/mounts에서 발견: remote='{remote_name}' -> mountpoint='{mountpoint}'")
+        print(f"[Vfs-MountDetect] Found in /proc/mounts: remote='{remote_name}' -> mountpoint='{mountpoint}'")
         if physical_path_norm and not (physical_path_norm == mountpoint or physical_path_norm.startswith(mountpoint + '/')):
-            print(f"[Vfs-MountDetect] 경고: physical_path='{physical_path_norm}'가 이 마운트 하위 경로가 아님 — 물리 경로를 다시 확인하세요")
+            print(f"[Vfs-MountDetect] Warning: physical_path='{physical_path_norm}' is not under this mount - check the physical path")
             continue
         return mountpoint
 
-    print(f"[Vfs-MountDetect] /proc/mounts에 remote='{remote_name}' 마운트 없음")
+    print(f"[Vfs-MountDetect] No mount for remote='{remote_name}' in /proc/mounts")
     return None
 
 
@@ -237,10 +237,10 @@ def detect_mount_root_via_rc(rc_urls, physical_path):
     가장 길게(구체적으로) 일치하는 MountPoint를 우선한다."""
     physical_path = (physical_path or '').strip().replace('\\', '/').rstrip('/')
     if not physical_path:
-        print("[Vfs-MountDetect] physical_path가 비어 있어 감지를 건너뜀")
+        print("[Vfs-MountDetect] physical_path is empty, skipping detection")
         return None
 
-    print(f"[Vfs-MountDetect] 감지 시작: physical_path='{physical_path}', rc_urls={rc_urls}")
+    print(f"[Vfs-MountDetect] Detection start: physical_path='{physical_path}', rc_urls={rc_urls}")
 
     for rc_url in rc_urls:
         try:
@@ -251,32 +251,32 @@ def detect_mount_root_via_rc(rc_urls, physical_path):
                 raw_body = resp.read().decode('utf-8')
                 payload = json.loads(raw_body)
         except Exception as e:
-            print(f"[Vfs-MountDetect] RC 서버 '{rc_url}' 조회 실패(다음 후보로 계속): {e}{_docker_localhost_rc_hint(rc_url)}")
+            print(f"[Vfs-MountDetect] RC server '{rc_url}' query failed (trying the next candidate): {e}{_docker_localhost_rc_hint(rc_url)}")
             continue
 
-        print(f"[Vfs-MountDetect] RC 서버 '{rc_url}' 응답: {raw_body}")
+        print(f"[Vfs-MountDetect] RC server '{rc_url}' response: {raw_body}")
 
         mount_points = payload.get('mountPoints') if isinstance(payload, dict) else None
         if not isinstance(mount_points, list):
-            print(f"[Vfs-MountDetect] RC 서버 '{rc_url}' 응답에 mountPoints 배열이 없음 (payload keys: {list(payload.keys()) if isinstance(payload, dict) else type(payload)})")
+            print(f"[Vfs-MountDetect] RC server '{rc_url}' response has no mountPoints array (payload keys: {list(payload.keys()) if isinstance(payload, dict) else type(payload)})")
             continue
         if not mount_points:
-            print(f"[Vfs-MountDetect] RC 서버 '{rc_url}': 현재 활성 마운트가 0개 (rclone mount로 마운트된 게 아니라 rclone.conf 상의 원격 자체를 다른 방식(fstab 등)으로 마운트했을 가능성)")
+            print(f"[Vfs-MountDetect] RC server '{rc_url}': no active mounts (the remote may be mounted another way, e.g. fstab, rather than with rclone mount)")
 
         best_match = None
         for entry in mount_points:
             mp = str(entry.get('MountPoint') or '').replace('\\', '/').rstrip('/')
-            print(f"[Vfs-MountDetect]   후보 마운트: Fs='{entry.get('Fs')}', MountPoint='{mp}' -> {'일치' if (physical_path == mp or physical_path.startswith(mp + '/')) else '불일치'}")
+            print(f"[Vfs-MountDetect]   Candidate mount: Fs='{entry.get('Fs')}', MountPoint='{mp}' -> {'match' if (physical_path == mp or physical_path.startswith(mp + '/')) else 'no match'}")
             if not mp:
                 continue
             if physical_path == mp or physical_path.startswith(mp + '/'):
                 if best_match is None or len(mp) > len(best_match):
                     best_match = mp
         if best_match:
-            print(f"[Vfs-MountDetect] 감지 성공: '{best_match}'")
+            print(f"[Vfs-MountDetect] Detected: '{best_match}'")
             return best_match
 
-    print(f"[Vfs-MountDetect] 감지 실패: physical_path='{physical_path}'를 포함하는 마운트를 못 찾음")
+    print(f"[Vfs-MountDetect] Detection failed: no mount contains physical_path='{physical_path}'")
     return None
 
 

@@ -53,7 +53,7 @@ def pick_archive_cover_image(zf, img_infos):
                         return img_infos[index]
                     break
         except Exception as e:
-            print(f"[Scanner-Cover] ComicInfo.xml FrontCover 해석 실패, 이름 기준으로 계속: {e}")
+            print(f"[Scanner-Cover] Failed to read ComicInfo.xml FrontCover, continuing by file name: {e}")
 
     for info in img_infos:
         stem = os.path.splitext(os.path.basename(info.filename))[0]
@@ -69,6 +69,43 @@ def save_as_thumbnail_webp(img, dest_path, quality=80, max_w=COVER_THUMB_MAX_W, 
     Image.thumbnail()은 이미 더 작은 이미지는 확대하지 않고 그대로 둔다."""
     img.thumbnail((max_w, max_h), Image.LANCZOS)
     img.save(dest_path, "WEBP", quality=quality)
+
+def render_pdf_cover(pdf_path, dest_path):
+    """PDF 첫 페이지를 렌더링해 WebP 표지로 저장한다(성공 True, 빈 PDF는 False, 렌더 실패는 예외).
+    레이지 스캐너와 gdrive 링크 책의 '열 때 표지'가 함께 쓴다."""
+    import pypdfium2 as pdfium
+    pdf = pdfium.PdfDocument(pdf_path)
+    try:
+        if len(pdf) == 0:
+            return False
+        page = pdf[0]
+        # 표지에 필요한 크기(COVER_THUMB_MAX_W/H)를 훨씬 넘는 배율로 렌더링해봐야
+        # (예: 300dpi+ 스캔 PDF를 원본 mediabox 그대로) 어차피 save_as_thumbnail_webp()가
+        # 저장 직전에 다시 줄이므로 rasterize 시간만 낭비다. 그렇다고 딱 최종 크기로만
+        # 그리면(1x) 축소 과정에서 나던 안티에일리어싱 효과가 없어져 글자가 흐릿해진다 —
+        # 그래서 최종 크기의 PDF_COVER_SUPERSAMPLE배로 살짝 크게 그린 뒤
+        # save_as_thumbnail_webp()의 LANCZOS 리샘플링이 그 여분 해상도로 텍스트 경계를
+        # 부드럽게 다듬으며 축소하게 한다 - 전체 원본 해상도 렌더링보다는 훨씬 싸면서도
+        # 1x 직접 렌더링보다 또렷한, 그 중간 지점.
+        PDF_COVER_SUPERSAMPLE = 2
+        page_w, page_h = page.get_size()
+        scale = float(PDF_COVER_SUPERSAMPLE)
+        if page_w > 0 and page_h > 0:
+            scale = min(
+                PDF_COVER_SUPERSAMPLE,
+                (COVER_THUMB_MAX_W * PDF_COVER_SUPERSAMPLE) / page_w,
+                (COVER_THUMB_MAX_H * PDF_COVER_SUPERSAMPLE) / page_h,
+            )
+        bitmap = page.render(scale=scale)
+        img = bitmap.to_pil()
+        save_as_thumbnail_webp(img, dest_path)
+        del img
+        del bitmap
+        page.close()
+        return True
+    finally:
+        pdf.close()
+
 
 def extract_epub_cover_direct(epub_path, dest_path):
     """Search cover image in EPUB file, convert to WebP format and save to dest_path"""

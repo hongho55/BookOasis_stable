@@ -83,7 +83,7 @@ export async function loadUsersList() {
   const tbody = document.getElementById('settings-users-list');
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> 사용자 목록 로드 중...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> ' + i18n.t('settings.users_loading') + '</td></tr>';
 
   try {
     const res = await fetch(`/api/admin/users?type=${state.currentLibraryType}`);
@@ -243,11 +243,11 @@ export async function submitResetPwdForm(e) {
   const newPassword = document.getElementById('reset-pwd-new').value.trim();
 
   if (newPassword.length < MIN_PASSWORD_LENGTH) {
-    alert(`비밀번호는 최소 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`);
+    alert(i18n.t('settings.users_password_min', { n: MIN_PASSWORD_LENGTH }));
     return;
   }
   if (newPassword.length > MAX_PASSWORD_LENGTH) {
-    alert(`비밀번호는 최대 ${MAX_PASSWORD_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('settings.users_password_max', { n: MAX_PASSWORD_LENGTH }));
     return;
   }
 
@@ -259,11 +259,11 @@ export async function submitResetPwdForm(e) {
     });
     const data = await res.json();
     if (data.success) {
-      alert(data.message || '변경되었습니다.');
+      alert(data.message || i18n.t('settings.users_changed'));
       closeResetPwdModal();
       loadUsersList();
     } else {
-      alert(data.error || '오류가 발생했습니다.');
+      alert(data.error || i18n.t('settings.users_error'));
     }
   } catch (err) {
     alert(i18n.t('settings.users_server_error'));
@@ -293,11 +293,11 @@ export async function submitAdminChangePwdForm(e) {
   const newPassword = document.getElementById('change-pwd-new').value.trim();
 
   if (currentPassword.length > MAX_PASSWORD_LENGTH || newPassword.length > MAX_PASSWORD_LENGTH) {
-    alert(`비밀번호는 최대 ${MAX_PASSWORD_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('settings.users_password_max', { n: MAX_PASSWORD_LENGTH }));
     return;
   }
   if (newPassword.length < MIN_PASSWORD_LENGTH) {
-    alert(`비밀번호는 최소 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`);
+    alert(i18n.t('settings.users_password_min', { n: MIN_PASSWORD_LENGTH }));
     return;
   }
 
@@ -309,11 +309,11 @@ export async function submitAdminChangePwdForm(e) {
     });
     const data = await res.json();
     if (data.success) {
-      alert(data.message || '변경되었습니다.');
+      alert(data.message || i18n.t('settings.users_changed'));
       closeAdminChangePwdModal();
       loadUsersList();
     } else {
-      alert(data.error || '오류가 발생했습니다.');
+      alert(data.error || i18n.t('settings.users_error'));
     }
   } catch (err) {
     alert(i18n.t('settings.users_server_error'));

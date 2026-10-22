@@ -68,7 +68,7 @@ class LibraryScanProgress:
         try:
             self._callback(phase, **details)
         except Exception as error:
-            print(f"[Scanner-Progress] 진행 상태 갱신 실패(스캔은 계속 진행): {error}")
+            print(f"[Scanner-Progress] Failed to update progress (scan continues): {error}")
 
     def folder_visited(self, count=1):
         """폴더 순회(탐색) 단계: 방문한 폴더 수를 늘린다."""
@@ -131,7 +131,7 @@ class ThrottledStageReporter:
             try:
                 self._update_stage(text)
             except Exception as error:
-                print(f"[Scanner-Progress] 단계 기록 실패(무시): {error}")
+                print(f"[Scanner-Progress] Failed to record step (ignored): {error}")
                 return
             self._last_text = text
             self._last_phase = phase

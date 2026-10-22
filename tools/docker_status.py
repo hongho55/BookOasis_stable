@@ -56,7 +56,7 @@ def find_processes_by_cmdline(pattern):
 
 def check_db_integrity(db_path):
     if not os.path.exists(db_path):
-        return "⚠️ 파일 없음 (미생성)"
+        return "⚠️ No file (not created yet)"
     try:
         conn = sqlite3.connect(db_path, timeout=5.0)
         cursor = conn.cursor()
@@ -64,15 +64,15 @@ def check_db_integrity(db_path):
         res = cursor.fetchone()[0]
         conn.close()
         if res == "ok":
-            return "✅ 무결성 정상 (OK)"
+            return "✅ Integrity OK"
         else:
-            return f"❌ 손상됨 (오류: {res})"
+            return f"❌ Corrupted (error: {res})"
     except Exception as e:
-        return f"❌ 접속 실패 ({e})"
+        return f"❌ Connection failed ({e})"
 
 def main():
     print("=" * 60)
-    print(" [BookOasis] 도커 컨테이너 내부 서비스 및 DB 상태 실시간 리포트")
+    print(" [BookOasis] Live report of services and DB status inside the Docker container")
     print("=" * 60)
 
     # 1. 미디어 웹 서버 점검
@@ -88,11 +88,11 @@ def main():
             web_pid = fallback_pids[0]
             web_alive = True
 
-    print("\n🖥️  [서비스 프로세스 상태]")
+    print("\n🖥️  [Service processes]")
     if web_alive:
-        print(f"  - 미디어 웹 서버 (Gunicorn) : 🟢 실행 중 (PID: {web_pid})")
+        print(f"  - Media web server (Gunicorn) : 🟢 running (PID: {web_pid})")
     else:
-        print("  - 미디어 웹 서버 (Gunicorn) : 🔴 정지 상태")
+        print("  - Media web server (Gunicorn) : 🔴 stopped")
 
     # 2. 스캐너 워커 서버 점검
     worker_pid = get_pid_from_file(WORKER_PID_FILE)
@@ -107,21 +107,21 @@ def main():
             worker_alive = True
 
     if worker_alive:
-        print(f"  - 백그라운드 스캐너 워커   : 🟢 실행 중 (PID: {worker_pid})")
+        print(f"  - Background scanner worker   : 🟢 running (PID: {worker_pid})")
     else:
-        print("  - 백그라운드 스캐너 워커   : 🔴 정지 상태")
+        print("  - Background scanner worker   : 🔴 stopped")
 
     # 3. 데이터베이스 무결성(PRAGMA integrity_check) 점검
-    print("\n💾  [데이터베이스 정합성 상태]")
+    print("\n💾  [Database integrity]")
     
     db_general = os.path.join(DB_DIR, "media_general.db")
     db_adult = os.path.join(DB_DIR, "media_adult.db")
     
-    print(f"  - 일반 DB (media_general.db) : {check_db_integrity(db_general)}")
-    print(f"  - 성인 DB (media_adult.db)   : {check_db_integrity(db_adult)}")
+    print(f"  - General DB (media_general.db) : {check_db_integrity(db_general)}")
+    print(f"  - Adult DB (media_adult.db)     : {check_db_integrity(db_adult)}")
 
     print("\n" + "=" * 60)
-    print(" 컨테이너 헬스 체크가 완료되었습니다.")
+    print(" Container health check complete.")
     print("=" * 60)
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ def save_scan_report(library_id, error_list, db_type='general'):
     이후 해당 카테고리 기준 리포트 수가 10개를 초과할 시 가장 오래된 파일을 순환 소거합니다.
     """
     if not error_list:
-        print(f"[ReportHelper] 카테고리 {library_id} 에러 내역이 없어 리포트 저장을 생략합니다.")
+        print(f"[ReportHelper] No errors for category {library_id}, skipping the report.")
         return None
 
     reports_dir = get_reports_dir()
@@ -55,9 +55,9 @@ def save_scan_report(library_id, error_list, db_type='general'):
     try:
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(report_data, f, ensure_ascii=False, indent=4)
-        print(f"[ReportHelper] 📄 스캔 에러 리포트 저장 성공: {file_path}")
+        print(f"[ReportHelper] 📄 Saved scan error report: {file_path}")
     except Exception as e:
-        print(f"[ReportHelper ERROR] 리포트 파일 저장 실패: {e}")
+        print(f"[ReportHelper ERROR] Failed to save the report file: {e}")
         return None
 
     # 카테고리(library_id)별 링 버퍼 순환 소거 실행 (최대 10개 유지)
@@ -73,11 +73,11 @@ def save_scan_report(library_id, error_list, db_type='general'):
                 old_file = existing_files[i]
                 try:
                     os.remove(old_file)
-                    print(f"[ReportHelper] ♻️ 순환 소거 정책에 따라 구형 리포트 물리 삭제: {old_file}")
+                    print(f"[ReportHelper] ♻️ Deleted an old report under the rotation policy: {old_file}")
                 except Exception as del_err:
-                    print(f"[ReportHelper ERROR] 구형 리포트 제거 실패: {del_err}")
+                    print(f"[ReportHelper ERROR] Failed to delete an old report: {del_err}")
     except Exception as e:
-        print(f"[ReportHelper ERROR] 리포트 순환 정리 도중 에러: {e}")
+        print(f"[ReportHelper ERROR] Error while rotating reports: {e}")
 
     return filename
 
@@ -91,10 +91,10 @@ def delete_all_reports(library_id, db_type='general'):
                 os.remove(f)
                 removed_count += 1
             except Exception as e:
-                print(f"[ReportHelper ERROR] 리포트 파일 개별 제거 실패 ({f}): {e}")
+                print(f"[ReportHelper ERROR] Failed to delete report file ({f}): {e}")
         if removed_count > 0:
-            print(f"[ReportHelper] 🗑️ 카테고리 {library_id} 삭제에 따라 연계 리포트 {removed_count}개 일괄 삭제 완료.")
+            print(f"[ReportHelper] 🗑️ Deleted {removed_count} reports linked to deleted category {library_id}.")
         return True
     except Exception as e:
-        print(f"[ReportHelper ERROR] 카테고리 {library_id} 연계 리포트 파일 조회 실패: {e}")
+        print(f"[ReportHelper ERROR] Failed to list report files for category {library_id}: {e}")
         return False

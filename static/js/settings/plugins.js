@@ -13,7 +13,7 @@ export async function loadPluginsSettings() {
     return;
   }
 
-  container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="lc lc-loader-circle lc-spin lc-2x"></i><br><br>플러그인 목록 로드 중...</div>';
+  container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-accent);"><i class="lc lc-loader-circle lc-spin lc-2x"></i><br><br>' + i18n.t('settings.plug_loading') + '</div>';
 
   try {
     console.log('[Plugins-Settings] api.fetchMetadataPluginsForManagement() API 호출 시작');
@@ -50,15 +50,15 @@ export async function loadPluginsSettings() {
                       <div style="min-width: 0;">
                           <h4 style="margin: 0; color: var(--app-text-primary); font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                               ${escapeHtmlText(p.name)}
-                              ${hasConfigurableBody ? '<span style="font-size: 0.68rem; font-weight: 600; color: #c4b5fd; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); border-radius: 4px; padding: 0.1rem 0.4rem;">설정 있음</span>' : ''}
+                              ${hasConfigurableBody ? '<span style="font-size: 0.68rem; font-weight: 600; color: #c4b5fd; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); border-radius: 4px; padding: 0.1rem 0.4rem;">' + i18n.t('settings.plug_has_settings') + '</span>' : ''}
                           </h4>
-                          <span style="font-size: 0.75rem; color: var(--app-text-muted);">플러그인 고유 ID: ${escapeHtmlText(p.id)}</span>
+                          <span style="font-size: 0.75rem; color: var(--app-text-muted);">${i18n.t('settings.plug_unique_id')}: ${escapeHtmlText(p.id)}</span>
                       </div>
                   </div>
                   <!-- ON/OFF 활성화 토글 -->
                   <div style="display: flex; align-items: center; gap: 0.6rem;" data-role="plugin-toggle-zone">
                       <span id="plugin-status-text-${p.id}" style="font-size: 0.82rem; color: ${p.enabled ? '#4ade80' : '#94a3b8'}; font-weight: 600;">
-                          ${p.enabled ? '활성화됨' : '비활성화됨'}
+                          ${p.enabled ? i18n.t('settings.plug_enabled') : i18n.t('settings.plug_disabled')}
                       </span>
                       <label style="position: relative; display: inline-block; width: 46px; height: 24px; margin: 0;">
                           <input type="checkbox" class="plugin-toggle-checkbox" data-plugin-id="${p.id}" ${p.enabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
@@ -77,12 +77,12 @@ export async function loadPluginsSettings() {
                       ` : (schema.length > 0 ? schema.map(f => {
                         const curVal = config[f.key];
                         return renderSchemaField(f, curVal);
-                      }).join('') : '<p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0;">이 플러그인은 별도의 추가 설정값이 필요하지 않습니다.</p>')}
+                      }).join('') : '<p style="font-size: 0.82rem; color: var(--app-text-muted); margin: 0;">' + i18n.t('settings.plug_no_settings') + '</p>')}
 
                       ${(hasCustomSettingsUi || schema.length > 0) ? `
                       <div style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
                           <button type="submit" class="btn-submit" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1.2rem; font-size: 0.82rem;">
-                              <i class="lc lc-save"></i> 설정 저장
+                              <i class="lc lc-save"></i> ${i18n.t('settings.btn_save_config')}
                           </button>
                       </div>
                       ` : ''}
@@ -90,9 +90,9 @@ export async function loadPluginsSettings() {
                       ${showSampleUpdateButton ? `
                       <div style="margin-top: 0.4rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
                         <button type="button" class="plugin-sample-update-btn" data-plugin-id="${p.id}" style="display: inline-flex; align-items: center; gap: 0.45rem; width: fit-content; padding: 0.5rem 1.0rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(56,189,248,0.5); background: rgba(2,132,199,0.22); color: #dbeafe; cursor: pointer;">
-                          <i class="lc lc-cloud-download"></i> 샘플 업데이트 (${p.id})
+                          <i class="lc lc-cloud-download"></i> ${i18n.t('settings.plug_sample_update')} (${p.id})
                         </button>
-                        <span id="plugin-sample-update-status-${p.id}" style="font-size: 0.78rem; color: var(--app-text-muted);">업데이트 가능 조건: 현재 버전 &lt; GitHub 버전</span>
+                        <span id="plugin-sample-update-status-${p.id}" style="font-size: 0.78rem; color: var(--app-text-muted);">${i18n.t('settings.plug_update_condition')}</span>
                       </div>
                       ` : ''}
                   </form>
@@ -109,12 +109,12 @@ export async function loadPluginsSettings() {
       bindPluginEvents();
       loadDetailViewProviderSettings(data.plugins);
     } else {
-      container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-text-muted);">로드된 메타데이터 플러그인이 없습니다.</div>';
+      container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--app-text-muted);">' + i18n.t('settings.plug_none_loaded') + '</div>';
       loadDetailViewProviderSettings([]);
     }
   } catch (err) {
     console.error('플러그인 목록 조회 에러:', err);
-    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #f43f5e;">서버와 통신 중 오류가 발생했습니다.</div>';
+    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #f43f5e;">' + i18n.t('settings.gen_server_request_error') + '</div>';
   }
 
   initSamplePluginsModal();
@@ -134,10 +134,10 @@ function resolvePluginSessionsClient(manifest) {
 }
 
 const DETAIL_VIEW_SESSION_LABELS = {
-  general: '일반 도서',
-  adult: '성인 도서',
-  audiobook: '오디오북',
-  video: '영상강좌',
+  general: 'header.general_books',
+  adult: 'header.adult_books',
+  audiobook: 'header.audiobooks',
+  video: 'header.videos',
 };
 
 // 세션별 도서 상세페이지 렌더러 선택 UI 로드 (detail_view를 선언한 플러그인 + 코어 기본값)
@@ -161,20 +161,20 @@ export async function loadDetailViewProviderSettings(plugins) {
     const settingKey = `DETAIL_VIEW_PROVIDER_${sessionKey.toUpperCase()}`;
     const currentVal = currentValues[settingKey] || 'core';
     const eligiblePlugins = detailViewPlugins.filter((p) => resolvePluginSessionsClient(p.detail_view).includes(sessionKey));
-    const options = ['<option value="core">기본(코어)</option>']
+    const options = [`<option value="core">${i18n.t('settings.plug_detail_core')}</option>`]
       .concat(eligiblePlugins.map((p) => `<option value="${escapeHtmlAttr(p.id)}" ${String(currentVal) === p.id ? 'selected' : ''}>${escapeHtmlText(p.detail_view.title || p.name)}</option>`));
     // 현재 저장된 값이 더 이상 유효하지 않은 플러그인 id면(비활성화/삭제) 코어로 표시
     const coreSelected = currentVal === 'core' || !eligiblePlugins.some((p) => p.id === currentVal);
     if (coreSelected) {
-      options[0] = '<option value="core" selected>기본(코어)</option>';
+      options[0] = `<option value="core" selected>${i18n.t('settings.plug_detail_core')}</option>`;
     }
     return `
       <div class="library-form-group-row" style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
-        <label style="font-weight: 700; color: var(--app-text-primary); font-size: 0.88rem; min-width: 90px;">${DETAIL_VIEW_SESSION_LABELS[sessionKey]}</label>
+        <label style="font-weight: 700; color: var(--app-text-primary); font-size: 0.88rem; min-width: 90px;">${i18n.t(DETAIL_VIEW_SESSION_LABELS[sessionKey])}</label>
         <select class="detail-view-provider-select" data-session="${sessionKey}" data-setting-key="${settingKey}" style="flex: 1; min-width: 200px; max-width: 360px; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.5rem 0.7rem; border-radius: 6px;">
           ${options.join('')}
         </select>
-        ${eligiblePlugins.length === 0 ? '<span style="font-size: 0.76rem; color: var(--app-text-muted);">이 세션에서 detail_view를 선언한 활성 플러그인이 없습니다.</span>' : ''}
+        ${eligiblePlugins.length === 0 ? '<span style="font-size: 0.76rem; color: var(--app-text-muted);">' + i18n.t('settings.plug_detail_none') + '</span>' : ''}
       </div>
     `;
   }).join('');
@@ -191,13 +191,13 @@ export async function loadDetailViewProviderSettings(plugins) {
           // (안 그러면 openBookDetail()이 여전히 페이지 로드 시점의 구값을 참조해
           // "선택은 했는데 화면이 안 바뀐다"는 혼란을 준다).
           state.detailViewProviders[sessionKey] = value;
-          if (typeof window.showToast === 'function') window.showToast('저장되었습니다. 도서 상세페이지를 다시 열면 반영됩니다.', 'success');
+          if (typeof window.showToast === 'function') window.showToast(i18n.t('settings.plug_detail_saved'), 'success');
         } else {
-          alert(res.error || '저장 실패');
+          alert(res.error || i18n.t('settings.plug_save_failed'));
         }
       } catch (err) {
         console.error('[Plugins-Settings] 상세페이지 렌더러 설정 저장 에러:', err);
-        alert('서버와 통신 중 오류가 발생했습니다.');
+        alert(i18n.t('settings.gen_server_request_error'));
       }
     });
   });
@@ -329,15 +329,15 @@ function initPluginSettingsScripts(container, plugins) {
 }
 
 function buildPluginReloadStatusText(res) {
-  const base = `업데이트 완료 (${res.local_version} -> ${res.github_version})`;
+  const base = i18n.t('settings.plug_update_done', { from: res.local_version, to: res.github_version });
   const reload = res.reload || null;
   if (!reload) return base;
 
   if (reload.reload_ok) {
-    return `${base} | 핫리로드 완료 (모듈 ${reload.removed_count || 0}개 반영)`;
+    return `${base} | ${i18n.t('settings.plug_reload_done', { count: reload.removed_count || 0 })}`;
   }
 
-  return `${base} | 업데이트는 완료됐지만 핫리로드 실패`;
+  return `${base} | ${i18n.t('settings.plug_reload_failed_after_update')}`;
 }
 
 // 플러그인 이벤트 핸들러 바인딩
@@ -352,7 +352,7 @@ function bindPluginEvents() {
         : null;
       if (!guide) return;
       event.preventDefault();
-      alert('준비 중인 기여 항목입니다. GitHub 기여 가이드를 확인해 주세요!');
+      alert(i18n.t('settings.plug_contrib_pending'));
     }, true);
     window.__pluginsStaticDelegationBound = true;
   }
@@ -382,7 +382,7 @@ function bindPluginEvents() {
         const res = await api.toggleMetadataPlugin(state.currentLibraryType, pluginId, isEnabled);
         if (res.success) {
           if (statusText) {
-            statusText.innerText = isEnabled ? '활성화됨' : '비활성화됨';
+            statusText.innerText = isEnabled ? i18n.t('settings.plug_enabled') : i18n.t('settings.plug_disabled');
             statusText.style.color = isEnabled ? '#4ade80' : '#94a3b8';
           }
           
@@ -426,7 +426,7 @@ function bindPluginEvents() {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerText = '저장 중...';
+          submitBtn.innerText = i18n.t('settings.plug_saving');
         }
         
         const res = await api.saveMetadataPluginConfig(state.currentLibraryType, pluginId, configData);
@@ -446,7 +446,7 @@ function bindPluginEvents() {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="lc lc-save"></i> 설정 저장';
+          submitBtn.innerHTML = `<i class="lc lc-save"></i> ${i18n.t('settings.btn_save_config')}`;
         }
       }
     });
@@ -460,9 +460,9 @@ function bindPluginEvents() {
       const prevText = btn.innerHTML;
       try {
         btn.disabled = true;
-        btn.innerHTML = '<i class="lc lc-loader-circle lc-spin"></i> 업데이트 중...';
+        btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('settings.plug_updating')}`;
         if (statusEl) {
-          statusEl.textContent = '업데이트 확인/적용 진행 중...';
+          statusEl.textContent = i18n.t('settings.plug_update_in_progress');
           statusEl.style.color = '#38bdf8';
         }
 
@@ -478,7 +478,7 @@ function bindPluginEvents() {
           }
 
           if (res.reload && res.reload.reload_ok === false) {
-            const warn = `핫리로드 실패: ${res.reload.reload_error || '원인 미상'} (필요 시 컨테이너 재시작)`;
+            const warn = i18n.t('settings.plug_reload_failed', { error: res.reload.reload_error || i18n.t('settings.gen_unknown_error') });
             if (statusEl) {
               statusEl.textContent = `${msg} | ${warn}`;
               statusEl.style.color = '#f59e0b';
@@ -488,7 +488,7 @@ function bindPluginEvents() {
             }
           }
         } else {
-          const err = res.error || '업데이트 실패';
+          const err = res.error || i18n.t('settings.plug_update_failed');
           if (statusEl) {
             statusEl.textContent = err;
             statusEl.style.color = '#f43f5e';
@@ -502,7 +502,7 @@ function bindPluginEvents() {
       } catch (err) {
         console.error('샘플 플러그인 업데이트 에러:', err);
         if (statusEl) {
-          statusEl.textContent = '서버 통신 오류';
+          statusEl.textContent = i18n.t('settings.plug_server_error_short');
           statusEl.style.color = '#f43f5e';
         }
       } finally {
@@ -535,7 +535,7 @@ async function loadSamplePluginsList() {
   try {
     const data = await api.fetchSamplePlugins();
     if (!data.success || !data.samples || data.samples.length === 0) {
-      list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: var(--app-text-muted);">설치 가능한 샘플 플러그인이 없습니다.</div>';
+      list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: var(--app-text-muted);">' + i18n.t('settings.plug_no_samples') + '</div>';
       return;
     }
 
@@ -546,9 +546,9 @@ async function loadSamplePluginsList() {
           <div style="color: var(--app-text-muted); font-size: 0.75rem;">${escapeHtmlText(s.id)}</div>
         </div>
         ${s.installed
-          ? `<span style="flex-shrink: 0; font-size: 0.8rem; color: #4ade80; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="lc lc-check"></i> 설치됨</span>`
+          ? `<span style="flex-shrink: 0; font-size: 0.8rem; color: #4ade80; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;"><i class="lc lc-check"></i> ${i18n.t('settings.plug_installed')}</span>`
           : `<button type="button" class="sample-plugin-install-btn" data-plugin-id="${escapeHtmlAttr(s.id)}" style="flex-shrink: 0; padding: 0.45rem 0.9rem; font-size: 0.8rem; border-radius: 6px; border: 1px solid rgba(168,85,247,0.5); background: rgba(168,85,247,0.18); color: #e9d5ff; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-              <i class="lc lc-download"></i> 설치
+              <i class="lc lc-download"></i> ${i18n.t('settings.plug_install')}
             </button>`
         }
       </div>
@@ -559,7 +559,7 @@ async function loadSamplePluginsList() {
         const pluginId = btn.dataset.pluginId;
         const prevText = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<i class="lc lc-loader-circle lc-spin"></i> 설치 중...';
+        btn.innerHTML = `<i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('settings.plug_installing')}`;
         try {
           const res = await api.installSamplePlugin(pluginId);
           if (res.success) {
@@ -570,9 +570,9 @@ async function loadSamplePluginsList() {
             await loadPluginsSettings();
           } else {
             if (typeof window.showToast === 'function') {
-              window.showToast(res.error || '설치 실패', 'error');
+              window.showToast(res.error || i18n.t('settings.plug_install_failed'), 'error');
             } else {
-              alert(res.error || '설치 실패');
+              alert(res.error || i18n.t('settings.plug_install_failed'));
             }
             btn.disabled = false;
             btn.innerHTML = prevText;
@@ -586,7 +586,7 @@ async function loadSamplePluginsList() {
     });
   } catch (err) {
     console.error('샘플 플러그인 목록 조회 에러:', err);
-    list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #f43f5e;">서버와 통신 중 오류가 발생했습니다.</div>';
+    list.innerHTML = '<div style="text-align: center; padding: 1.5rem; color: #f43f5e;">' + i18n.t('settings.gen_server_request_error') + '</div>';
   }
 }
 

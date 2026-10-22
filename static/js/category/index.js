@@ -137,7 +137,7 @@ function renderLibraryItem(lib, isPinned) {
   const countBadgeHtml = bookCount > 0
     ? `<span class="category-count-badge" title="${bookCount.toLocaleString()}">${formatCompactCount(bookCount)}</span>`
     : '';
-  return `<li class="menu-item ${isActive}" data-type="custom" data-role="sidebar-category-dynamic" data-id="${lib.id}" data-category-id="${lib.id}" data-name="${safeName}" data-path="${safePath}" data-remote="${lib.is_remote || 0}" data-rclone-url="${safeRclone}" data-icon="${safeIcon}" data-color="${safeColor}" data-hide-cover="${hideCover}" data-hide-title="${hideTitle}" data-content-kind="${contentKind}" data-cover-aspect-ratio="${coverAspectRatio}" data-group-id="${groupId}" data-gdrive-copy-remote="${safeGdriveCopyRemote}" data-gdrive-view-local-mirror-path="${safeGdriveViewMirrorPath}" ${draggableAttr} style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;"><span style="display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><i class="${window.boIcon(safeIcon)}" style="color: ${safeColor}; flex-shrink: 0;"></i><span class="sidebar-bare-label" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeName}</span></span><div style="display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">${countBadgeHtml}<i class="lc lc-loader-circle lc-spin category-scan-spinner" style="display:none; color:var(--app-accent-hover); font-size:0.75rem;" title="스캔 진행 중"></i></div></li>`;
+  return `<li class="menu-item ${isActive}" data-type="custom" data-role="sidebar-category-dynamic" data-id="${lib.id}" data-category-id="${lib.id}" data-name="${safeName}" data-path="${safePath}" data-remote="${lib.is_remote || 0}" data-rclone-url="${safeRclone}" data-icon="${safeIcon}" data-color="${safeColor}" data-hide-cover="${hideCover}" data-hide-title="${hideTitle}" data-content-kind="${contentKind}" data-cover-aspect-ratio="${coverAspectRatio}" data-group-id="${groupId}" data-gdrive-copy-remote="${safeGdriveCopyRemote}" data-gdrive-view-local-mirror-path="${safeGdriveViewMirrorPath}" ${draggableAttr} style="display: flex; align-items: center; justify-content: space-between; gap: 0.4rem;"><span style="display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><i class="${window.boIcon(safeIcon)}" style="color: ${safeColor}; flex-shrink: 0;"></i><span class="sidebar-bare-label" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${safeName}</span></span><div style="display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;">${countBadgeHtml}<i class="lc lc-loader-circle lc-spin category-scan-spinner" style="display:none; color:var(--app-accent-hover); font-size:0.75rem;" title="${i18n.t('header.scan_in_progress')}"></i></div></li>`;
 }
 
 function renderPluginItem(cp) {
@@ -256,10 +256,10 @@ export function applySidebarShowMore(sidebar, currentLibraryId) {
   moreBtn.dataset.type = 'system';  // Sortable filter 제외 등록
   const hiddenCount = total - visibleCount;
   if (expanded) {
-    moreBtn.innerHTML = `<i class="lc lc-chevron-up"></i> <span>접기</span>`;
+    moreBtn.innerHTML = `<i class="lc lc-chevron-up"></i> <span>${i18n.t('sidebar.show_less')}</span>`;
     sidebar.appendChild(moreBtn);
   } else {
-    moreBtn.innerHTML = `<span>더 보기 (${hiddenCount})</span> <i class="lc lc-chevron-right"></i>`;
+    moreBtn.innerHTML = `<span>${i18n.t('sidebar.show_more', { count: hiddenCount })}</span> <i class="lc lc-chevron-right"></i>`;
     // visibleCount - 1번째 항목 바로 뒤에 삽입
     const insertAfter = items[visibleCount - 1];
     if (insertAfter && insertAfter.parentNode) {
@@ -806,10 +806,10 @@ async function persistLibraryPositions(sidebar) {
 
   try {
     const result = await api.moveLibraries(items, state.currentLibraryType);
-    if (!result.success) throw new Error(result.error || '카테고리 위치를 저장하지 못했습니다.');
+    if (!result.success) throw new Error(result.error || i18n.t('category.order_save_failed'));
     await loadLibraries();
   } catch (error) {
-    alert(error.message || '카테고리 위치를 저장하지 못했습니다.');
+    alert(error.message || i18n.t('category.order_save_failed'));
     await loadLibraries();
   }
 }
@@ -821,10 +821,10 @@ async function persistGroupPositions(sidebar) {
 
   try {
     const result = await api.moveLibraryGroups(items, state.currentLibraryType);
-    if (!result.success) throw new Error(result.error || '그룹 순서를 저장하지 못했습니다.');
+    if (!result.success) throw new Error(result.error || i18n.t('category.group_order_save_failed'));
     await loadLibraries();
   } catch (error) {
-    alert(error.message || '그룹 순서를 저장하지 못했습니다.');
+    alert(error.message || i18n.t('category.group_order_save_failed'));
     await loadLibraries();
   }
 }
@@ -838,10 +838,10 @@ async function persistPluginGroupPositions(sidebar) {
 
   try {
     const result = await api.assignPluginGroups(items, state.currentLibraryType);
-    if (!result.success) throw new Error(result.error || '플러그인 그룹 위치를 저장하지 못했습니다.');
+    if (!result.success) throw new Error(result.error || i18n.t('category.plugin_group_save_failed'));
     await loadLibraries();
   } catch (error) {
-    alert(error.message || '플러그인 그룹 위치를 저장하지 못했습니다.');
+    alert(error.message || i18n.t('category.plugin_group_save_failed'));
     await loadLibraries();
   }
 }

@@ -33,12 +33,12 @@ def convert_image_to_webp(src_path, dest_path, quality=80):
             img.save(dest_path, "WEBP", quality=quality)
         return True
     except Exception as e:
-        print(f"[-] 이미지 변환 실패 ({src_path} -> {dest_path}): {e}")
+        print(f"[-] Image conversion failed ({src_path} -> {dest_path}): {e}")
         return False
 
 def migrate_db(db_path):
     """특정 데이터베이스 파일 내 표지 파일 갱신 및 파일 변환"""
-    print(f"\n[*] 데이터베이스 마이그레이션 시작: {os.path.basename(db_path)}")
+    print(f"\n[*] Database migration start: {os.path.basename(db_path)}")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -75,7 +75,7 @@ def migrate_db(db_path):
                 try:
                     os.remove(old_cover_path)
                 except Exception as e:
-                    print(f"[!] 원본 파일 삭제 실패 ({old_cover_path}): {e}")
+                    print(f"[!] Failed to delete the original file ({old_cover_path}): {e}")
                 converted_books_count += 1
         else:
             # 파일이 유실되었으나 확장자만이라도 일치시켜주기 위해 DB 업데이트 수행
@@ -111,34 +111,34 @@ def migrate_db(db_path):
                     converted_series_count += 1
             else:
                 cursor.execute("UPDATE series SET cover_image = ? WHERE id = ?", (new_cover, series_id))
-        print(f"[+] series 테이블 변환 완료: {converted_series_count}건")
+        print(f"[+] series table converted: {converted_series_count}")
     except sqlite3.OperationalError:
         # series 테이블에 cover_image 컬럼이 없거나 테이블이 없는 경우 예외 스킵
-        print("[*] series 테이블이 존재하지 않거나 cover_image 컬럼이 없어 스킵합니다.")
+        print("[*] Skipping: the series table does not exist or has no cover_image column.")
         
     conn.commit()
     conn.close()
-    print(f"[+] books 테이블 변환 완료: {converted_books_count}건")
+    print(f"[+] books table converted: {converted_books_count}")
 
 def main():
-    print("=== BookOasis 표지 이미지 WebP 일괄 변환 마이그레이션 툴 ===")
+    print("=== BookOasis cover image WebP batch conversion tool ===")
     
     # Pillow 라이브러리 검증
     try:
         from PIL import Image
     except ImportError:
-        print("[-] Pillow 라이브러리가 설치되어 있지 않습니다. 'pip install pillow'를 먼저 실행해 주세요.")
+        print("[-] The Pillow library is not installed. Run 'pip install pillow' first.")
         return
 
     db_paths = get_db_paths()
     if not db_paths:
-        print("[-] 마이그레이션할 데이터베이스(*.db) 파일을 db/ 디렉터리에서 찾지 못했습니다.")
+        print("[-] No database (*.db) files to migrate were found in the db/ directory.")
         return
         
     for db_path in db_paths:
         migrate_db(db_path)
         
-    print("\n[+] 모든 마이그레이션 작업이 안전하게 완료되었습니다!")
+    print("\n[+] All migration jobs completed safely!")
 
 if __name__ == '__main__':
     main()

@@ -31,10 +31,10 @@ def _compute_offsets(full_path, filename, is_remote, root, gdrive_file_ids):
         try:
             offsets_data, _total_size = fetch_gdrive_zip_offsets(file_id)
             if offsets_data:
-                print(f"[Scanner-DEBUG-Task] ⚡ [gdrive Range] '{filename}' 오프셋 계산 완료 ({len(offsets_data)}p, 전체 다운로드 없음)")
+                print(f"[Scanner-DEBUG-Task] ⚡ [gdrive Range] '{filename}' offsets computed ({len(offsets_data)}p, no full download)")
             return offsets_data
         except Exception as e:
-            print(f"[Scanner-DEBUG-Task] ❌ gdrive Range 오프셋 계산 실패: '{filename}' - {e}")
+            print(f"[Scanner-DEBUG-Task] ❌ gdrive Range offset computation failed: '{filename}' - {e}")
             return []
     if is_remote:
         return []
@@ -61,7 +61,7 @@ def _full_path_for(root, filename, gdrive_file_ids):
 _META_EXTENSIONS = ('.yaml', '.yml', '.json', '.xml')
 
 
-def _stage_gdrive_metadata_folder(root, files, gdrive_file_ids):
+def _stage_gdrive_metadata_folder(root, files, gdrive_file_ids, gdrive_meta_dirs=None):
     """gdrive 폴더에 kavita.yaml/series.json/info.xml 등 메타데이터 파일이 있으면
     실제 내용을 로컬 스테이징 폴더로 받아와, merge_local_metadata()가 평소처럼
     os.path.join(folder_path, filename) + open()으로 읽을 수 있게 해준다.
@@ -69,8 +69,19 @@ def _stage_gdrive_metadata_folder(root, files, gdrive_file_ids):
     이렇게 해두면 kavita.yaml에 임베드된 Base64 커버(cover_b64_map)를 커버 스캔 때
     바로 쓸 수 있어, 표지 하나 뽑자고 수십~수백MB 압축 파일 전체를 받을 필요가 없다.
 
+    gdrive_meta_dirs(dict)가 있으면 리모트 카테고리다: 엔진이 스캔 시작 때 rclone sync 한 번으로
+    받아둔 메타 미러 폴더를 그대로 쓰고, 여기서 파일별로 내려받지 않는다 — 폴더마다 API 키로
+    받으면 대형 공유 폴더에서 수백 건 만에 Google 403으로 차단된다(2026-10-22 .21 실측).
+    아래 파일별 다운로드는 리모트가 없는 옛 카테고리용이다.
+
     실패해도 예외를 전파하지 않고 원본 root를 그대로 반환한다(항상 안전한 폴백).
     """
+    if gdrive_meta_dirs is not None:
+        mirror_dir = gdrive_meta_dirs.get(root)
+        if mirror_dir and os.path.isdir(mirror_dir):
+            return mirror_dir, True
+        return root, False
+
     if not gdrive_file_ids:
         return root, False
 
@@ -101,12 +112,12 @@ def _stage_gdrive_metadata_folder(root, files, gdrive_file_ids):
                     f.write('done')
                 any_ready = True
             else:
-                print(f"[Scanner-DEBUG-Task] ⚠️ gdrive 메타데이터 파일 다운로드 실패, 건너뜀: '{fname}'")
+                print(f"[Scanner-DEBUG-Task] ⚠️ Failed to download gdrive metadata file, skipping: '{fname}'")
 
         if any_ready:
             return staging_dir, True
     except Exception as e:
-        print(f"[Scanner-DEBUG-Task] ⚠️ gdrive 메타데이터 스테이징 실패, 원본 경로로 폴백: {e}")
+        print(f"[Scanner-DEBUG-Task] ⚠️ gdrive metadata staging failed, falling back to the original path: {e}")
 
     return root, False
 
@@ -119,10 +130,20 @@ def _normalize_series_text(name):
     return re.sub(r'^\[(?:단행|연재|소설|만화|웹툰|일반)\]\s*', '', str(name)).strip()
 
 
-def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote=False, library_id=None, db_files_cache=None, library_root=None, gdrive_file_ids=None, db_type=None, db_book_ids=None):
+def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote=False, library_id=None, db_files_cache=None, library_root=None, gdrive_file_ids=None, db_type=None, db_book_ids=None, gdrive_meta_dirs=None, gdrive_file_stats=None):
     """Independent I/O scan task per folder (DB independent, pure FS/I/O scaling)"""
     root = canonical_path(root)
     print(f"[Scanner-DEBUG-Task] 📂 entering process_folder_task - folder: '{root}'")
+    # 리모트가 있는 gdrive 카테고리(gdrive_meta_dirs 전달됨)는 책을 로컬 사본으로 열므로 Range 오프셋이 필요 없다.
+    skip_gdrive_offsets = gdrive_meta_dirs is not None
+    # gdrive:// 가상 경로는 os.stat이 안 되므로, 엔진이 rclone 목록에서 넘긴 파일별 (수정 시각, 크기)를 쓴다.
+    # 이게 있어야 로컬 폴더와 같은 규칙(파일/메타 수정 시각 비교)으로 바뀌지 않은 폴더를 건너뛴다.
+    folder_stats = gdrive_file_stats.get(root, {}) if gdrive_file_stats else {}
+
+    def _file_stat(full_path, filename):
+        if filename in folder_stats:
+            return folder_stats[filename]
+        return os.path.getmtime(full_path), os.path.getsize(full_path)
     
     media_files = [f for f in files if f.lower().endswith(SUPPORTED_FORMATS)]
     image_files = [f for f in files if f.lower().endswith(SUPPORTED_IMAGE_FORMATS)]
@@ -145,8 +166,10 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
 
     if root.startswith(('gdrive:', 'gdrive://')):
         is_remote = True
-        dir_mtime = 0.0
-        meta_mtime = 0.0
+        # 폴더 자체의 수정 시각은 목록에 없으므로 폴더 안 파일 중 가장 최근 수정 시각을 폴더 신호로 쓴다
+        # (새 회차는 어차피 DB에 없는 파일이라 파일 단위로 잡힌다). 목록 정보가 없으면 예전처럼 0.
+        dir_mtime = max((m for m, _ in folder_stats.values()), default=0.0)
+        meta_mtime = max((folder_stats[f][0] for f in meta_signal_files if f in folder_stats), default=0.0)
     else:
         # rclone 마운트도 stat은 VFS 디렉터리 캐시가 답한다(내려받기 없음) → 로컬과 같이 실제 값을 쓴다.
         try:
@@ -180,14 +203,24 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
     # 2. Early skip if files are unchanged (mtime & size match DB cache)
     skipped_files = set()
     imgdir_skip = False
-    imgdir_virtual_path = join_canonical(root, IMGDIR_VIRTUAL_FILENAME)
+    # gdrive 이미지 폴더는 가상 경로에 폴더 ID(?gid=)가 붙는다 — 볼 때 폴더째 받는 데 쓴다.
+    imgdir_virtual_path = _full_path_for(root, IMGDIR_VIRTUAL_FILENAME, gdrive_file_ids)
+
+    def _imgdir_stat():
+        """이미지 폴더 책의 (수정 시각, 이미지 합계 크기). gdrive는 rclone 목록 값을 쓴다."""
+        if folder_stats:
+            return dir_mtime, sum(folder_stats[f][1] for f in image_files if f in folder_stats)
+        return os.path.getmtime(root), sum(
+            os.path.getsize(join_canonical(root, f))
+            for f in image_files
+            if os.path.exists(join_canonical(root, f))
+        )
     if not force and not meta_changed and db_files_cache:
         for filename in media_files:
             full_path = _full_path_for(root, filename, gdrive_file_ids)
             if full_path in db_files_cache:
                 try:
-                    p_mtime = os.path.getmtime(full_path)
-                    p_size = os.path.getsize(full_path)
+                    p_mtime, p_size = _file_stat(full_path, filename)
                     c_mtime, c_size = db_files_cache[full_path]
                     
                     if int(c_mtime) == int(p_mtime) and c_size == p_size:
@@ -210,12 +243,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
 
         if has_imgdir_candidate and imgdir_virtual_path in db_files_cache:
             try:
-                p_mtime = os.path.getmtime(root)
-                p_size = sum(
-                    os.path.getsize(join_canonical(root, f))
-                    for f in image_files
-                    if os.path.exists(join_canonical(root, f))
-                )
+                p_mtime, p_size = _imgdir_stat()
                 c_mtime, c_size = db_files_cache[imgdir_virtual_path]
                 if int(c_mtime) == int(p_mtime) and int(c_size) == int(p_size):
                     imgdir_skip = True
@@ -248,7 +276,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
     print(f"[Scanner-DEBUG-Task]   - Metadata YAML/XML/JSON load started")
     meta_folder_path, meta_staged_locally = (root, False)
     if is_remote and root.startswith(('gdrive:', 'gdrive://')):
-        meta_folder_path, meta_staged_locally = _stage_gdrive_metadata_folder(root, files, gdrive_file_ids)
+        meta_folder_path, meta_staged_locally = _stage_gdrive_metadata_folder(root, files, gdrive_file_ids, gdrive_meta_dirs)
     merged_meta = merge_local_metadata(meta_folder_path, files=files, is_remote=is_remote and not meta_staged_locally)
     print(f"[Scanner-DEBUG-Task]   - Metadata load completed")
 
@@ -287,7 +315,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
         file_format = ext.replace('.', '').lower()
 
         skip = False
-        if not force and not meta_changed and not meta_has_data and full_path in db_meta_full and full_path in db_offsets_cached:
+        if not force and not meta_changed and not meta_has_data and full_path in db_meta_full and (full_path in db_offsets_cached or skip_gdrive_offsets):
             skip = True
         elif filename in skipped_files:
             skip = True
@@ -306,7 +334,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
             full_path in db_meta_full and
             full_path not in db_offsets_cached and
             file_format in ('zip', 'cbz') and
-            (not is_remote or root.startswith(('gdrive:', 'gdrive://')))
+            (not is_remote or (root.startswith(('gdrive:', 'gdrive://')) and not skip_gdrive_offsets))
         ):
             # ── [Offset-only Fast Path] ──
             # If existing book has cover/meta but no offset:
@@ -457,7 +485,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
                 })
 
             try:
-                if file_format in ('zip', 'cbz') and (force or full_path not in db_offsets_cached):
+                if file_format in ('zip', 'cbz') and (force or full_path not in db_offsets_cached) and not skip_gdrive_offsets:
                     print(f"[Scanner-DEBUG-Task]     - Offset analysis started: '{filename}'")
                     offsets_data = _compute_offsets(full_path, filename, is_remote, root, gdrive_file_ids)
             except Exception as e:
@@ -474,8 +502,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
         f_mtime = 0.0
         f_size = 0
         try:
-            f_mtime = os.path.getmtime(full_path)
-            f_size = os.path.getsize(full_path)
+            f_mtime, f_size = _file_stat(full_path, filename)
         except Exception:
             pass
 
@@ -497,11 +524,17 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
     if has_imgdir_candidate:
         # 이미지 폴더(imgdir)는 "현재 폴더=책", "부모 폴더=시리즈" 규칙을 사용한다.
         parent_folder = os.path.basename(os.path.dirname(root.rstrip('/')))
+        if root.startswith(('gdrive:', 'gdrive://')):
+            # gdrive 링크 바로 아래 폴더면 부모가 Drive 폴더 ID(가상 경로 첫 마디)라 시리즈 이름이 될 수 없다.
+            segments = [p for p in root.split(':', 1)[-1].split('/') if p]
+            if len(segments) <= 2:
+                parent_folder = ''
         imgdir_series_name = _normalize_series_text(parent_folder) if parent_folder else series_name
         imgdir_title = os.path.basename(root)
         imgdir_cover = None
         imgdir_banner = shared_banner_image
-        if not imgdir_skip:
+        # gdrive 이미지 폴더는 스캔 때 이미지를 받지 않는다 — 표지는 처음 열 때 첫 이미지로 만든다.
+        if not imgdir_skip and not root.startswith(('gdrive:', 'gdrive://')):
             try:
                 imgdir_cover = get_imgdir_cover(root, imgdir_virtual_path, force=force, library_id=library_id)
             except Exception as e:
@@ -521,12 +554,7 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
         f_mtime = 0.0
         f_size = 0
         try:
-            f_mtime = os.path.getmtime(root)
-            f_size = sum(
-                os.path.getsize(join_canonical(root, f))
-                for f in image_files
-                if os.path.exists(join_canonical(root, f))
-            )
+            f_mtime, f_size = _imgdir_stat()
         except Exception:
             pass
 

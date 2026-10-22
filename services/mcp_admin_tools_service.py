@@ -326,7 +326,7 @@ class McpAdminToolsService:
             with open(MCP_WRITE_AUDIT_LOG, 'a', encoding='utf-8') as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + '\n')
         except Exception as e:
-            print(f"[McpAdminToolsService] write audit log 기록 실패: {e}")
+            print(f"[McpAdminToolsService] Failed to write the write-audit log: {e}")
 
 
 _api_app = None

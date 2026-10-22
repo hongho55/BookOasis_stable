@@ -512,10 +512,10 @@ def _lazy_scan_should_yield_to_priority_task(sq, sub_batch_count):
     try:
         from repositories.scanner_queue_repository import ScannerQueueRepository
         if ScannerQueueRepository.has_pending_priority_task():
-            sq.log(f"⏸️ 대기 중인 우선순위 작업(라이브러리 스캔 등) 감지 - lazy scan 세션 #{sub_batch_count}에서 양보. 다음 기회에 이어서 진행됩니다.")
+            sq.log(f"⏸️ Pending priority work (library scan, etc.) detected - lazy scan session #{sub_batch_count} yields. It resumes at the next opportunity.")
             return True
     except Exception as yield_err:
-        sq.log(f"[Lazy-Scanner] 우선순위 작업 확인 실패 (무시하고 계속 진행): {yield_err}")
+        sq.log(f"[Lazy-Scanner] Failed to check for priority work (ignored, continuing): {yield_err}")
     return False
 
 
@@ -565,7 +565,7 @@ def _process_lazy_scan(sq, task_id, **kwargs):
     while not stop_requested:
         sub_batch_count += 1
         if sub_batch_count > 1:
-            sq.log(f"🔄 RAM 환수 쿨다운(3초) 후 서브-배치 세션 #{sub_batch_count} 이어서 기동 중...")
+            sq.log(f"🔄 Resuming sub-batch session #{sub_batch_count} after a 3-second RAM recovery cooldown...")
             time.sleep(3.0)
 
         active_subprocess = subprocess.Popen(
@@ -602,7 +602,7 @@ def _process_lazy_scan(sq, task_id, **kwargs):
                     elapsed += _CANCEL_POLL_INTERVAL
                     if stop_requested or ScannerQueueRepository.is_cancel_requested(task_id):
                         cancelled_now = True
-                        sq.log(f"🛑 취소 요청 감지. Lazy-Scanner subprocess(PID: {active_subprocess.pid}) 강제 종료 중...")
+                        sq.log(f"🛑 Cancel request detected. Killing Lazy-Scanner subprocess (PID: {active_subprocess.pid})...")
                         active_subprocess.terminate()
                         try:
                             stdout_data, stderr_data = active_subprocess.communicate(timeout=5)
@@ -650,7 +650,7 @@ def _process_lazy_scan(sq, task_id, **kwargs):
             # 처리 속도가 느려 세션 예산을 다 못 채운 것뿐이므로, RAM 환수(코드 10)와 동일하게
             # 다음 서브-배치를 이어서 기동한다. 예전에는 여기서 RuntimeError를 던져 태스크 전체를
             # failed로 마킹하고 멈춰버렸다(자동 재개 없음) - 대량/원격 라이브러리에서 실제로 발생 확인됨.
-            sq.log(f"⏱️ 세션 시간 한도(7200초) 도달로 서브-배치 세션 #{sub_batch_count} 강제 종료. 다음 분량을 계속 처리합니다.")
+            sq.log(f"⏱️ Session time limit (7200s) reached; force-stopping sub-batch session #{sub_batch_count}. Continuing with the next portion.")
             try:
                 from repositories.scanner_queue_repository import ScannerQueueRepository
                 task = ScannerQueueRepository.get_task_by_key('lazy_scan')
@@ -662,7 +662,7 @@ def _process_lazy_scan(sq, task_id, **kwargs):
                 break
             continue
         elif returncode == 10:
-            sq.log(f"⚡ 서브-배치 세션 #{sub_batch_count} 마감 (RAM 환수 완료). 다음 분량을 계속 처리합니다.")
+            sq.log(f"⚡ Sub-batch session #{sub_batch_count} finished (RAM recovered). Continuing with the next portion.")
             try:
                 from repositories.scanner_queue_repository import ScannerQueueRepository
                 task = ScannerQueueRepository.get_task_by_key('lazy_scan')

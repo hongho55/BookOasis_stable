@@ -732,6 +732,16 @@ def preload_next_book_api():
 
         # 2. 백그라운드 복사 태스크 기동
         next_file_path = next_book['file_path']
+        from utils.drive_helper import is_gdrive_url
+        if is_gdrive_url(next_file_path):
+            # gdrive 링크 카테고리: 다음 권을 로그인 리모트로 로컬 뷰캐시에 미리 받아둔다.
+            from repositories.category_repository import CategoryRepository
+            from repositories import BookRepository
+            from services.gdrive_view_copy_service import prefetch_in_background
+            basic = BookRepository.get_book_basic_info(db_type, next_book['id']) or {}
+            library = CategoryRepository.get_library_by_id(db_type, basic.get('library_id')) if basic.get('library_id') else None
+            prefetch_in_background(db_type, next_book['id'], next_file_path, library)
+            return jsonify({'success': True, 'preloaded_book_id': next_book['id']})
         if os.path.exists(next_file_path):
             start_background_copy(next_file_path)
             print(f"[Viewer-Preload] Preloading next book successfully: {next_book['title']}")

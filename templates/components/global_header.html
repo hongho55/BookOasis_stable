@@ -55,7 +55,7 @@
         <div class="scan-activity-wrap">
             <button id="btn-scan-activity" class="btn-scan-activity" type="button"
                 aria-label="알림" aria-expanded="false" aria-controls="scan-activity-popover"
-                title="알림">
+                title="알림" data-i18n-title="header.notifications">
                 <i class="lc lc-bell" aria-hidden="true"></i>
                 <span id="scan-activity-indicator" class="scan-activity-indicator" aria-hidden="true"></span>
             </button>
@@ -67,7 +67,7 @@
                     </div>
                     <button id="btn-clear-notifications" class="scan-activity-clear" type="button" hidden
                         data-i18n="notify.clear" data-i18n-title="notify.clear_hint" title="완료 기록을 지우고 참고 알림을 '알고 있음'으로 둡니다">지우기</button>
-                    <button id="btn-close-scan-activity" type="button" aria-label="닫기" title="닫기">
+                    <button id="btn-close-scan-activity" type="button" aria-label="닫기" title="닫기" data-i18n-title="common.close">
                         <i class="lc lc-x" aria-hidden="true"></i>
                     </button>
                 </header>
@@ -93,7 +93,7 @@
         <!-- 계정: 사이드바 하단의 사용자 프로필/로그아웃을 상단 아이콘 + 팝오버로 이동 -->
         <div class="account-menu-wrap">
             <button id="btn-account-menu" class="btn-header-icon" type="button"
-                aria-label="계정 메뉴" aria-expanded="false" aria-controls="account-menu-popover" title="계정">
+                aria-label="계정 메뉴" aria-expanded="false" aria-controls="account-menu-popover" title="계정" data-i18n-title="header.account">
                 <i class="lc lc-circle-user" aria-hidden="true"></i>
             </button>
             <section id="account-menu-popover" class="account-menu-popover" hidden aria-live="polite">
@@ -104,19 +104,19 @@
                 <!-- KOReader 진행 동기화(kosync): 동기화 비밀번호 설정 - static/js/kosync_settings.js -->
                 <button type="button" id="btn-kosync-settings" class="account-menu-item" aria-expanded="false" aria-controls="kosync-settings-panel">
                     <i class="lc lc-book-open-text" aria-hidden="true"></i>
-                    <span>KOReader 동기화</span>
-                    <span id="kosync-status-badge" class="kosync-status-badge" hidden>켜짐</span>
+                    <span data-i18n="header.kosync_title">KOReader 동기화</span>
+                    <span id="kosync-status-badge" class="kosync-status-badge" data-i18n="header.kosync_on" hidden>켜짐</span>
                 </button>
                 <div id="kosync-settings-panel" class="kosync-settings" hidden>
-                    <div class="kosync-row"><span>서버</span><code id="kosync-server-url">-</code></div>
-                    <div class="kosync-row"><span>사용자명</span><code id="kosync-username">-</code></div>
-                    <input type="password" id="kosync-password" class="kosync-input" placeholder="동기화 비밀번호 (4자 이상)" autocomplete="new-password">
+                    <div class="kosync-row"><span data-i18n="header.kosync_server">서버</span><code id="kosync-server-url">-</code></div>
+                    <div class="kosync-row"><span data-i18n="header.kosync_username">사용자명</span><code id="kosync-username">-</code></div>
+                    <input type="password" id="kosync-password" class="kosync-input" placeholder="동기화 비밀번호 (4자 이상)" data-i18n-placeholder="header.kosync_password_placeholder" autocomplete="new-password">
                     <div class="kosync-actions">
                         <button type="button" id="btn-kosync-save" class="kosync-btn kosync-btn-primary">저장</button>
-                        <button type="button" id="btn-kosync-clear" class="kosync-btn" hidden>해제</button>
+                        <button type="button" id="btn-kosync-clear" class="kosync-btn" data-i18n="header.kosync_clear" hidden>해제</button>
                     </div>
                     <p id="kosync-message" class="kosync-message" aria-live="polite"></p>
-                    <p class="kosync-hint">KOReader → 진행 상황 동기화 → 사용자 지정 동기화 서버에 위 서버 주소, 로그인에 사용자명과 이 비밀번호를 넣으세요. BookOasis 로그인 비밀번호와 따로 정합니다. OPDS로 내려받은 책이 동기화됩니다.</p>
+                    <p class="kosync-hint" data-i18n="header.kosync_hint">KOReader → 진행 상황 동기화 → 사용자 지정 동기화 서버에 위 서버 주소, 로그인에 사용자명과 이 비밀번호를 넣으세요. BookOasis 로그인 비밀번호와 따로 정합니다. OPDS로 내려받은 책이 동기화됩니다.</p>
                 </div>
                 <a href="/logout" data-i18n-title="sidebar.logout_title" title="로그아웃" class="account-menu-logout">
                     <i class="lc lc-power" aria-hidden="true"></i>

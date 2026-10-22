@@ -103,7 +103,7 @@ class PluginService:
                 display['id'] = getattr(target_class, 'id', plugin_id) or plugin_id
                 display['name'] = getattr(target_class, 'name', plugin_id) or plugin_id
         except Exception as e:
-            print(f"[PluginService] 샘플 플러그인 소개 정보 조회 실패 ({plugin_id}): {e}")
+            print(f"[PluginService] Failed to load sample plugin info ({plugin_id}): {e}")
         return display
 
     @classmethod

@@ -3,7 +3,7 @@ import { state } from '../state.js';
 import * as api from '../api.js';
 import { selectCategory } from '../tab_media_library.js';
 import { currentTargetLibrary } from './context_menu.js';
-import { updateRemoteWarning, enableVFSCheckForRemote, loadGdriveCopyRemotes, detectGdriveMountRoot } from './path_browser.js';
+import { updateRemoteWarning, enableVFSCheckForRemote, loadGdriveCopyRemotes } from './path_browser.js';
 import { loadVideoLibraryView } from '../video_library.js';
 import { buildKindOptionsHtml } from './kind_options.js';
 import { coverRatioAttr, normalizeCoverAspectRatio } from '../utils/cover_ratio.js';
@@ -38,7 +38,7 @@ function populateLibraryGroupSelect(selectedGroupId = '') {
   const select = document.getElementById('library-form-group-id');
   if (!select) return;
   const selected = selectedGroupId == null ? '' : String(selectedGroupId);
-  select.innerHTML = '<option value="">미분류</option>' + (state.libraryGroups || []).map((group) => {
+  select.innerHTML = `<option value="">${i18n.t('modal.ungrouped')}</option>` + (state.libraryGroups || []).map((group) => {
     const groupId = String(group.id);
     const safeName = String(group.name || '')
       .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -52,7 +52,7 @@ function populateContentKindSelect(selectedCode = '') {
   const select = document.getElementById('library-form-content-kind');
   if (!select) return;
   const translated = window.i18n?.t?.('modal.content_kind_unspecified');
-  const unspecifiedLabel = translated && translated !== 'modal.content_kind_unspecified' ? translated : '미지정';
+  const unspecifiedLabel = translated && translated !== 'modal.content_kind_unspecified' ? translated : i18n.t('category.unspecified');
   select.innerHTML = buildKindOptionsHtml(state.libraryKinds, selectedCode, unspecifiedLabel);
   select.value = !selectedCode || selectedCode === 'unspecified' ? '' : String(selectedCode);
 }
@@ -63,11 +63,11 @@ window.addEventListener('library:kinds-changed', () => {
 });
 
 export async function triggerAddLibraryGroup() {
-  const name = prompt('새 그룹 이름을 입력하세요.');
+  const name = prompt(i18n.t('category.group_new_prompt'));
   if (name === null) return;
   const cleanName = name.trim();
   if (!cleanName || cleanName.length > 25) {
-    alert('그룹 이름은 1~25자로 입력해 주세요.');
+    alert(i18n.t('category.group_name_length'));
     return;
   }
   const formData = new FormData();
@@ -75,14 +75,14 @@ export async function triggerAddLibraryGroup() {
   formData.append('name', cleanName);
   const result = await api.addLibraryGroup(formData);
   if (!result.success) {
-    alert(result.error || '그룹을 추가하지 못했습니다.');
+    alert(result.error || i18n.t('category.group_add_failed'));
     return;
   }
   await window.loadLibraries?.();
 }
 
 export async function triggerEditLibraryGroup(group) {
-  const name = prompt('그룹 이름을 입력하세요.', group?.name || '');
+  const name = prompt(i18n.t('category.group_rename_prompt'), group?.name || '');
   if (name === null) return;
   const formData = new FormData();
   formData.append('type', state.currentLibraryType);
@@ -90,20 +90,20 @@ export async function triggerEditLibraryGroup(group) {
   formData.append('name', name.trim());
   const result = await api.editLibraryGroup(formData);
   if (!result.success) {
-    alert(result.error || '그룹 이름을 변경하지 못했습니다.');
+    alert(result.error || i18n.t('category.group_rename_failed'));
     return;
   }
   await window.loadLibraries?.();
 }
 
 export async function triggerDeleteLibraryGroup(group) {
-  if (!confirm(`'${group?.name || ''}' 그룹을 삭제할까요? 하위 카테고리는 미분류로 이동합니다.`)) return;
+  if (!confirm(i18n.t('category.group_delete_confirm', { name: group?.name || '' }))) return;
   const formData = new FormData();
   formData.append('type', state.currentLibraryType);
   formData.append('id', group.id);
   const result = await api.deleteLibraryGroup(formData);
   if (!result.success) {
-    alert(result.error || '그룹을 삭제하지 못했습니다.');
+    alert(result.error || i18n.t('category.group_delete_failed'));
     return;
   }
   await window.loadLibraries?.();
@@ -172,8 +172,6 @@ export function triggerAddLibrary() {
   if (hideTitleEl) hideTitleEl.checked = true;
   updateHideTitleRowVisibility();
 
-  const gdriveViewMirrorEl = document.getElementById('library-form-gdrive-view-mirror-path');
-  if (gdriveViewMirrorEl) gdriveViewMirrorEl.value = '';
   // loadGdriveCopyRemotes()는 비동기라 <select>가 직전에 연 카테고리의 값을 그대로
   // 들고 있을 수 있다 — updateGdriveSectionVisibility()가 그 값을 읽기 전에 먼저
   // 동기적으로 비워서, 새 카테고리 모달이 항상 접힌 상태로 열리게 한다.
@@ -235,9 +233,9 @@ export async function triggerEditLibrary() {
   if (moveBtn) {
     moveBtn.style.display = 'block';
     if (state.currentLibraryType === 'general') {
-      moveBtn.innerText = '성인도서로 이동';
+      moveBtn.innerText = i18n.t('category.move_to_adult');
     } else {
-      moveBtn.innerText = '일반도서로 이동';
+      moveBtn.innerText = i18n.t('category.move_to_general');
     }
   }
   
@@ -266,11 +264,8 @@ export async function triggerEditLibrary() {
   const rcloneUrlEl = document.getElementById('library-form-rclone-url');
   if (rcloneUrlEl) rcloneUrlEl.value = rcloneUrlVal;
 
-  // 구글 드라이브 자동 복사 리모트/마운트 루트 바인딩
+  // 구글 드라이브 연결 리모트 바인딩
   const gdriveCopyRemoteVal = libraryItem?.dataset?.gdriveCopyRemote || '';
-  const gdriveViewMirrorVal = libraryItem?.dataset?.gdriveViewLocalMirrorPath || '';
-  const gdriveViewMirrorEl = document.getElementById('library-form-gdrive-view-mirror-path');
-  if (gdriveViewMirrorEl) gdriveViewMirrorEl.value = gdriveViewMirrorVal;
   // 이미 리모트가 연결된 카테고리는 열자마자 섹션을 펼쳐서 설정을 바로 보여준다.
   const gdriveCopyDetailsEl = document.getElementById('library-form-gdrive-copy-details');
   if (gdriveCopyDetailsEl) gdriveCopyDetailsEl.open = !!gdriveCopyRemoteVal;
@@ -356,7 +351,7 @@ export async function triggerDeleteLibrary() {
   formData.append('id', currentTargetLibrary.id);
 
   if (typeof window.showGlobalLoadingSpinner === 'function') {
-    window.showGlobalLoadingSpinner(`'${currentTargetLibrary.name}' 카테고리와 관련 도서 데이터를 안전하게 삭제 중입니다...\n잠시만 기다려 주세요.`);
+    window.showGlobalLoadingSpinner(i18n.t('category.deleting', { name: currentTargetLibrary.name }));
   }
 
   try {
@@ -471,12 +466,12 @@ export async function triggerLazyScanLibrary() {
     } else if (!data.success) {
       alert(i18n.t('category.scan_fail', {error: data.error}));
     } else {
-      alert(`'${name}' 라이브러리 Lazy-Scanner 작업을 대기열에 추가했습니다.`);
+      alert(i18n.t('category.lazy_queued', { name }));
     }
   } catch (e) {
     console.error('라이브러리 Lazy-Scanner 요청 중 오류 발생:', e);
     if (typeof window.showToast === 'function') {
-      window.showToast('라이브러리 Lazy-Scanner 요청 중 서버 통신 오류가 발생했습니다.', 'error');
+      window.showToast(i18n.t('category.lazy_request_error'), 'error');
     } else {
       alert(i18n.t('category.server_error'));
     }
@@ -528,19 +523,19 @@ export async function submitLibraryForm(event) {
     return;
   }
   if (name.length > MAX_LIBRARY_NAME_LENGTH) {
-    alert(`카테고리 이름은 최대 ${MAX_LIBRARY_NAME_LENGTH}자까지 입력할 수 있습니다.`);
+    alert(i18n.t('category.name_max', { n: MAX_LIBRARY_NAME_LENGTH }));
     return;
   }
   if (physicalPathRaw.length > MAX_LIBRARY_PATH_TEXT_LENGTH) {
-    alert(`경로 입력 길이는 최대 ${MAX_LIBRARY_PATH_TEXT_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('category.path_text_max', { n: MAX_LIBRARY_PATH_TEXT_LENGTH }));
     return;
   }
   if (targetPaths.length > MAX_LIBRARY_PATHS) {
-    alert(`경로는 최대 ${MAX_LIBRARY_PATHS}개까지 입력할 수 있습니다.`);
+    alert(i18n.t('category.paths_max', { n: MAX_LIBRARY_PATHS }));
     return;
   }
   if (targetPaths.some(p => p.length > MAX_LIBRARY_PATH_LINE_LENGTH)) {
-    alert(`각 경로는 최대 ${MAX_LIBRARY_PATH_LINE_LENGTH}자까지 허용됩니다.`);
+    alert(i18n.t('category.path_line_max', { n: MAX_LIBRARY_PATH_LINE_LENGTH }));
     return;
   }
 
@@ -597,13 +592,13 @@ export async function submitLibraryForm(event) {
       }
     } else {
       console.error('[Category-CRUD] 카테고리 저장 실패:', result ? result.error : '알 수 없는 오류');
-      const errDetail = result && result.error ? result.error : '오류가 발생했습니다.';
-      alert(`[카테고리 저장 오류]\n${errDetail}`);
+      const errDetail = result && result.error ? result.error : i18n.t('category.error_generic');
+      alert(`[${i18n.t('category.save_error_title')}]\n${errDetail}`);
     }
   } catch (e) {
     console.error('라이브러리 저장 예외 발생:', e);
     const errDetail = e && e.message ? e.message : String(e);
-    alert(`[서버 통신/저장 예외]\n${errDetail}`);
+    alert(`[${i18n.t('category.save_exception_title')}]\n${errDetail}`);
   } finally {
     const submitBtn = document.getElementById('library-form-submit-btn');
     if (submitBtn) {
@@ -620,9 +615,8 @@ export async function triggerMoveLibrary() {
   const toType = (fromType === 'general') ? 'adult' : 'general';
 
   // 도서 이관은 서버의 스캔 대기열(library_transfer)이 백그라운드로 처리한다 - 요청은 바로 끝나므로 화면을 잠그지 않는다.
-  const targetLabel = (toType === 'general') ? '일반도서' : '성인도서';
-  const confirmMsg = `정말로 이 카테고리를 [${targetLabel}] 보관함으로 이동하시겠습니까?
-도서 정보는 백그라운드에서 옮겨지며, 끝나면 [${targetLabel}] 보관함에 나타납니다.`;
+  const targetLabel = (toType === 'general') ? i18n.t('header.general_books') : i18n.t('header.adult_books');
+  const confirmMsg = i18n.t('category.move_confirm', { target: targetLabel });
   if (!confirm(confirmMsg)) return;
 
   const modal = document.getElementById('library-form-modal');
@@ -647,13 +641,13 @@ export async function triggerMoveLibrary() {
     }
 
     if (data.success) {
-      alert(data.message || '카테고리 이동을 시작했습니다.');
+      alert(data.message || i18n.t('category.move_started'));
     } else {
-      alert('이동 실패: ' + (data.error || '알 수 없는 오류'));
+      alert(i18n.t('category.move_failed', { error: data.error || i18n.t('settings.gen_unknown_error') }));
     }
   } catch (e) {
     console.error('이관 API 오류:', e);
-    alert('서버 통신 실패 또는 타임아웃이 발생했습니다.');
+    alert(i18n.t('category.server_timeout'));
   }
   // 성공이면 원본이 이미 목록에서 빠졌고, 실패해도 서버 상태와 맞춘다.
   await reloadLibrarySidebar();
@@ -681,8 +675,6 @@ export function updateGdriveSectionVisibility() {
   const gdriveCopyGroup = document.getElementById('library-form-gdrive-copy-group');
   const gdriveCopyRemoteLabel = document.getElementById('library-form-gdrive-copy-remote-label');
   const gdriveCopyRemoteSelect = document.getElementById('library-form-gdrive-copy-remote');
-  const gdriveViewMirrorGroup = document.getElementById('library-form-gdrive-view-mirror-group');
-  const gdriveViewMirrorInput = document.getElementById('library-form-gdrive-view-mirror-path');
   const remoteEl = document.getElementById('library-form-remote');
   const isRemoteChecked = !!(remoteEl && remoteEl.checked);
 
@@ -700,42 +692,18 @@ export function updateGdriveSectionVisibility() {
   if (gdriveCopyDetailsEl && (hasGdriveLine || hasConfiguredRemote)) gdriveCopyDetailsEl.open = true;
   if (gdriveCopyStatusDotEl) gdriveCopyStatusDotEl.classList.toggle('active', hasGdriveLine || hasConfiguredRemote);
 
-  // Rclone RC 주소는 "원격 드라이브" 체크 또는 공유 링크 존재, 둘 중 하나만 있어도 필요.
-  if (rcloneGroup) rcloneGroup.style.display = (isRemoteChecked || hasGdriveLine) ? 'block' : 'none';
+  // Rclone RC 주소는 "원격 드라이브"(마운트 VFS 새로고침)에만 필요 — 공유 링크는 리모트로 직접 조회한다.
+  if (rcloneGroup) rcloneGroup.style.display = isRemoteChecked ? 'block' : 'none';
 
   if (hasGdriveLine) {
       // 개인 rclone Drive 리모트 없이는 공유 링크가 포함된 카테고리를 저장할 수 없다
       // (하드 게이트) — 더 이상 "선택/실험적" 부가 기능이 아니라 필수 설정이라 항상 노출/필수화.
       if (gdriveCopyRemoteLabel) gdriveCopyRemoteLabel.textContent = '연결할 내 구글 드라이브 리모트 (필수)';
       if (gdriveCopyRemoteSelect) gdriveCopyRemoteSelect.required = true;
-      if (gdriveViewMirrorGroup) gdriveViewMirrorGroup.style.display = 'block';
-      if (gdriveViewMirrorInput) gdriveViewMirrorInput.required = true;
-      maybeAutoDetectGdriveMountRoot();
   } else {
       if (gdriveCopyRemoteLabel) gdriveCopyRemoteLabel.textContent = '연결할 내 구글 드라이브 리모트 (선택, 실험적)';
       if (gdriveCopyRemoteSelect) gdriveCopyRemoteSelect.required = false;
-      if (gdriveViewMirrorGroup) gdriveViewMirrorGroup.style.display = 'none';
-      if (gdriveViewMirrorInput) gdriveViewMirrorInput.required = false;
   }
-}
-
-let gdriveMountRootAutoDetectTimer = null;
-
-// 마운트 루트는 리모트 이름만으로 /proc/mounts를 조회해 감지되므로(물리 경로는 공유
-// 소스 링크라 계산 기준으로 쓸 수 없음) 리모트가 선택되는 즉시(300ms 디바운스)
-// 시도한다. 이미 값이 있으면(이전 감지 결과나 관리자가 직접 입력) 건드리지 않는다.
-function maybeAutoDetectGdriveMountRoot() {
-  const mirrorInput = document.getElementById('library-form-gdrive-view-mirror-path');
-  const remoteEl = document.getElementById('library-form-gdrive-copy-remote');
-  if (!mirrorInput || mirrorInput.value.trim()) return;
-  if (!remoteEl || !remoteEl.value) return;
-
-  if (gdriveMountRootAutoDetectTimer) clearTimeout(gdriveMountRootAutoDetectTimer);
-  gdriveMountRootAutoDetectTimer = setTimeout(() => {
-    gdriveMountRootAutoDetectTimer = null;
-    if (mirrorInput.value.trim()) return;
-    detectGdriveMountRoot(true);
-  }, 300);
 }
 
 function updateAdvancedStatusDot(isRemoteChecked) {

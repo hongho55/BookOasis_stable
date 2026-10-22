@@ -102,6 +102,7 @@ mcp dev tools/mcp_server.py
 | `list_problems` | 알림센터의 열린 문제 카드 목록 (파일 없음·대량 사라짐 보류·원격 드라이브 끊김·파일 손상·백그라운드 작업 실패·사용자 신고·플러그인 문제 등, 플러그인 카드는 `plugin`에 이름/제목/설명) |
 | `get_problem_card` | 문제 카드 하나의 시리즈별 내역, `series_key`를 주면 그 시리즈의 도서 목록 |
 | `diagnose_book` | 도서 1권 진단: DB 기록 / 원격 연결 / 파일 존재 / 파일 형식 체크리스트와 원인·권장 조치 (읽기 전용) |
+| `get_gdrive_beta_summary` | 구글 드라이브 링크 카테고리(클로즈 베타) 로그 요약: 스캔 시간·건너뛴 폴더·신규, 책 열기 시간/크기/실패율, 다음 화 미리 받기, 캐시 사용량, 열린 경고 |
 | `get_version` | 실행 중인 BookOasis 버전(VERSION 파일 기준) 조회 |
 | `run_readonly_query` | 서재 DB에 읽기 전용(SELECT/WITH/EXPLAIN/PRAGMA/SHOW/DESCRIBE) SQL을 직접 실행 |
 | `read_logs` | `logs/` 폴더의 서버 로그를 끝에서부터 최근 N줄 조회 (검색어 필터 지원) |

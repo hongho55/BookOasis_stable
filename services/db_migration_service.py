@@ -168,7 +168,7 @@ def startup_db_sanity_check():
         if not has_wal and not has_shm:
             continue
 
-        print(f"[DB-Sanity] {db_type} DB — WAL/SHM 파일 감지, 무결성 검증 시작...")
+        print(f"[DB-Sanity] {db_type} DB - WAL/SHM files found, starting integrity check...")
         try:
             conn = sqlite3.connect(db_path, timeout=10.0)
             conn.execute("PRAGMA journal_mode=WAL;")
@@ -179,16 +179,16 @@ def startup_db_sanity_check():
                 # WAL 체크포인트 수행 (SQLite C-Engine이 스스로 마감하도록 맡김)
                 conn.execute("PRAGMA wal_checkpoint(TRUNCATE);")
                 conn.close()
-                print(f"[DB-Sanity] {db_type} DB — 무결성 정상, WAL 체크포인트 마감 완료")
+                print(f"[DB-Sanity] {db_type} DB - integrity OK, WAL checkpoint done")
             else:
                 conn.close()
-                print(f"[DB-Sanity] {db_type} DB — 무결성 이상 감지: {result[:3]}")
-                print(f"[DB-Sanity] 지속적인 오류 발생 시 tools/db_recovery.py 를 실행하세요.")
+                print(f"[DB-Sanity] {db_type} DB - integrity problem detected: {result[:3]}")
+                print(f"[DB-Sanity] If errors persist, run tools/db_recovery.py.")
 
         except sqlite3.DatabaseError as e:
-            print(f"[DB-Sanity] {db_type} DB — DB 접속 실패: {e}")
+            print(f"[DB-Sanity] {db_type} DB - failed to connect: {e}")
         except Exception as e:
-            print(f"[DB-Sanity] {db_type} DB — 예기치 못한 오류 (무시하고 계속): {e}")
+            print(f"[DB-Sanity] {db_type} DB - unexpected error (ignored, continuing): {e}")
 
 
 # 4개 미디어 세션(general/adult/audiobook/video) 공용 스키마.
@@ -896,28 +896,28 @@ def _connect_and_init_schema(db_type, schema):
                 try:
                     cursor._cursor.execute(stmt)
                 except Exception as ddl_err:
-                    print(f"[DB-Migration ERROR] '{db_type}' 중앙 스키마 적용 실패: {ddl_err} | {stmt[:80]!r}")
+                    print(f"[DB-Migration ERROR] '{db_type}' failed to apply the central schema: {ddl_err} | {stmt[:80]!r}")
             conn.commit()
         cursor.executescript(schema)
         conn.commit()
     except Exception as conn_err:
-        print(f"[DB-Migration ERROR] '{db_type}' DB 연결/초기화 실패로 이 DB를 건너뜁니다: {conn_err}")
+        print(f"[DB-Migration ERROR] Skipping '{db_type}' DB because connecting/initializing failed: {conn_err}")
         db_engine = os.environ.get('DB_ENGINE', os.environ.get('DBMS', ''))
         if 'access denied' in str(conn_err).lower() or 'mariadb' in db_engine.lower():
             mariadb_user = os.environ.get('MARIADB_USER', 'bookoasis')
             db_prefix = os.environ.get('MARIADB_DATABASE_PREFIX', 'media_')
             print(
-                "[DB-Migration ERROR] MariaDB 권한 문제로 보입니다. "
-                f"'{mariadb_user}' 계정에 '{db_prefix}{db_type}' 권한이 없을 수 있습니다. "
-                "MariaDB에 root로 접속해 아래 SQL을 실행하세요 (docker-compose.mariadb.yml 사용 중이면 "
-                "'mariadb-grant-repair' 서비스가 다음 `docker-compose up` 시 자동으로 재실행합니다):"
+                "[DB-Migration ERROR] This looks like a MariaDB permission problem. "
+                f"The '{mariadb_user}' account may lack privileges on '{db_prefix}{db_type}'. "
+                "Connect to MariaDB as root and run the SQL below (if you use docker-compose.mariadb.yml, "
+                "the 'mariadb-grant-repair' service reruns it automatically on the next `docker-compose up`):"
             )
             print(
                 f"  CREATE DATABASE IF NOT EXISTS {db_prefix}{db_type} CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;\n"
                 f"  GRANT ALL PRIVILEGES ON {db_prefix}{db_type}.* TO '{mariadb_user}'@'%';\n"
                 "  FLUSH PRIVILEGES;"
             )
-            print("[DB-Migration ERROR] 자세한 내용은 docs/move_to_mariadb.md FAQ Q1을 참고하세요.")
+            print("[DB-Migration ERROR] See FAQ Q1 in docs/move_to_mariadb.md for details.")
         if conn:
             try:
                 conn.close()
@@ -1353,9 +1353,9 @@ def _backfill_html_entities_video_titles_sqlite(conn):
         conn.commit()
 
         if changed > 0 or ep_changed > 0:
-            print(f"  [+] SQLite video HTML 엔티티 제목 보정 완료: videos {changed}건, video_episodes {ep_changed}건")
+            print(f"  [+] SQLite video HTML entity title fix done: videos {changed}, video_episodes {ep_changed}")
     except Exception as e:
-        print(f"  [경고] SQLite video HTML 엔티티 제목 보정 실패: {e}")
+        print(f"  [WARN] SQLite video HTML entity title fix failed: {e}")
 
 
 def _backfill_html_entities_video_titles_mariadb():
@@ -1385,10 +1385,10 @@ def _backfill_html_entities_video_titles_mariadb():
         conn.commit()
 
         if changed > 0 or ep_changed > 0:
-            print(f"  [+] MariaDB video HTML 엔티티 제목 보정 완료: videos {changed}건, video_episodes {ep_changed}건")
+            print(f"  [+] MariaDB video HTML entity title fix done: videos {changed}, video_episodes {ep_changed}")
         conn.close()
     except Exception as e:
-        print(f"  [경고] MariaDB video HTML 엔티티 제목 보정 실패: {e}")
+        print(f"  [WARN] MariaDB video HTML entity title fix failed: {e}")
 
 
 def _fix_mariadb_column_collations():
@@ -1426,10 +1426,10 @@ def _ensure_mariadb_columns():
         if has_old and not has_new:
             cur.execute("RENAME TABLE `tracks` TO `audiobook_tracks`")
             conn.commit()
-            print("  [+] MariaDB 구형 테이블 `tracks` ➔ `audiobook_tracks` 자동 RENAME 완료.")
+            print("  [+] Renamed old MariaDB table `tracks` -> `audiobook_tracks` automatically.")
         conn.close()
     except Exception as e:
-        print(f"  [!] MariaDB 구형 테이블 RENAME 검사 중 오류: {e}")
+        print(f"  [!] Error while checking old MariaDB table rename: {e}")
 
     required_columns = [
         ('media_general', 'libraries', 'group_id', 'BIGINT DEFAULT NULL'),
@@ -1525,10 +1525,10 @@ def _ensure_mariadb_columns():
             if not cur.fetchone():
                 cur.execute(f"ALTER TABLE `{tbl}` ADD COLUMN `{col_name}` {col_def}")
                 conn.commit()
-                print(f"  [+] MariaDB 누락 컬럼 자동 보강 완료: `{db_name}`.`{tbl}`.{col_name}")
+                print(f"  [+] Added missing MariaDB column: `{db_name}`.`{tbl}`.{col_name}")
             conn.close()
         except Exception as e:
-            print(f"  [!] MariaDB 컬럼 보강 실패: `{db_name}`.`{tbl}`.{col_name} ({col_def}) -> {e}")
+            print(f"  [!] Failed to add MariaDB column: `{db_name}`.`{tbl}`.{col_name} ({col_def}) -> {e}")
 
     # 구버전(테이블명이 `tracks`였던 시절)부터 계속 업그레이드해온 DB는 audiobook_tracks.title이
     # 그 시절 정의(NOT NULL, 기본값 없음) 그대로 남아있을 수 있다. 현재 앱은 트랙을 filename으로
@@ -1546,10 +1546,10 @@ def _ensure_mariadb_columns():
             if row and str(row.get('Null')).upper() == 'NO' and row.get('Default') is None:
                 cur.execute(f"ALTER TABLE `{tbl}` MODIFY COLUMN `{col_name}` {new_col_def}")
                 conn.commit()
-                print(f"  [+] MariaDB 구형 스키마 보정 완료: `{db_name}`.`{tbl}`.{col_name} (NOT NULL 제약 해제)")
+                print(f"  [+] Fixed old MariaDB schema: `{db_name}`.`{tbl}`.{col_name} (NOT NULL constraint removed)")
             conn.close()
         except Exception as e:
-            print(f"  [!] MariaDB 구형 컬럼 제약 보정 실패: `{db_name}`.`{tbl}`.{col_name} -> {e}")
+            print(f"  [!] Failed to fix old MariaDB column constraint: `{db_name}`.`{tbl}`.{col_name} -> {e}")
 
 
 def _ensure_mariadb_indexes():
@@ -1588,10 +1588,10 @@ def _ensure_mariadb_indexes():
             if not cur.fetchone():
                 cur.execute(idx_sql)
                 conn.commit()
-                print(f"  [+] MariaDB 고속 성능 인덱스 생성 완료: `{db_name}`.`{tbl}`.{idx_name}")
+                print(f"  [+] Created MariaDB performance index: `{db_name}`.`{tbl}`.{idx_name}")
             conn.close()
         except Exception as e:
-            print(f"  [!] MariaDB 인덱스 생성 실패: `{db_name}`.`{tbl}`.{idx_name} -> {e}")
+            print(f"  [!] Failed to create MariaDB index: `{db_name}`.`{tbl}`.{idx_name} -> {e}")
 
 
 def run_full_migration():

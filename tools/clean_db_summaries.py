@@ -29,14 +29,14 @@ def clean_html_tags(text):
     return html.unescape(cleaned).strip()
 
 def clean_database_summaries():
-    print("=== [미디어 서버 독립] 기존 데이터베이스 줄거리 HTML/이미지 태그 일괄 정화 시작 ===")
+    print("=== [Standalone] Cleaning HTML/image tags from book summaries in existing databases ===")
     
     for db_path in DB_PATHS:
         if not os.path.exists(db_path):
-            print(f"[*] 존재하지 않는 DB 생략: {db_path}")
+            print(f"[*] Skipping a DB that does not exist: {db_path}")
             continue
             
-        print(f"[*] 대상 DB 작업 시작: {os.path.basename(db_path)}")
+        print(f"[*] Working on DB: {os.path.basename(db_path)}")
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -62,9 +62,9 @@ def clean_database_summaries():
                     
         conn.commit()
         conn.close()
-        print(f"[+] '{os.path.basename(db_path)}' 정화 완료 (총 {updated_count}개 도서 갱신)")
+        print(f"[+] Cleaned '{os.path.basename(db_path)}' ({updated_count} books updated)")
 
-    print("=== 데이터베이스 정화 작업 완료 ===")
+    print("=== Database cleanup done ===")
 
 if __name__ == '__main__':
     clean_database_summaries()

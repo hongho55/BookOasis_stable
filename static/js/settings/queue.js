@@ -173,7 +173,7 @@ function buildQueueRowInnerHtml(task, index, t) {
         <td style="padding: 1rem; display: flex; align-items: center; gap: 8px;">${statusHtml}${cancelButton}</td>
         <td style="padding: 1rem; color: var(--app-text-primary);">${getQueueTaskTypeName(task.type, t)}</td>
         <td style="padding: 1rem; color: var(--app-text-primary);">${task.library_name || t('queue.system')}</td>
-        <td style="padding: 1rem; color: var(--app-text-muted); font-size: 0.85rem;">등록: ${task.enqueued_at || '-'}</td>
+        <td style="padding: 1rem; color: var(--app-text-muted); font-size: 0.85rem;">${i18n.t('settings.queue_enqueued_at', { time: task.enqueued_at || '-' })}</td>
     `;
 }
 

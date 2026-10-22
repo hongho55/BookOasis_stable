@@ -94,6 +94,7 @@ mcp dev tools/mcp_server.py
 | `list_problems` | Open problem cards from the notification center (missing files, held mass disappearance, remote drive disconnected, corrupt files, failing background tasks, user reports, plugin problems, ...; plugin cards carry name/title/detail in `plugin`) |
 | `get_problem_card` | Per-series breakdown of one problem card; with `series_key`, the books in that series |
 | `diagnose_book` | Diagnose one book: DB record / remote connection / file exists / file format checklist with the cause and suggested action (read-only) |
+| `get_gdrive_beta_summary` | Google Drive link categories (closed beta) log summary: scan time, skipped folders, new books; book-open download time/size/failure rate; next-episode prefetch; cache usage; open warnings |
 | `run_readonly_query` | Run raw read-only (SELECT/WITH/EXPLAIN/PRAGMA) SQL against the library DB |
 | `read_logs` | Tail the last N lines of a server log under `logs/` (with an optional search filter) |
 | `call_api` | Call an existing GET REST API endpoint (`docs/api_endpoints.md`) directly |

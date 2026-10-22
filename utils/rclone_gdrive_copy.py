@@ -73,9 +73,9 @@ def _rclone_config_args():
 
     own_default = os.path.expanduser('~/.config/rclone/rclone.conf')
     if not os.path.isfile(own_default) and os.path.isfile(_ROOT_RCLONE_CONFIG_FALLBACK):
-        print(f"[RcloneGdriveCopy] 기본 위치 '{own_default}'에 rclone.conf가 없어 "
-              f"'{_ROOT_RCLONE_CONFIG_FALLBACK}'을(를) 대신 사용합니다 "
-              f"(RCLONE_CONFIG_PATH를 지정하면 이 자동 폴백보다 우선합니다).")
+        print(f"[RcloneGdriveCopy] No rclone.conf at the default location '{own_default}', "
+              f"using '{_ROOT_RCLONE_CONFIG_FALLBACK}' instead "
+              f"(setting RCLONE_CONFIG_PATH takes priority over this automatic fallback).")
         return ['--config', _ROOT_RCLONE_CONFIG_FALLBACK]
 
     return []
@@ -89,23 +89,23 @@ def _rclone_config_dump():
             capture_output=True, text=True, timeout=RCLONE_CONFIG_DUMP_TIMEOUT
         )
     except FileNotFoundError:
-        print('[RcloneGdriveCopy] rclone 바이너리를 찾을 수 없습니다 (PATH 확인 필요)')
+        print('[RcloneGdriveCopy] rclone binary not found (check PATH)')
         return None
     except subprocess.TimeoutExpired:
-        print('[RcloneGdriveCopy] rclone config dump 시간 초과')
+        print('[RcloneGdriveCopy] rclone config dump timed out')
         return None
     except Exception as e:
-        print(f'[RcloneGdriveCopy] rclone config dump 실행 오류: {e}')
+        print(f'[RcloneGdriveCopy] Error running rclone config dump: {e}')
         return None
 
     if result.returncode != 0:
-        print(f'[RcloneGdriveCopy] rclone config dump 실패 (code={result.returncode}): {result.stderr.strip()[:200]}')
+        print(f'[RcloneGdriveCopy] rclone config dump failed (code={result.returncode}): {result.stderr.strip()[:200]}')
         return None
 
     try:
         return json.loads(result.stdout)
     except Exception as e:
-        print(f'[RcloneGdriveCopy] rclone config dump 출력 파싱 실패: {e}')
+        print(f'[RcloneGdriveCopy] Failed to parse rclone config dump output: {e}')
         return None
 
 
@@ -227,7 +227,7 @@ def resolve_effective_root_folder_id(access_token, remote_name):
     folder_id = get_remote_root_folder_id(remote_name)
     subpath = detect_mount_remote_subpath(remote_name)
     if not subpath:
-        print(f"[RcloneGdriveCopy] 리모트 '{remote_name}'의 마운트 서브경로를 감지하지 못함 (도커 등으로 /proc/mounts를 못 읽는 경우 정상) — root_folder_id 기준으로만 계산")
+        print(f"[RcloneGdriveCopy] Could not detect the mount subpath of remote '{remote_name}' (normal when /proc/mounts is unreadable, e.g. Docker) - computing from root_folder_id only")
         return folder_id
 
     for part in [p for p in subpath.split('/') if p]:
@@ -243,7 +243,7 @@ def find_or_create_folder(access_token, name, parent_id):
     resp = requests.get(
         f'{DRIVE_API_BASE}/files',
         headers=headers,
-        params={'q': query, 'fields': 'files(id,name)'},
+        params={'q': query, 'fields': 'files(id,name)', 'supportsAllDrives': 'true', 'includeItemsFromAllDrives': 'true'},
         timeout=DRIVE_API_TIMEOUT,
     )
     if resp.status_code != 200:
@@ -255,6 +255,7 @@ def find_or_create_folder(access_token, name, parent_id):
     resp = requests.post(
         f'{DRIVE_API_BASE}/files',
         headers=headers,
+        params={'supportsAllDrives': 'true'},
         json={'name': name, 'mimeType': 'application/vnd.google-apps.folder', 'parents': [parent_id]},
         timeout=DRIVE_API_TIMEOUT,
     )
@@ -276,6 +277,7 @@ def copy_file(access_token, file_id, dest_folder_id, dest_name=None):
             resp = requests.post(
                 f'{DRIVE_API_BASE}/files/{file_id}/copy',
                 headers=headers,
+                params={'supportsAllDrives': 'true'},
                 json=payload,
                 timeout=DRIVE_API_TIMEOUT,
             )
@@ -416,6 +418,97 @@ def rclone_copy_file_by_id(remote_name, file_id, dest_rclone_path):
     return True
 
 
+def _shared_folder_source(remote_name, folder_id):
+    """임의의 공유 폴더(folder_id)를 remote_name 리모트의 OAuth 인증으로, 그 폴더가 루트인
+    것처럼 읽는 rclone 소스 문자열 (공유 드라이브 폴더도 그대로 동작)."""
+    return f'{remote_name},root_folder_id={folder_id}:'
+
+
+def rclone_list_shared_folder(remote_name, folder_id):
+    """공유 폴더 전체를 재귀로 한 번에 나열한다 (`rclone lsjson -R --fast-list`, 폴더 항목 포함 —
+    이미지 폴더 책을 볼 때 폴더 ID로 통째 받기 위해 폴더 ID도 필요하다).
+    API 키 방식(폴더마다 files.list)보다 빠르고(.21 실측 3.8만 파일: 154s vs 296s), 로그인된
+    계정이라 익명 요청 차단을 받지 않는다. 실패하면 ValueError — 부분 목록은 반환하지 않는다."""
+    code, stdout, stderr = _run_rclone(
+        ['lsjson', _shared_folder_source(remote_name, folder_id), '-R', '--fast-list', '--no-mimetype'],
+        timeout=RCLONE_FOLDER_COPY_TIMEOUT,
+    )
+    if code != 0:
+        raise ValueError(f'rclone lsjson 실패: {stderr.decode("utf-8", "replace")[-300:]}')
+    return json.loads(stdout.decode('utf-8') or '[]')
+
+
+def rclone_download_file_by_id(remote_name, file_id, dest_local_path):
+    """단일 파일(file_id)을 remote_name 리모트의 로그인 인증으로 이 서버 로컬 디스크에 내려받는다
+    (`rclone backend copyid`의 목적지를 로컬로 줌, 원격 수정 시각 유지). 임시 폴더에 받은 뒤 원자적으로 옮긴다."""
+    import shutil
+    import tempfile
+    if not os.path.isabs(dest_local_path):
+        raise ValueError(f'다운로드 목적지는 로컬 절대 경로여야 합니다: {dest_local_path}')
+    dest_dir = os.path.dirname(dest_local_path)
+    os.makedirs(dest_dir, exist_ok=True)
+    tmp_dir = tempfile.mkdtemp(prefix='.rc_dl_', dir=dest_dir)
+    try:
+        code, _, stderr = _run_rclone(['backend', 'copyid', f'{remote_name}:', file_id, tmp_dir + os.sep])
+        if code != 0:
+            raise ValueError(f'rclone copyid(로컬) 실패: {stderr.decode("utf-8", "replace")[:300]}')
+        downloaded = os.listdir(tmp_dir)
+        if len(downloaded) != 1:
+            raise ValueError(f'rclone copyid(로컬) 결과 파일 수 이상: {downloaded}')
+        os.replace(os.path.join(tmp_dir, downloaded[0]), dest_local_path)
+        return True
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def rclone_download_folder_images(remote_name, folder_id, dest_local_dir, image_exts):
+    """이미지 폴더(화보 등) 하나의 이미지들만 로그인 리모트로 로컬 폴더에 통째로 받는다 (하위 폴더 제외).
+    임시 폴더에 받은 뒤 이름을 바꿔 넣으므로, dest_local_dir이 보이면 항상 다 받아진 상태다."""
+    import shutil
+    import tempfile
+    if not os.path.isabs(dest_local_dir):
+        raise ValueError(f'다운로드 목적지는 로컬 절대 경로여야 합니다: {dest_local_dir}')
+    parent = os.path.dirname(dest_local_dir)
+    os.makedirs(parent, exist_ok=True)
+    tmp_dir = tempfile.mkdtemp(prefix='.rc_dir_', dir=parent)
+    try:
+        args = ['copy', _shared_folder_source(remote_name, folder_id), tmp_dir, '--max-depth', '1',
+                '--transfers', '8', '--retries', '1']
+        for ext in image_exts:
+            args += ['--include', f'*{ext}', '--include', f'*{ext.upper()}']
+        code, _, stderr = _run_rclone(args, timeout=RCLONE_FOLDER_COPY_TIMEOUT)
+        if code != 0:
+            raise ValueError(f'rclone copy(이미지 폴더) 실패: {stderr.decode("utf-8", "replace")[-300:]}')
+        if not os.listdir(tmp_dir):
+            raise ValueError('이미지 폴더에서 받은 이미지가 없습니다')
+        shutil.rmtree(dest_local_dir, ignore_errors=True)
+        os.replace(tmp_dir, dest_local_dir)
+        return True
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def rclone_sync_metadata_mirror(remote_name, folder_id, dest_local_dir, include_patterns):
+    """공유 폴더의 메타데이터 파일(kavita.yaml 등)만 폴더 구조 그대로 로컬 미러로 동기화한다.
+    수천 개를 rclone 한 번으로 받고(.21 실측 1.5천 개 약 6분), 다음부터는 바뀐 것만 받는다.
+    방향은 항상 원격 → 로컬이다: 목적지가 리모트 경로면 거부한다(공유 원본에 절대 쓰지 않음).
+
+    반환: (ok, 에러 꼬리 문자열). 일부 파일 실패는 치명적이지 않으므로 예외 대신 ok=False로
+    알린다 — 받아진 파일은 그대로 쓰고, 못 받은 건 다음 스캔에 다시 시도된다."""
+    if not os.path.isabs(dest_local_dir):
+        raise ValueError(f'메타 미러 목적지는 로컬 절대 경로여야 합니다: {dest_local_dir}')
+    os.makedirs(dest_local_dir, exist_ok=True)
+    args = ['sync', _shared_folder_source(remote_name, folder_id), dest_local_dir, '--fast-list',
+            '--transfers', '8', '--checkers', '8',
+            # 같은 폴더에 이름이 같은 파일이 둘 있으면(공유자 쪽 중복 업로드) 크기 불일치로
+            # 전체 재시도가 3번 반복됐다(.21 실측 686s) — 재시도는 1번으로 끝낸다.
+            '--retries', '1']
+    for pattern in include_patterns:
+        args += ['--include', pattern]
+    code, _, stderr = _run_rclone(args, timeout=RCLONE_FOLDER_COPY_TIMEOUT)
+    return code == 0, stderr.decode('utf-8', 'replace')[-300:]
+
+
 def rclone_copy_folder_by_id(remote_name, folder_id, dest_rclone_path):
     """폴더(folder_id) 전체를 재귀적으로 remote_name 리모트의 dest_rclone_path 아래로
     서버사이드 복사한다(`rclone copy`, 인라인 root_folder_id 오버라이드로 임의의 공유
@@ -445,4 +538,4 @@ def rclone_ensure_ignore_marker(marker_rclone_path):
     if code != 0:
         # 마커 생성 실패는 치명적이지 않다 — 최악의 경우 다음 스캔에서 이 캐시 폴더가
         # 잘못 재스캔될 수 있을 뿐, 복사/열람 자체는 계속 진행해도 된다.
-        print(f'[RcloneGdriveCopy] .bookoasisignore 마커 생성 실패 (무시하고 계속): {stderr.decode("utf-8", "replace")[:200]}')
+        print(f'[RcloneGdriveCopy] Failed to create the .bookoasisignore marker (ignored, continuing): {stderr.decode("utf-8", "replace")[:200]}')

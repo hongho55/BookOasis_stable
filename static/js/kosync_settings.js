@@ -22,7 +22,7 @@ function applyState(data) {
   const clearBtn = el('btn-kosync-clear');
   if (clearBtn) clearBtn.hidden = !enabled;
   const saveBtn = el('btn-kosync-save');
-  if (saveBtn) saveBtn.textContent = enabled ? '변경' : '저장';
+  if (saveBtn) saveBtn.textContent = enabled ? i18n.t('header.kosync_change') : i18n.t('common.save');
   if (data && data.server_url && el('kosync-server-url')) el('kosync-server-url').textContent = data.server_url;
   if (data && data.username && el('kosync-username')) el('kosync-username').textContent = data.username;
 }
@@ -34,7 +34,7 @@ async function request(method, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.success === false) throw new Error(data.error || '요청에 실패했습니다.');
+  if (!res.ok || data.success === false) throw new Error(data.error || i18n.t('header.kosync_request_failed'));
   return data;
 }
 
@@ -66,7 +66,7 @@ export function initKosyncSettings() {
     try {
       applyState(await request('POST', { password: input ? input.value : '' }));
       if (input) input.value = '';
-      showMessage('저장했습니다. KOReader에서 이 비밀번호로 로그인하세요.');
+      showMessage(i18n.t('header.kosync_saved'));
       loadState();
     } catch (e) {
       showMessage(e.message, true);
@@ -74,10 +74,10 @@ export function initKosyncSettings() {
   });
 
   el('btn-kosync-clear')?.addEventListener('click', async () => {
-    if (!window.confirm('KOReader 동기화를 해제할까요? KOReader에서 다시 로그인해야 합니다.')) return;
+    if (!window.confirm(i18n.t('header.kosync_clear_confirm'))) return;
     try {
       applyState(await request('DELETE'));
-      showMessage('해제했습니다.');
+      showMessage(i18n.t('header.kosync_cleared'));
     } catch (e) {
       showMessage(e.message, true);
     }

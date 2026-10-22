@@ -12,7 +12,7 @@ class CoverScanService:
         start_time = datetime.now()
 
         print(f"[CoverScanner-Trigger] 🚀 Immediate cover-only scan started: DB={db_type}, ID={library_id}, Path={physical_path}")
-        write_scan_log(f"표지 전용 스캔 기동 시작 - DB={db_type}, LibraryID={library_id}, Path='{physical_path}'")
+        write_scan_log(f"Cover-only scan starting - DB={db_type}, LibraryID={library_id}, Path='{physical_path}'")
 
         # 1. 상태를 'scanning'으로 업데이트
         try:
@@ -29,7 +29,7 @@ class CoverScanService:
 
             CategoryRepository.update_library_scan_success(db_type, library_id, end_str)
 
-            msg = f"표지 전용 스캔 성공 완료 - DB={db_type}, LibraryID={library_id}, 소요시간={duration:.2f}초"
+            msg = f"Cover-only scan completed - DB={db_type}, LibraryID={library_id}, elapsed={duration:.2f}s"
             print(f"[CoverScanner-Trigger] ✅ {msg}")
             write_scan_log(msg)
         except Exception as e:
@@ -40,6 +40,6 @@ class CoverScanService:
             except Exception:
                 pass
 
-            msg = f"표지 전용 스캔 실패 - DB={db_type}, LibraryID={library_id}, 소요시간={duration:.2f}초, 에러={e}"
+            msg = f"Cover-only scan failed - DB={db_type}, LibraryID={library_id}, elapsed={duration:.2f}s, error={e}"
             print(f"[CoverScanner-Trigger] ❌ {msg}")
             write_scan_log(msg)

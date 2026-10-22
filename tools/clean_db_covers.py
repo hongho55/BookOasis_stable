@@ -9,10 +9,10 @@ DB_ADULT_PATH = os.path.join(BASE_DIR, 'db', 'media_adult.db')
 
 def migrate_db(db_path):
     if not os.path.exists(db_path):
-        print(f"[-] DB 파일 없음: {db_path}")
+        print(f"[-] DB file not found: {db_path}")
         return
         
-    print(f"[*] 마이그레이션 시작: {db_path}")
+    print(f"[*] Migration start: {db_path}")
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -21,7 +21,7 @@ def migrate_db(db_path):
     cursor.execute("SELECT id, file_path, cover_image FROM books WHERE cover_image LIKE 'book_%.png'")
     rows = cursor.fetchall()
     
-    print(f"[*] 총 검사 대상 도서 수: {len(rows)}권")
+    print(f"[*] Books to check: {len(rows)}")
     
     update_count = 0
     for r in rows:
@@ -49,7 +49,7 @@ def migrate_db(db_path):
             
     conn.commit()
     conn.close()
-    print(f"[+] 마이그레이션 완료: {db_path} - 총 {update_count}권 정화 완료")
+    print(f"[+] Migration done: {db_path} - cleaned {update_count} books")
 
 if __name__ == '__main__':
     migrate_db(DB_GENERAL_PATH)

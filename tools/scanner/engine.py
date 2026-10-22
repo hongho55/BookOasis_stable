@@ -264,12 +264,84 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     ignore_filter = IgnoreFilter(ignore_patterns_str)
 
     from utils.drive_helper import is_gdrive_url
+    # gdrive 링크 카테고리는 저장 시 로그인된 rclone 리모트(사본 뷰어용)가 필수다. 그 리모트로
+    # 목록(lsjson 한 번)과 메타데이터(kavita.yaml 등을 로컬 미러로 sync 한 번)를 일괄로 받는다 —
+    # API 키 익명 다운로드는 대형 공유 폴더에서 수백 건 만에 Google 403으로 IP 차단됐다(2026-10-22).
+    # 책은 열 때 로컬 사본을 읽으므로 zip마다 Range로 오프셋을 미리 계산하지도 않는다.
+    # 리모트가 없는 옛 카테고리만 예전 API 키 경로(목록/파일별 다운로드/Range 오프셋)를 쓴다.
+    gdrive_view_remote = None
+    gdrive_meta_dirs = None  # v_root -> 메타 미러 로컬 폴더 (리모트 경로일 때만 dict)
+    gdrive_file_stats = {}  # v_root -> {filename: (수정 시각 epoch, 크기)} — 바뀌지 않은 폴더 건너뛰기용
+    gdrive_scan = any(is_gdrive_url(p) for p in target_paths)
+    gdrive_scan_started = time.time()
+    gdrive_folder_count = 0
+    if gdrive_scan:
+        try:
+            cursor.execute("SELECT gdrive_copy_remote, gdrive_view_local_mirror_path FROM libraries WHERE id = ?", (library_id,))
+            vc_row = cursor.fetchone()
+            if vc_row and vc_row['gdrive_copy_remote']:
+                gdrive_view_remote = vc_row['gdrive_copy_remote']
+        except Exception as e:
+            print(f"[Scanner] gdrive view-copy settings lookup failed (offsets will be computed): {e}")
+        if gdrive_view_remote:
+            gdrive_meta_dirs = {}
+            print(f"[Scanner] gdrive remote '{gdrive_view_remote}' is configured - listing/metadata via rclone, no Range offsets.")
     for t_path in target_paths:
         if is_gdrive_url(t_path):
-            print(f"[Scanner] 구글 드라이브 원격 링크 카테고리 스캔 시작: {t_path}")
-            from utils.drive_helper import fetch_gdrive_folder_files, extract_gdrive_folder_id, encode_gdrive_file_id
-            g_files = fetch_gdrive_folder_files(t_path)
+            print(f"[Scanner] Starting scan of a Google Drive remote link category: {t_path}")
+            from utils.drive_helper import fetch_gdrive_folder_files, extract_gdrive_folder_id, encode_gdrive_file_id, drive_modtime_epoch
+            from utils.gdrive_beta_log import beta_log
+            from services.system_health_service import SystemHealthService
+            listing_health = (f'gdrive_listing:{db_type}:{library_id}', f'구글 링크 목록 조회 ({db_type} 카테고리 {library_id})')
+            gdrive_listing_errors = []
+            g_files = None
+            listing_via = 'api_key'
+            t_list = time.time()
+            if gdrive_view_remote:
+                from utils.drive_helper import fetch_gdrive_folder_files_via_rclone
+                try:
+                    g_files = fetch_gdrive_folder_files_via_rclone(gdrive_view_remote, t_path)
+                    listing_via = 'rclone'
+                except Exception as e:
+                    # 목록은 API 키로도 차단 없이 받아지므로 폴백한다. 다만 이번 스캔은 삭제 동기화를 건너뛴다.
+                    print(f"[Scanner] ⚠️ rclone listing failed, falling back to the API key listing: {e}")
+                    gdrive_listing_errors.append(f"rclone listing failed: {e}")
+                    beta_log('scan.listing_failed', db=db_type, lib=library_id, remote=gdrive_view_remote,
+                             took=time.time() - t_list, err=e)
+                    SystemHealthService.record_failure(*listing_health, e)
+            if g_files is None:
+                g_files = fetch_gdrive_folder_files(t_path, listing_errors=gdrive_listing_errors)
+            beta_log('scan.listing', db=db_type, lib=library_id, via=listing_via, files=len(g_files),
+                     errors=len(gdrive_listing_errors), took=time.time() - t_list)
+            if listing_via == 'rclone':
+                SystemHealthService.record_success(listing_health[0])
+            # 부분 목록으로 삭제 동기화를 돌리면 안 잡힌 폴더의 책이 soft-delete되므로 순회 오류로 취급한다.
+            traversal_errors.extend(f"gdrive {t_path}: {err}" for err in gdrive_listing_errors)
             folder_id = extract_gdrive_folder_id(t_path) or 'gdrive_root'
+
+            meta_mirror_root = None
+            if gdrive_view_remote and folder_id != 'gdrive_root':
+                from utils.drive_helper import gdrive_meta_mirror_dir, GDRIVE_META_EXTENSIONS
+                if any(item.get('name', '').lower().endswith(GDRIVE_META_EXTENSIONS) for item in g_files):
+                    from utils.drive_helper import refresh_gdrive_meta_mirror
+                    meta_mirror_root = gdrive_meta_mirror_dir(db_type, library_id, folder_id)
+                    t_meta = time.time()
+                    meta_health = (f'gdrive_meta:{db_type}:{library_id}', f'구글 링크 메타데이터 받기 ({db_type} 카테고리 {library_id})')
+                    try:
+                        fetched, failed, mode = refresh_gdrive_meta_mirror(gdrive_view_remote, folder_id, meta_mirror_root, g_files)
+                        print(f"[Scanner] gdrive metadata mirror refreshed in {time.time() - t_meta:.1f}s "
+                              f"({mode}, fetched={fetched}, failed={failed}): {meta_mirror_root}")
+                        beta_log('scan.meta_mirror', db=db_type, lib=library_id, mode=mode, fetched=fetched,
+                                 failed=failed, took=time.time() - t_meta)
+                        if failed:
+                            SystemHealthService.record_failure(*meta_health, f'{failed}개 메타데이터 파일을 받지 못함 ({mode})')
+                        else:
+                            SystemHealthService.record_success(meta_health[0])
+                    except Exception as e:
+                        # 미러가 없어도 책 등록은 진행된다(메타/표지 없이) — 다음 스캔에서 다시 받는다.
+                        print(f"[Scanner] ⚠️ gdrive metadata mirror sync failed: {e}")
+                        beta_log('scan.meta_mirror_failed', db=db_type, lib=library_id, took=time.time() - t_meta, err=e)
+                        SystemHealthService.record_failure(*meta_health, e)
 
             grouped_files = {}
             grouped_file_ids = {}  # v_root -> {filename: drive file_id} — 나중에 실제 바이트를 받아올 때 필요
@@ -289,17 +361,33 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
                 if v_root not in grouped_files:
                     grouped_files[v_root] = []
                     grouped_file_ids[v_root] = {}
+                    if meta_mirror_root:
+                        gdrive_meta_dirs[v_root] = os.path.join(meta_mirror_root, rel_f) if rel_f else meta_mirror_root
                 grouped_files[v_root].append(fname)
                 grouped_file_ids[v_root][fname] = item.get('id')
+                if fname.lower().endswith(SUPPORTED_IMAGE_FORMATS) and item.get('folder_id'):
+                    # 이미지 폴더 책은 볼 때 폴더째 받아야 하므로 가상 파일에 폴더 ID를 붙여둔다.
+                    grouped_file_ids[v_root][IMGDIR_VIRTUAL_FILENAME] = item['folder_id']
+                item_mtime = drive_modtime_epoch(item.get('modifiedTime'))
+                if item_mtime is not None:
+                    gdrive_file_stats.setdefault(v_root, {})[fname] = (item_mtime, int(item.get('size') or 0))
 
             for v_root, fnames in grouped_files.items():
                 file_ids = grouped_file_ids[v_root]
+                has_media = any(fn.lower().endswith(SUPPORTED_FORMATS) for fn in fnames)
                 for fn in fnames:
+                    if fn.lower().endswith(SUPPORTED_IMAGE_FORMATS):
+                        continue  # 낱장 이미지는 책이 아니다 — 아래 이미지 폴더 가상 책으로만 등록
                     found_file_paths.add(encode_gdrive_file_id(join_canonical(v_root, fn), file_ids.get(fn)))
+                if not has_media and IMGDIR_VIRTUAL_FILENAME in file_ids:
+                    # 책 파일 없이 이미지만 있는 폴더(화보 등) = 책 한 권 (로컬 imgdir와 같은 규칙)
+                    found_file_paths.add(encode_gdrive_file_id(
+                        join_canonical(v_root, IMGDIR_VIRTUAL_FILENAME), file_ids[IMGDIR_VIRTUAL_FILENAME]))
                 tasks.append((v_root, fnames, t_path, file_ids))
 
             progress.folder_visited(len(grouped_files))
-            print(f"[Scanner] 구글 드라이브 원격 도서 총 {len(g_files)}개 ({len(grouped_files)}개 폴더) 감지 완료!")
+            gdrive_folder_count += len(grouped_files)
+            print(f"[Scanner] Found {len(g_files)} Google Drive remote books ({len(grouped_files)} folders)!")
             continue
 
         if not os.path.exists(t_path):
@@ -317,14 +405,14 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
             # 디렉토리 조기 차단 (In-place dirs 제거로 하위 탐색 물리 차단) 및 스킵 로그 출력
             ignored_dirs = [d for d in dirs if ignore_filter.should_ignore_dir(d, parent_path=root)]
             for d in ignored_dirs:
-                print(f"[Scanner-Ignore] 🚫 스캔 예외 디렉토리 하위 탐색 차단: {os.path.join(root, d)}")
+                print(f"[Scanner-Ignore] 🚫 Not descending into an ignored folder: {os.path.join(root, d)}")
             dirs[:] = [d for d in dirs if d not in ignored_dirs]
 
             # 파일 수준 필터링 및 스킵 로그 출력
             ignored_files = [f for f in files if ignore_filter.should_ignore_file(f, parent_path=root)]
             for f in ignored_files:
                 if f.lower() != '.bookoasisignore':
-                    print(f"[Scanner-Ignore] 🚫 스캔 예외 파일 무시: {os.path.join(root, f)}")
+                    print(f"[Scanner-Ignore] 🚫 Ignored file: {os.path.join(root, f)}")
             files = [f for f in files if f not in ignored_files]
 
             media_files = [f for f in files if f.lower().endswith(SUPPORTED_FORMATS)]
@@ -367,6 +455,7 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     log_pool_stats('scan-start')
     
     processed_folders_count = 0
+    skipped_folders_count = 0
     import json
     import threading
     import datetime
@@ -692,13 +781,13 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
 
     with ThreadPoolExecutor(max_workers=threads_to_use) as executor:
         futures = {
-            executor.submit(process_folder_task, root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote, library_id, db_files_cache, t_path, file_ids, db_type, db_books): root
+            executor.submit(process_folder_task, root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote, library_id, db_files_cache, t_path, file_ids, db_type, db_books, gdrive_meta_dirs, gdrive_file_stats): root
             for root, files, t_path, file_ids in tasks
         }
         
         for fut in as_completed(futures):
             if stop_requested:
-                print("[Scanner] ⚠️ 스캔 중단 요청(SIGTERM/SIGINT)이 감지되었습니다. 루프를 탈출하여 현재까지의 변경점만 DB에 쓰고 마감합니다.")
+                print("[Scanner] ⚠️ Scan stop request (SIGTERM/SIGINT) detected. Leaving the loop, writing only the changes so far to the DB and finishing.")
                 break
             root_folder = futures[fut]
             # 결과 처리 방식(변경 없음 건너뜀/정상/예외)과 상관없이 이 폴더는 처리가 끝났다.
@@ -710,6 +799,7 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
                     # process_folder_task()가 None을 반환하는 것은 예외가 아니라
                     # "Ultra-fast skip" 등으로 처리할 변경점이 없다는 정상 조기 종료다.
                     processed_folders_count += 1
+                    skipped_folders_count += 1
                     continue
 
                 processed_file_paths.add(root_folder)
@@ -836,7 +926,7 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
                         if _cancel_cur.fetchone():
                             is_cancelled = True
                 except Exception as _e:
-                    print(f"[Scanner-Cancel] ⚠️ 취소 상태 확인 중 오류 (무시하고 계속 진행): {_e}")
+                    print(f"[Scanner-Cancel] ⚠️ Error while checking cancel state (ignored, continuing): {_e}")
                 finally:
                     if _cancel_conn:
                         try:
@@ -932,6 +1022,12 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     # (이전 파일명 도서가 목록에 남음). 전체 스캔도 cleanup 잠금 실패 시 같은 이유로 잃는다.
     _commit_with_retry(conn, 'deletion-sync')
     print(f"[Scanner-DB] Deletion sync done db={db_type} library_id={library_id}")
+    if gdrive_scan:
+        from utils.gdrive_beta_log import beta_log
+        beta_log('scan.summary', db=db_type, lib=library_id, folders=gdrive_folder_count,
+                 skipped=skipped_folders_count, processed=processed_folders_count - skipped_folders_count,
+                 new=len(detected_new_books), removed=len(trashed_paths), deletion_held=deletion_held or 'no',
+                 traversal_errors=len(traversal_errors), took=time.time() - gdrive_scan_started)
 
     # Initialize checkpoint of library upon successful completion
     # path_scope가 있는 부분 스캔(scan-path)은 전체 라이브러리의 scanner_progress/scan_status를

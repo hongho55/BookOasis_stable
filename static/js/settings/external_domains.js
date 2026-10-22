@@ -32,7 +32,7 @@ export async function loadExternalDomainsSettings() {
   const listEl = document.getElementById('external-domains-list');
   if (!listEl) return;
 
-  listEl.innerHTML = '<div style="text-align:center; padding:1rem; color: var(--app-text-muted);">불러오는 중...</div>';
+  listEl.innerHTML = '<div style="text-align:center; padding:1rem; color: var(--app-text-muted);">' + i18n.t('settings.ext_loading') + '</div>';
 
   try {
     const res = await fetch('/api/webview/whitelist');
@@ -44,7 +44,7 @@ export async function loadExternalDomainsSettings() {
     }
   } catch (e) {
     console.error('[ExternalDomains] 목록 로드 실패:', e);
-    listEl.innerHTML = '<div style="text-align:center; padding:1rem; color:#f43f5e;">목록을 불러오지 못했습니다.</div>';
+    listEl.innerHTML = '<div style="text-align:center; padding:1rem; color:#f43f5e;">' + i18n.t('settings.ext_load_failed') + '</div>';
   }
 }
 
@@ -53,7 +53,7 @@ function renderDomainList(domains) {
   if (!listEl) return;
 
   if (!domains.length) {
-    listEl.innerHTML = '<div style="text-align:center; padding:1.2rem; color: var(--app-text-muted); font-size:0.85rem;">등록된 허용 도메인이 없습니다. 아래에서 추가해주세요.</div>';
+    listEl.innerHTML = '<div style="text-align:center; padding:1.2rem; color: var(--app-text-muted); font-size:0.85rem;">' + i18n.t('settings.ext_empty') + '</div>';
     return;
   }
 
@@ -65,7 +65,7 @@ function renderDomainList(domains) {
       ${canEdit ? `
       <button type="button" class="btn-remove-external-domain" data-domain="${escapeHtmlText(d.pattern)}"
               style="background:none; border:1px solid rgba(244,63,94,0.4); color:#f43f5e; border-radius:5px;
-                     padding:0.25rem 0.6rem; font-size:0.78rem; cursor:pointer;">삭제</button>
+                     padding:0.25rem 0.6rem; font-size:0.78rem; cursor:pointer;">${i18n.t('settings.ext_delete')}</button>
       ` : ''}
     </div>
   `).join('');
@@ -81,21 +81,21 @@ export async function addWhitelistDomain(pattern) {
     });
     const data = await res.json();
     if (!data.success) {
-      if (typeof window.showToast === 'function') window.showToast(data.error || '도메인 추가에 실패했습니다.', 'error');
+      if (typeof window.showToast === 'function') window.showToast(data.error || i18n.t('settings.ext_add_failed'), 'error');
       return;
     }
     invalidateCache();
     renderDomainList(data.domains || []);
-    if (typeof window.showToast === 'function') window.showToast('도메인이 추가되었습니다.', 'success');
+    if (typeof window.showToast === 'function') window.showToast(i18n.t('settings.ext_added'), 'success');
   } catch (e) {
     console.error('[ExternalDomains] 추가 실패:', e);
-    if (typeof window.showToast === 'function') window.showToast('도메인 추가 중 오류가 발생했습니다.', 'error');
+    if (typeof window.showToast === 'function') window.showToast(i18n.t('settings.ext_add_error'), 'error');
   }
 }
 
 export async function removeWhitelistDomain(pattern) {
   if (!pattern) return;
-  if (!window.confirm(`"${pattern}" 도메인을 허용 목록에서 삭제할까요?`)) return;
+  if (!window.confirm(i18n.t('settings.ext_delete_confirm', { pattern }))) return;
 
   try {
     const res = await fetch('/api/webview/whitelist', {
@@ -105,14 +105,14 @@ export async function removeWhitelistDomain(pattern) {
     });
     const data = await res.json();
     if (!data.success) {
-      if (typeof window.showToast === 'function') window.showToast('도메인 삭제에 실패했습니다.', 'error');
+      if (typeof window.showToast === 'function') window.showToast(i18n.t('settings.ext_delete_failed'), 'error');
       return;
     }
     invalidateCache();
     renderDomainList(data.domains || []);
   } catch (e) {
     console.error('[ExternalDomains] 삭제 실패:', e);
-    if (typeof window.showToast === 'function') window.showToast('도메인 삭제 중 오류가 발생했습니다.', 'error');
+    if (typeof window.showToast === 'function') window.showToast(i18n.t('settings.ext_delete_error'), 'error');
   }
 }
 

@@ -82,19 +82,19 @@ class GdriveCopyService:
         mount_root_override = str(mount_root_override or '').strip()
         if mount_root_override:
             mount_root = mount_root_override
-            sq.log(f"[GdriveCopy] 마운트 루트 수동 입력값 사용: '{mount_root}' (자동 감지 건너뜀)")
+            sq.log(f"[GdriveCopy] Using the manually entered mount root: '{mount_root}' (auto-detection skipped)")
         else:
             from tools.scanner.vfs import detect_mount_root, resolve_rc_urls
             rc_urls = resolve_rc_urls(db_type, {'rclone_rc_url': rclone_rc_url or ''})
             mount_root = detect_mount_root(remote, dest_local_path, rc_urls)
             if not mount_root:
-                sq.log(f"[GdriveCopy] 경고: 마운트 루트 자동 감지 실패 — dest_path를 Drive 루트 기준으로 계산합니다. 도커 환경이라면 마운트 루트를 직접 입력해 주세요.")
+                sq.log(f"[GdriveCopy] Warning: mount root auto-detection failed - computing dest_path from the Drive root. On Docker, enter the mount root manually.")
         raw_dest_path = compute_relative_dest_path(dest_local_path, mount_root)
         if mount_root and raw_dest_path is None:
-            sq.log(f"[GdriveCopy] 경고: dest_local_path='{dest_local_path}'가 감지된 마운트 루트 '{mount_root}' 하위 경로가 아닙니다 — dest_path를 Drive 루트 기준으로 계산합니다. 심볼릭 링크/대소문자/도커 볼륨 매핑 차이를 확인해 주세요.")
+            sq.log(f"[GdriveCopy] Warning: dest_local_path='{dest_local_path}' is not under the detected mount root '{mount_root}' - computing dest_path from the Drive root. Check symlinks, letter case and Docker volume mappings.")
         dest_path = raw_dest_path or ''
 
-        sq.log(f"[GdriveCopy] 시작: remote='{remote}', dest_local_path='{dest_local_path}', dest_path='{dest_path}', links={len(source_links)}개")
+        sq.log(f"[GdriveCopy] Start: remote='{remote}', dest_local_path='{dest_local_path}', dest_path='{dest_path}', links={len(source_links)}")
 
         # 1. 소스 폴더(들)의 파일 목록 수집
         ScannerQueueRepository.update_task_status(task_id, 'running', stage='소스 폴더 목록 조회 중...')
@@ -130,12 +130,12 @@ class GdriveCopyService:
                 rclone_copy_file_by_id(remote, item['id'], dest_rclone_path)
                 copied += 1
             except Exception as copy_err:
-                sq.log(f"[GdriveCopy] 파일 복사 실패 ({filename}): {copy_err}")
+                sq.log(f"[GdriveCopy] File copy failed ({filename}): {copy_err}")
                 failed.append(filename)
 
         summary = f'{copied}/{total} 파일 복사 완료' + (f' ({len(failed)}개 실패)' if failed else '')
         ScannerQueueRepository.update_task_status(task_id, 'running', stage=summary)
-        sq.log(f"[GdriveCopy] {summary} — dest_local_path='{dest_local_path}'. 이 폴더를 가리키는 카테고리를 만들면(또는 이미 있다면 재스캔하면) 목록에 반영됩니다.")
+        sq.log(f"[GdriveCopy] {summary} - dest_local_path='{dest_local_path}'. Create a category pointing to this folder (or rescan it if one exists) to list the books.")
 
         if copied == 0:
             raise RuntimeError(f'모든 파일 복사에 실패했습니다: {", ".join(failed[:5])}')

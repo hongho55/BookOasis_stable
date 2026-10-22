@@ -45,7 +45,7 @@ def _iter_mounts():
                 fstype = parts[2].lower()
                 yield mount_point, fstype
     except Exception as e:
-        print(f"[drive_helper] mounts 파싱 실패: {e}")
+        print(f"[drive_helper] Failed to parse mounts: {e}")
 
 
 def _is_same_or_subpath(path, root):
@@ -83,11 +83,19 @@ def _find_best_rclone_mount_point(path):
     """Find the longest matching rclone VFS mount point that contains path."""
     return _find_best_mount_point(path, _RCLONE_VFS_FS_TYPES)
 
+def gdrive_link_beta_enabled():
+    """구글 드라이브 링크 카테고리/복사 기능(클로즈 베타)을 켤지. 전용 옵션 GDRIVE_LINK_BETA=true로 켠다.
+    예전부터 이 기능들을 가리던 DEVELOP=true도 계속 인정한다(기존 테스트 서버 호환)."""
+    def _on(name):
+        return os.environ.get(name, 'false').strip().lower() == 'true'
+    return _on('GDRIVE_LINK_BETA') or _on('DEVELOP')
+
 import re
 import json
 import urllib.request
 import urllib.parse
 import urllib.error
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SUPPORTED_EXTENSIONS = ('.zip', '.cbz', '.rar', '.cbr', '.epub', '.pdf', '.txt', '.yaml', '.xml', '.json')
@@ -95,6 +103,29 @@ SUPPORTED_EXTENSIONS = ('.zip', '.cbz', '.rar', '.cbr', '.epub', '.pdf', '.txt',
 # 서브폴더 하나당 API/HTTP 요청 1번인 waterfall 구조라, 깊고 넓은 트리는 순차 재귀 시 매우
 # 느려진다. 같은 depth의 형제 서브폴더들은 서로 의존관계가 없으므로 스레드풀로 동시 처리한다.
 GDRIVE_SCAN_WORKERS = max(1, int(os.getenv('GDRIVE_SCAN_WORKERS', '4') or '4'))
+
+# 수천 개 폴더를 도는 대형 공유 폴더에서 files.list 한 페이지가 가끔 10초를 넘겨 타임아웃
+# 나는 것이 실측됨 (.21, 1.5천 시리즈). 한 번 실패로 HTML 폴백(최대 ~50개)에 넘어가면 목록이
+# 잘리므로, 일시 오류는 재시도한다.
+GDRIVE_API_PAGE_TIMEOUT = 20
+GDRIVE_API_PAGE_ATTEMPTS = 3
+
+
+def _fetch_drive_api_page(url):
+    last_error = None
+    for attempt in range(GDRIVE_API_PAGE_ATTEMPTS):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url), timeout=GDRIVE_API_PAGE_TIMEOUT) as resp:
+                return json.loads(resp.read().decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            # 404/400 등은 재시도해도 같으므로 바로 올린다. 403(rate limit)/429/5xx만 재시도.
+            if e.code not in (403, 429) and e.code < 500:
+                raise
+            last_error = e
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last_error = e
+        time.sleep(1.5 * (attempt + 1))
+    raise last_error
 
 def extract_gdrive_folder_id(path_or_url):
     """
@@ -118,7 +149,7 @@ def extract_gdrive_folder_id(path_or_url):
 HTML_SCRAPE_SUSPECTED_PAGE_SIZE = 50
 
 
-def _fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings):
+def _fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings, listing_errors):
     """같은 depth의 형제 서브폴더들을 스레드풀로 동시에 재귀 탐색한다.
 
     visited_folders(set)/truncation_warnings(list)에 대한 동시 append/add는 각각의 개별
@@ -133,7 +164,7 @@ def _fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, tru
         futures = {
             executor.submit(
                 fetch_gdrive_folder_files, sub_id, sub_rel, depth + 1, max_depth,
-                visited_folders, truncation_warnings
+                visited_folders, truncation_warnings, listing_errors
             ): sub_rel
             for sub_id, sub_rel in sub_specs
         }
@@ -142,21 +173,25 @@ def _fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, tru
             try:
                 results.extend(future.result())
             except Exception as e:
-                print(f"[gdrive_helper ⚠️] 서브폴더 병렬 탐색 실패 ('{sub_rel}'): {e}")
+                print(f"[gdrive_helper ⚠️] Parallel subfolder listing failed ('{sub_rel}'): {e}")
+                listing_errors.append(f"{sub_rel}: {e}")
     return results
 
 
-def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_depth=4, visited_folders=None, truncation_warnings=None):
+def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_depth=4, visited_folders=None, truncation_warnings=None, listing_errors=None):
     """
     Google Drive REST API (또는 웹 파싱 폴백)를 호출하여 하위 폴더(Subfolders)까지 재귀 수집합니다.
+
+    listing_errors(list)를 넘기면 목록이 불완전할 수 있는 폴더(API 실패 후 HTML 폴백, 잘림 의심,
+    하위 탐색 실패)가 여기에 쌓인다 — 스캐너는 이게 비어있지 않으면 삭제 동기화를 건너뛴다.
     """
     if depth > max_depth:
-        print(f"[gdrive_helper] ⚠️ 최대 depth({max_depth})를 초과했습니다.")
+        print(f"[gdrive_helper] ⚠️ Exceeded the maximum depth ({max_depth}).")
         return []
 
     folder_id = extract_gdrive_folder_id(folder_id_or_url)
     if not folder_id:
-        print(f"[gdrive_helper] ⚠️ 유효한 폴더 ID를 추출하지 못했습니다: {folder_id_or_url}")
+        print(f"[gdrive_helper] ⚠️ Could not extract a valid folder ID: {folder_id_or_url}")
         return []
 
     if visited_folders is None:
@@ -164,6 +199,9 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
 
     if truncation_warnings is None:
         truncation_warnings = []
+
+    if listing_errors is None:
+        listing_errors = []
 
     if folder_id in visited_folders:
         return []
@@ -178,7 +216,7 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
     # 1. API Key 방식 (하위 폴더 계층 정밀 재귀 탐색)
     if api_key:
         try:
-            print(f"[gdrive_helper] 🔑 API Key로 탐색: folder_id={folder_id} (depth={depth})")
+            print(f"[gdrive_helper] 🔑 Listing with API key: folder_id={folder_id} (depth={depth})")
             query = urllib.parse.quote(f"'{folder_id}' in parents and trashed = false")
             fields = urllib.parse.quote("nextPageToken,files(id,name,mimeType,size,modifiedTime,webContentLink,thumbnailLink)")
 
@@ -190,17 +228,17 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
             page_count = 0
             while True:
                 page_count += 1
-                url = f"https://www.googleapis.com/drive/v3/files?q={query}&fields={fields}&key={api_key}&pageSize=1000"
+                # 공유 드라이브(Shared Drive) 안의 폴더는 이 두 플래그가 없으면 에러 없이 빈 목록이 온다.
+                url = (f"https://www.googleapis.com/drive/v3/files?q={query}&fields={fields}&key={api_key}&pageSize=1000"
+                       "&supportsAllDrives=true&includeItemsFromAllDrives=true")
                 if page_token:
                     url += f"&pageToken={urllib.parse.quote(page_token)}"
 
-                req = urllib.request.Request(url)
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    data = json.loads(resp.read().decode('utf-8'))
+                data = _fetch_drive_api_page(url)
 
                 page_items = data.get('files', [])
                 items.extend(page_items)
-                print(f"[gdrive_helper] 🔑 API 페이지 {page_count}: {len(page_items)}개 항목 (누적 {len(items)}개, folder_id={folder_id})")
+                print(f"[gdrive_helper] 🔑 API page {page_count}: {len(page_items)} items ({len(items)} total, folder_id={folder_id})")
 
                 page_token = data.get('nextPageToken')
                 if not page_token:
@@ -220,13 +258,19 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
                     item['rel_folder'] = parent_subpath
                     files_result.append(item)
 
-            files_result.extend(_fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings))
+            files_result.extend(_fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings, listing_errors))
 
             if files_result and depth == 0:
-                print(f"[gdrive_helper] ✅ Google API 총 {len(files_result)}개 도서 수집 성공! ({page_count}페이지 조회)")
+                print(f"[gdrive_helper] ✅ Collected {len(files_result)} books through the Google API! ({page_count} pages)")
+            elif depth == 0:
+                print(f"[gdrive_helper ⚠️] Google API returned no supported books for folder_id={folder_id} "
+                      f"({len(items)} top-level items) — check sharing ('anyone with the link') and file extensions.")
             return files_result
         except Exception as e:
             print(f"[gdrive_helper ⚠️] API Key fetch warning: {e}")
+            # 이 폴더는 HTML 폴백(페이지네이션 없음)으로만 채워지므로 목록이 완전하다고 볼 수 없다.
+            listing_errors.append(f"{parent_subpath or '(root)'}: API listing failed ({e})")
+            files_result = []
 
     # 2. 웹 공개 스크래핑 폴백 (data-id 기반 정밀 파서)
     # 구글 드라이브 HTML의 <tr data-selectable data-id="..." data-target="doc"> 블록에서
@@ -234,14 +278,14 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
     # aria-label이 "Shared folder" 또는 "폴더"로 끝나면 서브폴더, 그 외는 파일입니다.
     try:
         url = f"https://drive.google.com/drive/folders/{folder_id}"
-        print(f"[gdrive_helper] 🌐 공개 웹 파서 탐색 시도: folder_id={folder_id} (depth={depth})")
+        print(f"[gdrive_helper] 🌐 Trying the public web parser: folder_id={folder_id} (depth={depth})")
         req = urllib.request.Request(url, headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
         })
         with urllib.request.urlopen(req, timeout=15) as resp:
             html = resp.read().decode('utf-8', errors='ignore')
-        print(f"[gdrive_helper DEBUG] HTML 수집 완료: {len(html):,} bytes")
+        print(f"[gdrive_helper DEBUG] HTML fetched: {len(html):,} bytes")
 
         # <tr data-selectable data-id="REAL_ID" data-target="doc"> 블록 전체 파싱
         # → data-id에 파일/폴더 실제 Google ID가 온전히 들어있음
@@ -268,7 +312,7 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
             # aria-label에서 항목명 + 타입 힌트 추출
             al_match = re.search(r'aria-label="([^"]+)"', block)
             if not al_match:
-                print(f"[gdrive_helper DEBUG] aria-label 없음: id={item_id}")
+                print(f"[gdrive_helper DEBUG] No aria-label: id={item_id}")
                 continue
 
             raw_label = al_match.group(1)
@@ -281,7 +325,7 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
                 # 폴더명 추출 (끝의 타입 설명 제거)
                 folder_name = re.sub(r'\s+(?:Shared folder|공유 폴더|폴더)$', '', raw_label, flags=re.IGNORECASE).strip()
                 if item_id not in visited_folders:
-                    print(f"[gdrive_helper] 📁 하위 폴더 감지: '{folder_name}' (ID: {item_id})")
+                    print(f"[gdrive_helper] 📁 Subfolder found: '{folder_name}' (ID: {item_id})")
                     folders_to_recurse.append((item_id, folder_name))
             else:
                 # 파일명 추출 (접미사 설명 제거)
@@ -290,12 +334,12 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
 
                 # 지원 확장자 필터링
                 if not any(fname_key.endswith(ext) for ext in SUPPORTED_EXTENSIONS):
-                    print(f"[gdrive_helper DEBUG] 미지원 확장자 스킵: '{fname}'")
+                    print(f"[gdrive_helper DEBUG] Skipping unsupported extension: '{fname}'")
                     continue
 
                 if fname_key not in seen_filenames:
                     seen_filenames.add(fname_key)
-                    print(f"[gdrive_helper] 📄 파일 감지: '{fname}' (ID: {item_id}, folder='{parent_subpath}')")
+                    print(f"[gdrive_helper] 📄 File found: '{fname}' (ID: {item_id}, folder='{parent_subpath}')")
                     files_result.append({
                         'id': item_id,   # 실제 Google Drive 파일 ID
                         'name': fname,
@@ -304,7 +348,7 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
                         'rel_folder': parent_subpath
                     })
 
-        print(f"[gdrive_helper DEBUG] depth={depth} 파일={len(files_result)}개, 하위폴더={len(folders_to_recurse)}개 감지")
+        print(f"[gdrive_helper DEBUG] depth={depth}: {len(files_result)} files, {len(folders_to_recurse)} subfolders found")
 
         # 잘림 감지: 이 depth에서 스크래핑으로 잡은 항목(파일+서브폴더) 수가 관측 상한 근처면,
         # 나머지는 브라우저 스크롤 시에만 로드되는 부분이라 이 요청 한 번으로는 못 잡았을 가능성이 높다.
@@ -312,31 +356,166 @@ def fetch_gdrive_folder_files(folder_id_or_url, parent_subpath="", depth=0, max_
         if total_items_this_level >= HTML_SCRAPE_SUSPECTED_PAGE_SIZE:
             warn_path = parent_subpath or '(루트)'
             print(
-                f"[gdrive_helper] ⚠️ 잘림 의심: '{warn_path}' 폴더에서 {total_items_this_level}개 항목 감지 — "
-                f"HTML 스크래핑은 페이지네이션을 지원하지 않아 이 이상은 누락됐을 수 있습니다. "
-                f"정확한 결과가 필요하면 GDRIVE_API_KEY/GOOGLE_API_KEY 설정을 권장합니다."
+                f"[gdrive_helper] ⚠️ Possibly truncated: {total_items_this_level} items found in folder '{warn_path}' - "
+                f"HTML scraping does not support pagination, so anything beyond this may be missing. "
+                f"Set GDRIVE_API_KEY/GOOGLE_API_KEY if you need complete results."
             )
             truncation_warnings.append((warn_path, total_items_this_level))
+            listing_errors.append(f"{warn_path}: possibly truncated HTML listing ({total_items_this_level} items)")
 
         # 감지된 서브폴더들을 병렬로 재귀 진입
         sub_specs = [
             (sub_id, os.path.join(parent_subpath, sub_name) if parent_subpath else sub_name)
             for sub_id, sub_name in folders_to_recurse
         ]
-        files_result.extend(_fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings))
+        files_result.extend(_fetch_subfolders_parallel(sub_specs, depth, max_depth, visited_folders, truncation_warnings, listing_errors))
 
         if depth == 0:
-            print(f"[gdrive_helper] 🎯 최종 수집 완료된 전체 도서 수: {len(files_result)}개")
+            print(f"[gdrive_helper] 🎯 Total books collected: {len(files_result)}")
             if truncation_warnings:
                 affected = ', '.join(f"'{p}'({n}개)" for p, n in truncation_warnings)
                 print(
-                    f"[gdrive_helper] ⚠️⚠️ 결과 잘림 가능성 요약: {len(truncation_warnings)}개 폴더에서 "
-                    f"항목이 누락됐을 수 있습니다 — {affected}. GDRIVE_API_KEY 설정을 강력히 권장합니다."
+                    f"[gdrive_helper] ⚠️⚠️ Possible truncation summary: items may be missing in {len(truncation_warnings)} folders "
+                    f"- {affected}. Setting GDRIVE_API_KEY is strongly recommended."
                 )
 
     except Exception as e:
         print(f"[gdrive_helper ❌] Web scraping fallback error: {e}")
+        listing_errors.append(f"{parent_subpath or '(root)'}: web fallback failed ({e})")
 
+    return files_result
+
+
+# 이미지 폴더(화보 등)를 책 한 권으로 등록할 때 쓰는 이미지 확장자 (tools/scanner/tasks.py와 동일).
+GDRIVE_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif')
+
+# 메타데이터로 쓰는 파일 확장자 — 공유 폴더에서 이것만 로컬 미러로 받아둔다(tools/scanner/tasks.py와 동일).
+GDRIVE_META_EXTENSIONS = ('.yaml', '.yml', '.json', '.xml')
+
+
+def gdrive_meta_mirror_dir(db_type, library_id, folder_id=None):
+    """gdrive 링크 카테고리의 메타데이터 로컬 미러 위치 (카테고리 삭제 시 통째로 지운다)."""
+    base = os.path.join(MEDIA_SERVER_DIR, 'cache', 'gdrive_meta', f'{db_type}_lib_{library_id}')
+    return os.path.join(base, folder_id) if folder_id else base
+
+
+# 바뀐 메타 파일이 이보다 많으면(첫 스캔 등) 파일별 copyid 대신 rclone sync 한 번으로 받는다.
+GDRIVE_META_BULK_THRESHOLD = 100
+
+
+def drive_modtime_epoch(value):
+    """rclone/Drive의 RFC3339 시각('2026-10-02T23:06:06.548Z')을 epoch 초로. 해석 못 하면 None."""
+    if not value:
+        return None
+    from datetime import datetime
+    m = re.match(r'^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$', value)
+    if not m:
+        return None
+    frac = (m.group(2) or '.0')[:7]
+    tz = m.group(3) or 'Z'
+    try:
+        return datetime.fromisoformat(m.group(1) + frac + ('+00:00' if tz == 'Z' else tz)).timestamp()
+    except ValueError:
+        return None
+
+
+def refresh_gdrive_meta_mirror(remote_name, folder_id, mirror_root, g_files):
+    """방금 받은 목록(g_files)의 메타 파일과 로컬 미러를 비교해 바뀐 것만 받는다.
+
+    rclone sync는 원본 트리를 다시 전부 나열해서 재스캔마다 약 170초가 들었다(.21, 3.8만 파일).
+    목록에 이미 수정 시각/ID가 있으니 그걸로 비교하고, 바뀐 게 많을 때(첫 스캔)만 sync 한 번,
+    적으면 파일 ID로 하나씩 받는다. Drive에서 사라진 메타 파일은 로컬 미러에서만 지운다.
+    반환: (받은 수, 실패 수, 방식 문자열)."""
+    from utils.rclone_gdrive_copy import rclone_download_file_by_id, rclone_sync_metadata_mirror
+    wanted = {}
+    for item in g_files:
+        name = item.get('name') or ''
+        if not name.lower().endswith(GDRIVE_META_EXTENSIONS) or not item.get('id'):
+            continue
+        rel = os.path.join(item.get('rel_folder') or '', name)
+        wanted[os.path.normpath(os.path.join(mirror_root, rel))] = item
+
+    if os.path.isdir(mirror_root):
+        for dirpath, _dirs, files in os.walk(mirror_root):
+            for f in files:
+                local = os.path.normpath(os.path.join(dirpath, f))
+                if local not in wanted:
+                    try:
+                        os.remove(local)
+                    except OSError:
+                        pass
+
+    changed = []
+    for local, item in wanted.items():
+        remote_mtime = drive_modtime_epoch(item.get('modifiedTime'))
+        try:
+            if remote_mtime is not None and abs(os.path.getmtime(local) - remote_mtime) < 2:
+                continue
+        except OSError:
+            pass
+        changed.append((local, item, remote_mtime))
+
+    if not changed:
+        return 0, 0, 'unchanged'
+    if len(changed) > GDRIVE_META_BULK_THRESHOLD:
+        ok, err_tail = rclone_sync_metadata_mirror(remote_name, folder_id, mirror_root,
+                                                   [f"*{ext}" for ext in GDRIVE_META_EXTENSIONS])
+        return len(changed), 0 if ok else 1, 'bulk sync' + ('' if ok else f' ({err_tail})')
+
+    failed = 0
+    for local, item, remote_mtime in changed:
+        try:
+            rclone_download_file_by_id(remote_name, item['id'], local)
+            if remote_mtime is not None:
+                # 같은 이름 중복 파일 등으로 시각이 어긋나도 다음 스캔에서 또 받지 않게 목록 기준으로 맞춘다.
+                os.utime(local, (remote_mtime, remote_mtime))
+        except Exception as e:
+            failed += 1
+            print(f"[gdrive_helper ⚠️] Metadata download failed: {local} - {e}")
+    return len(changed) - failed, failed, 'per-file copyid'
+
+
+def fetch_gdrive_folder_files_via_rclone(remote_name, folder_id_or_url):
+    """카테고리에 연결된 로그인 리모트로 공유 폴더 전체를 한 번에 나열해, fetch_gdrive_folder_files()와
+    같은 항목 형태({id, name, size, modifiedTime, rel_folder})로 돌려준다. 이미지 파일도 포함하며(이미지
+    폴더 책), 각 항목의 folder_id에 그 파일이 든 폴더의 Drive ID를 넣는다. 실패하면 예외를 그대로 올린다
+    (부분 목록으로 삭제 동기화가 돌면 안 되므로 호출자가 순회 오류로 처리)."""
+    folder_id = extract_gdrive_folder_id(folder_id_or_url)
+    if not folder_id:
+        raise ValueError(f'Could not extract a valid folder ID: {folder_id_or_url}')
+    from utils.rclone_gdrive_copy import rclone_list_shared_folder
+    entries = rclone_list_shared_folder(remote_name, folder_id)
+    folder_ids = {'': folder_id}
+    for e in entries:
+        if e.get('IsDir'):
+            folder_ids[e.get('Path') or ''] = e.get('ID')
+
+    # 같은 폴더에 같은 이름이 여럿이면(공유자 쪽 중복 업로드) 가장 최근 것 하나만 쓴다.
+    by_path = {}
+    for e in entries:
+        if e.get('IsDir'):
+            continue
+        path = e.get('Path') or ''
+        name = e.get('Name') or os.path.basename(path)
+        if not name.lower().endswith(SUPPORTED_EXTENSIONS + GDRIVE_IMAGE_EXTENSIONS):
+            continue
+        prev = by_path.get(path)
+        if prev and (prev.get('ModTime') or '') >= (e.get('ModTime') or ''):
+            continue
+        by_path[path] = e
+
+    files_result = []
+    for path, e in by_path.items():
+        files_result.append({
+            'id': e.get('ID'),
+            'name': e.get('Name') or os.path.basename(path),
+            'size': e.get('Size') or 0,
+            'modifiedTime': e.get('ModTime') or '',
+            'rel_folder': os.path.dirname(path),
+            'folder_id': folder_ids.get(os.path.dirname(path)),
+        })
+    print(f"[gdrive_helper] ✅ Listed {len(files_result)} files via rclone remote '{remote_name}' "
+          f"({len(entries)} entries incl. folders, folder_id={folder_id})")
     return files_result
 
 
@@ -383,7 +562,7 @@ def download_gdrive_file(file_id, dest_path, timeout=60):
 
     try:
         if api_key:
-            url = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}?alt=media&key={api_key}"
+            url = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}?alt=media&supportsAllDrives=true&key={api_key}"
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req, timeout=timeout) as resp, open(tmp_path, 'wb') as out:
                 while True:
@@ -415,7 +594,7 @@ def download_gdrive_file(file_id, dest_path, timeout=60):
                         confirm_m = re.search(r'name="confirm"\s+value="([^"]*)"', html)
                         uuid_m = re.search(r'name="uuid"\s+value="([^"]*)"', html)
                         if not confirm_m or not uuid_m:
-                            print(f"[gdrive_helper ❌] 다운로드 확인 페이지에서 confirm/uuid 토큰을 찾지 못함: file_id={file_id}")
+                            print(f"[gdrive_helper ❌] confirm/uuid token not found on the download confirmation page: file_id={file_id}")
                             return False
                         confirm_token = confirm_m.group(1)
                         uuid_token = uuid_m.group(1)
@@ -442,7 +621,7 @@ def download_gdrive_file(file_id, dest_path, timeout=60):
         os.rename(tmp_path, dest_path)
         return True
     except Exception as e:
-        print(f"[gdrive_helper ❌] 파일 다운로드 실패 (file_id={file_id}): {e}")
+        print(f"[gdrive_helper ❌] File download failed (file_id={file_id}): {e}")
         if os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
@@ -468,7 +647,7 @@ def _gdrive_range_get(file_id, start=None, end=None, suffix=None, timeout=10, ma
         raise ValueError('GDRIVE_API_KEY가 설정되어 있지 않아 Range 부분 다운로드를 사용할 수 없습니다.')
 
     range_header = f"bytes=-{suffix}" if suffix is not None else f"bytes={start}-{end}"
-    url = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}?alt=media&key={api_key}"
+    url = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}?alt=media&supportsAllDrives=true&key={api_key}"
 
     last_error = None
     for attempt in range(max_attempts):
@@ -498,7 +677,7 @@ def _gdrive_range_get(file_id, start=None, end=None, suffix=None, timeout=10, ma
         except (TimeoutError, urllib.error.URLError, ConnectionError, OSError) as e:
             # 소켓 타임아웃(순단/지연)·연결 리셋 등 — 요청을 폐기하고 짧게 대기 후 재시도.
             last_error = e
-            print(f"[gdrive_helper] ⚠️ Range 요청 실패(시도 {attempt + 1}/{max_attempts}), 폐기 후 재시도: {e}")
+            print(f"[gdrive_helper] ⚠️ Range request failed (attempt {attempt + 1}/{max_attempts}), discarding and retrying: {e}")
             if attempt < max_attempts - 1:
                 import time
                 time.sleep(1)
@@ -545,7 +724,7 @@ def fetch_gdrive_zip_offsets(file_id, initial_tail=65536, max_tail=8 * 1024 * 10
         except zipfile.BadZipFile:
             tail_size *= 4
             continue
-    print(f"[gdrive_helper ⚠️] central directory가 최대 tail 크기({max_tail}바이트)를 초과해 오프셋 계산 실패: file_id={file_id}")
+    print(f"[gdrive_helper ⚠️] Offset computation failed: the central directory exceeds the maximum tail size ({max_tail} bytes): file_id={file_id}")
     return [], 0
 
 
@@ -562,7 +741,7 @@ def fetch_gdrive_page_bytes(file_id, header_offset, compress_size, data_offset=N
         page_bytes, _ = _gdrive_range_get(file_id, start=data_offset, end=data_offset + compress_size - 1)
         if len(page_bytes) == compress_size:
             return page_bytes
-        print(f"[gdrive_helper ⚠️] 사전 계산된 data_offset({data_offset})으로 받은 바이트 길이가 어긋나 헤더 프로브로 폴백합니다 (offset={header_offset})")
+        print(f"[gdrive_helper ⚠️] Byte length received with the precomputed data_offset ({data_offset}) does not match; falling back to a header probe (offset={header_offset})")
 
     import struct
 
@@ -589,7 +768,7 @@ def resolve_gdrive_local_path(virtual_path):
 
     base_path, file_id = split_gdrive_file_id(virtual_path)
     if not file_id:
-        print(f"[gdrive_helper ⚠️] 가상 경로에 file_id가 없어 해석할 수 없습니다: {virtual_path}")
+        print(f"[gdrive_helper ⚠️] Cannot resolve a virtual path without a file_id: {virtual_path}")
         return virtual_path
 
     from api.cache import disk_cache_manager
@@ -603,7 +782,7 @@ def resolve_gdrive_local_path(virtual_path):
         disk_cache_manager.update_access(local_path)
         return local_path
 
-    print(f"[gdrive_helper] ⬇️ 원격 파일 캐시 없음, 동기 다운로드 시작: {os.path.basename(base_path)} (id={file_id})")
+    print(f"[gdrive_helper] ⬇️ Remote file not cached, starting synchronous download: {os.path.basename(base_path)} (id={file_id})")
     disk_cache_manager.clean_up_if_needed()
     ok = download_gdrive_file(file_id, local_path)
     if not ok:
@@ -612,7 +791,7 @@ def resolve_gdrive_local_path(virtual_path):
     with open(done_file, 'w') as f:
         f.write('done')
     disk_cache_manager.update_access(local_path)
-    print(f"[gdrive_helper] ✅ 원격 파일 캐시 완료: {os.path.basename(base_path)}")
+    print(f"[gdrive_helper] ✅ Remote file cached: {os.path.basename(base_path)}")
     return local_path
 
 
@@ -668,7 +847,7 @@ def is_remote_path(path):
                 if drive_type == 4: # DRIVE_REMOTE
                     return True
         except Exception as e:
-            print(f"[is_remote_path] Windows 드라이브 타입 체크 실패: {e}")
+            print(f"[is_remote_path] Windows drive type check failed: {e}")
             
     # 2. Linux / Unix 환경 판별
     elif system in ('linux', 'darwin'):
@@ -677,7 +856,7 @@ def is_remote_path(path):
             if remote_mount:
                 return True
         except Exception as e:
-            print(f"[is_remote_path] Linux mounts 체크 실패: {e}")
+            print(f"[is_remote_path] Linux mounts check failed: {e}")
 
     # 3. 공통 문자열 패턴 폴백 (예: 마운트 경로 관례 기반)
     # 사용자가 명시적으로 경로명에 클라우드 마운트 지점을 명시한 경우
@@ -708,7 +887,7 @@ def is_rclone_vfs_path(path):
             if _find_best_rclone_mount_point(path):
                 return True
         except Exception as e:
-            print(f"[is_rclone_vfs_path] Linux mounts 체크 실패: {e}")
+            print(f"[is_rclone_vfs_path] Linux mounts check failed: {e}")
 
     path_lower = path.lower()
     rclone_keywords = ('gdrive', 'rclone', 'vfs', 'google_drive', 'onedrive', 'sharepoint', 'webdav')
@@ -736,7 +915,7 @@ def get_rclone_relative_path(path):
         try:
             mount_point = _find_best_rclone_mount_point(path)
         except Exception as e:
-            print(f"[get_rclone_relative_path] Linux mounts 파싱 실패: {e}")
+            print(f"[get_rclone_relative_path] Failed to parse Linux mounts: {e}")
             mount_point = ''
             
         if mount_point:

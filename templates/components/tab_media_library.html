@@ -21,7 +21,7 @@
         <div class="sidebar-header-wrapper" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <!-- PC 사이드바 접기/펼치기(☰): 예전엔 오른쪽 상단 줄(검색창 왼쪽)에 있어 여닫는 메뉴와 떨어져 보였다.
                  로고 왼쪽으로 옮겨 상단 줄과 한 줄로 읽히게 한다(2026-10-22). 모바일은 이 줄째 숨김(mobile.css) -->
-            <button id="btn-sidebar-toggle-desktop" class="btn-sidebar-toggle-desktop" data-role="desktop-sidebar-toggle" title="사이드바 접기/펼치기" style="background: transparent; border: none; color: var(--app-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.4rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; outline: none; flex-shrink: 0;">
+            <button id="btn-sidebar-toggle-desktop" class="btn-sidebar-toggle-desktop" data-role="desktop-sidebar-toggle" title="사이드바 접기/펼치기" data-i18n-title="sidebar.toggle_collapse" style="background: transparent; border: none; color: var(--app-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0.4rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; outline: none; flex-shrink: 0;">
                 <i class="lc lc-menu"></i>
             </button>
             <h3 class="sidebar-title" data-role="mobile-brand-home"><i class="lc lc-tree-palm sidebar-brand-mark" aria-hidden="true"></i><span class="sidebar-brand-word">Book<span class="sidebar-brand-accent">Oasis</span></span></h3>
@@ -110,7 +110,7 @@
             <div id="active-filter-badges" class="active-filter-badges">
                 <!-- JS에서 동적으로 뱃지 렌더링 -->
             </div>
-            <button id="btn-active-filter-reset" data-role="library-filter-reset" class="btn-active-filter-reset" title="모든 필터 해제">
+            <button id="btn-active-filter-reset" data-role="library-filter-reset" class="btn-active-filter-reset" title="모든 필터 해제" data-i18n-title="header.filter_reset_all">
                 <i class="lc lc-rotate-ccw"></i> <span data-i18n="filter.reset_all">전체 해제</span>
             </button>
         </div>
@@ -197,13 +197,13 @@
             <div style="font-size: 2.8rem; color: #f87171; margin-bottom: 1.4rem;">
                 <i class="lc lc-trash-2"></i>
             </div>
-            <h3 style="margin: 0 0 0.7rem 0; font-size: 1.2rem; font-weight: 700; color: var(--app-text-primary);">도서 데이터 삭제 중</h3>
+            <h3 style="margin: 0 0 0.7rem 0; font-size: 1.2rem; font-weight: 700; color: var(--app-text-primary);" data-i18n="settings.trash_overlay_title">도서 데이터 삭제 중</h3>
             <p id="trash-loading-overlay-msg" style="margin: 0 0 1.2rem 0; color: var(--app-text-muted); font-size: 0.875rem; line-height: 1.6; word-break: keep-all;">
                 잠시만 기다려 주세요.
             </p>
             <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--app-text-muted); font-size: 0.78rem;">
                 <i class="lc lc-loader-circle lc-spin" style="color: #f87171;"></i>
-                <span>완료될 때까지 다른 작업을 진행하지 마십시오.</span>
+                <span data-i18n="settings.trash_overlay_hint">완료될 때까지 다른 작업을 진행하지 마십시오.</span>
             </div>
         </div>
     </div>

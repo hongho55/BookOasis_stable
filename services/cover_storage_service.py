@@ -37,7 +37,7 @@ def _resolve():
         from services.settings_service import SettingsService
         override = str(SettingsService.get('COVER_STORAGE_ROOT', '') or '').strip()
     except Exception as e:
-        print(f"[CoverStorageService] COVER_STORAGE_ROOT 설정 조회 실패, 기본 경로 사용: {e}")
+        print(f"[CoverStorageService] Failed to read COVER_STORAGE_ROOT, using the default path: {e}")
         override = ''
     return override if override else DEFAULT_COVERS_DIR
 
@@ -58,7 +58,7 @@ def get_covers_dir():
             _ensured_paths.add(_dir_cache)
         except Exception as e:
             if _dir_cache not in _warned_broken_paths:
-                print(f"[CoverStorageService] 커버 저장 경로 접근 불가({_dir_cache}), 이번 요청은 기본 경로로 폴백: {e}")
+                print(f"[CoverStorageService] Cover storage path is not accessible ({_dir_cache}), falling back to the default path for this request: {e}")
                 _warned_broken_paths.add(_dir_cache)
             if DEFAULT_COVERS_DIR not in _ensured_paths:
                 os.makedirs(DEFAULT_COVERS_DIR, exist_ok=True)
@@ -97,11 +97,11 @@ def _run_migration(source, dest):
                     with _migration_lock:
                         _migration_status['moved'] = moved
                 except Exception as move_err:
-                    print(f"[CoverStorageService] 이관 실패({src_path} -> {dst_path}): {move_err}")
+                    print(f"[CoverStorageService] Move failed ({src_path} -> {dst_path}): {move_err}")
         with _migration_lock:
             _migration_status['status'] = 'done'
     except Exception as e:
-        print(f"[CoverStorageService] 커버 이관 중 오류: {e}")
+        print(f"[CoverStorageService] Error while moving covers: {e}")
         with _migration_lock:
             _migration_status['status'] = 'error'
             _migration_status['error'] = str(e)

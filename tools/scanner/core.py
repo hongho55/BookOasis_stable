@@ -28,7 +28,7 @@ def _is_hdd_aggressive_warmup_enabled(db_type):
         val = SettingsRepository.get_value('HDD_AGGRESSIVE_WARMUP')
         return bool(val and str(val).strip() == '1')
     except Exception as e:
-        print(f"[Scanner-WakeUp] HDD 웜업 설정 조회 실패, 기본값(OFF) 사용: {e}")
+        print(f"[Scanner-WakeUp] Failed to read the HDD warm-up setting, using the default (OFF): {e}")
         return False
 
 
@@ -65,9 +65,9 @@ def _aggressive_warmup_path(path):
                         break
 
         elapsed_ms = (time.perf_counter() - start_ts) * 1000.0
-        print(f"[Scanner-WakeUp] 적극 웜업 완료: path='{path}', touched={warmed_entries}, elapsed={elapsed_ms:.1f}ms")
+        print(f"[Scanner-WakeUp] Aggressive warm-up done: path='{path}', touched={warmed_entries}, elapsed={elapsed_ms:.1f}ms")
     except Exception as e:
-        print(f"[Scanner-WakeUp] 적극 웜업 중 예외(무시): {e}")
+        print(f"[Scanner-WakeUp] Exception during aggressive warm-up (ignored): {e}")
 
 def _run_db_self_recovery(db_type):
     import subprocess
@@ -133,7 +133,7 @@ def scan_library(db_path, library_id, physical_path, force=False, skip_vfs_refre
     
     for path in target_paths:
         if is_gdrive_url(path):
-            print(f"[Scanner-WakeUp] 구글 드라이브 웹 공유 링크 감지: '{path}'. 로컬 디스크 Wake-up 검사를 우회합니다.")
+            print(f"[Scanner-WakeUp] Google Drive web share link detected: '{path}'. Skipping the local disk wake-up check.")
             continue
 
         path_accessible = False
@@ -151,7 +151,7 @@ def scan_library(db_path, library_id, physical_path, force=False, skip_vfs_refre
             except Exception as e:
                 last_error_msg = str(e)
             
-            print(f"[Scanner-WakeUp] '{path}' 접근 준비 지연 (시도 {attempt}/{max_attempts}). {retry_delay_sec:.1f}초 후 재시도... 사유: {last_error_msg}")
+            print(f"[Scanner-WakeUp] '{path}' is not ready yet (attempt {attempt}/{max_attempts}). Retrying in {retry_delay_sec:.1f}s... reason: {last_error_msg}")
             time.sleep(retry_delay_sec)
             
         if not path_accessible:
@@ -207,20 +207,20 @@ def scan_library(db_path, library_id, physical_path, force=False, skip_vfs_refre
                 check_cur = check_conn.cursor()
                 res = check_cur.execute("PRAGMA integrity_check;").fetchone()
                 if not res or str(res[0]).lower() != 'ok':
-                    print(f"[Scanner-SelfHealing] ⚠️ 무결성 이상 감지 ({res}). 자동 복구(db_recovery.py)를 가동합니다.")
+                    print(f"[Scanner-SelfHealing] ⚠️ Integrity problem detected ({res}). Running automatic recovery (db_recovery.py).")
                     check_conn.close()
                     _run_db_self_recovery(db_type)
                 else:
                     check_conn.close()
             except Exception as db_malformed_err:
-                print(f"[Scanner-SelfHealing] ⚠️ DB 손상 감지 ({db_malformed_err}). 자동 복구(db_recovery.py)를 가동합니다.")
+                print(f"[Scanner-SelfHealing] ⚠️ DB corruption detected ({db_malformed_err}). Running automatic recovery (db_recovery.py).")
                 try:
                     check_conn.close()
                 except Exception:
                     pass
                 _run_db_self_recovery(db_type)
     except Exception as check_err:
-        print(f"[Scanner-SelfHealing] 사전 무결성 점검 경고 (무시하고 계속): {check_err}")
+        print(f"[Scanner-SelfHealing] Pre-scan integrity check warning (ignored, continuing): {check_err}")
 
     result_summary = {}
     conn = database.get_connection(db_type)

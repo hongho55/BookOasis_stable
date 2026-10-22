@@ -83,6 +83,15 @@ class BookInfoService:
         file_format = (row['file_format'] or '').lower()
         file_path = row['file_path']
 
+        from utils.drive_helper import is_gdrive_url
+        if total_pages == 0 and file_path and is_gdrive_url(file_path):
+            # gdrive 링크 카테고리는 스캔 때 zip을 열지 않아 페이지 수가 0으로 등록된다 — 뷰어 사본을 받아 센다.
+            from repositories.category_repository import CategoryRepository
+            from services.gdrive_view_copy_service import resolve_viewable_path
+            basic = BookRepository.get_book_basic_info(db_type, book_id) or {}
+            library = CategoryRepository.get_library_by_id(db_type, basic.get('library_id')) if basic.get('library_id') else None
+            file_path = resolve_viewable_path(db_type, book_id, file_path, library)
+
         imgdir_exists = file_format == 'imgdir' and file_path and os.path.isdir(os.path.dirname(file_path))
         if total_pages == 0 and file_path and (os.path.exists(file_path) or imgdir_exists):
             if file_format in ('zip', 'cbz'):

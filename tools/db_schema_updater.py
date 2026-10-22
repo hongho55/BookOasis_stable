@@ -45,7 +45,7 @@ try:
         _ensure_mariadb_indexes,
     )
 except ImportError as e:
-    print(f"[오류] database.py 모듈을 임포트할 수 없습니다: {e}")
+    print(f"[ERROR] Cannot import the database.py module: {e}")
     sys.exit(1)
 
 # ==============================================================================
@@ -675,12 +675,12 @@ CREATE TABLE IF NOT EXISTS plugin_load_events (
 
 def run_schema_update():
     print("=" * 60)
-    print(" 데이터베이스 최신 스키마 강제 업데이트 및 동기화 도구")
+    print(" Database schema force-update and sync tool")
     print("=" * 60)
 
     engine = os.environ.get('DB_ENGINE', os.environ.get('DBMS', 'sqlite')).lower()
     if engine in ('mariadb', 'mysql'):
-        print("[+] MariaDB 데이터베이스 엔진 모드 구동")
+        print("[+] Running in MariaDB database engine mode")
         try:
             from tools.migrator_sqlite_to_mariadb import ensure_mariadb_databases, init_schema, DB_MAP
             ensure_mariadb_databases(reset=False)
@@ -688,35 +688,35 @@ def run_schema_update():
                 dbname = config['mariadb_db']
                 init_schema(db_type, dbname)
             run_full_migration()
-            print("[+] MariaDB 데이터베이스, 스키마 및 고속 복합 인덱스 검사 완료.")
+            print("[+] Checked MariaDB databases, schema and composite indexes.")
         except Exception as ex:
-            print(f"[!] MariaDB 스키마 검사 중 경고: {ex}")
+            print(f"[!] Warning while checking the MariaDB schema: {ex}")
         return
 
     # 1. DB 파일 존재 및 경로 확인
     db_paths = {
-        '일반 DB (media_general)': DB_GENERAL_PATH,
-        '성인 DB (media_adult)': DB_ADULT_PATH,
-        '오디오북 DB (media_audiobook)': DB_AUDIOBOOK_PATH,
-        '영상 강좌 DB (media_video)': DB_VIDEO_PATH
+        'General DB (media_general)': DB_GENERAL_PATH,
+        'Adult DB (media_adult)': DB_ADULT_PATH,
+        'Audiobook DB (media_audiobook)': DB_AUDIOBOOK_PATH,
+        'Video course DB (media_video)': DB_VIDEO_PATH
     }
 
     for db_name, db_path in db_paths.items():
-        print(f"[*] {db_name} 경로 확인: {db_path}")
+        print(f"[*] {db_name} path: {db_path}")
         if not os.path.exists(db_path):
-            print(f"    -> [안내] DB 파일이 아직 존재하지 않습니다. 새로 생성될 예정입니다.")
+            print(f"    -> [INFO] The DB file does not exist yet. It will be created.")
         else:
             size_mb = os.path.getsize(db_path) / (1024 * 1024)
-            print(f"    -> [확인] DB 파일 존재함 (크기: {size_mb:.2f} MB)")
+            print(f"    -> [OK] DB file exists (size: {size_mb:.2f} MB)")
 
-    print("\n[*] 1단계: 데이터베이스 초기화 및 스키마/인덱스/백필 마이그레이션 실행 중...")
+    print("\n[*] Step 1: initializing the database and running schema/index/backfill migrations...")
     try:
         run_full_migration()
-        print(" -> [성공] 데이터베이스 마이그레이션 완료.")
+        print(" -> [OK] Database migration complete.")
     except Exception as e:
-        print(f" -> [실패] 데이터베이스 마이그레이션 중 오류 발생: {e}")
+        print(f" -> [FAILED] Error during database migration: {e}")
 
-    print("\n[*] 2단계: WAL 체크포인트 마감 중...")
+    print("\n[*] Step 2: finishing the WAL checkpoint...")
     for db_key, db_path in [('general', DB_GENERAL_PATH), ('adult', DB_ADULT_PATH), ('audiobook', DB_AUDIOBOOK_PATH), ('video', DB_VIDEO_PATH)]:
         if not os.path.exists(db_path):
             continue
@@ -729,14 +729,14 @@ def run_schema_update():
             cursor.execute("PRAGMA integrity_check")
             integrity = cursor.fetchone()[0]
             if integrity != 'ok':
-                print(f"  - [경고] {db_key.upper()} DB 무결성 이상이 감지되었습니다: {integrity}")
+                print(f"  - [WARN] {db_key.upper()} DB integrity problem detected: {integrity}")
 
             cursor.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             conn.commit()
-            print(f"  - {db_key.upper()} DB WAL 체크포인트(TRUNCATE) 완료.")
+            print(f"  - {db_key.upper()} DB WAL checkpoint (TRUNCATE) done.")
 
         except Exception as db_err:
-            print(f"  - [오류] {db_key.upper()} DB WAL 체크포인트 중 문제 발생: {db_err}")
+            print(f"  - [ERROR] Problem during {db_key.upper()} DB WAL checkpoint: {db_err}")
             if conn:
                 conn.rollback()
         finally:
@@ -744,8 +744,8 @@ def run_schema_update():
                 conn.close()
 
     print("\n" + "=" * 60)
-    print(" 데이터베이스 스키마 및 마이그레이션 동기화가 성공적으로 완료되었습니다!")
-    print(" 서비스를 재시작해 주시기 바랍니다.")
+    print(" Database schema and migration sync completed successfully!")
+    print(" Please restart the service.")
     print("=" * 60)
 
 if __name__ == '__main__':

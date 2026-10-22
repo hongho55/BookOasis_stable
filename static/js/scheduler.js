@@ -83,18 +83,18 @@ function buildScheduleRow(lib) {
       <td style="padding: 1rem; text-align: center;">
         <div style="position: relative; display: inline-block; width: 44px; height: 24px; vertical-align: middle;">
           <input type="checkbox" id="sched-enabled-${lib.id}" data-role="schedule-enabled-toggle" data-library-id="${lib.id}" ${scheduleEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0; position: absolute;">
-          <label for="sched-enabled-${lib.id}" class="toggle-switch-slider" title="자동 스케줄 사용 여부 (수동 스캔에는 영향 없음)"></label>
+          <label for="sched-enabled-${lib.id}" class="toggle-switch-slider" title="${i18n.t('settings.sched_enabled_title')}"></label>
         </div>
       </td>
       <td data-role="schedule-status" style="padding: 1rem; text-align: center;">${statusBadge}</td>
       <td data-role="schedule-scan-info" style="padding: 1rem; text-align: center;">${buildLastScanInfo(lastScannedAt, lib.cron_schedule)}</td>
       <td style="padding: 1rem; text-align: center;">
-        <button class="btn-toggle" data-role="schedule-config" data-library-id="${lib.id}" data-library-name="${safeNameAttr}" data-is-remote="${lib.is_remote || 0}" data-rclone-rc-url="${safeRcloneRcUrlAttr}" data-cron-schedule="${safeCronScheduleAttr}" data-vfs-refresh="${lib.vfs_refresh_before_scan || 0}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="상세 설정">
+        <button class="btn-toggle" data-role="schedule-config" data-library-id="${lib.id}" data-library-name="${safeNameAttr}" data-is-remote="${lib.is_remote || 0}" data-rclone-rc-url="${safeRcloneRcUrlAttr}" data-cron-schedule="${safeCronScheduleAttr}" data-vfs-refresh="${lib.vfs_refresh_before_scan || 0}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="${i18n.t('settings.sched_config_title')}">
           <i class="lc lc-settings"></i> ${i18n.t('settings.col_config') || '설정'}
         </button>
       </td>
       <td style="padding: 1rem; text-align: center;">
-        <button class="btn-toggle active" data-role="schedule-action" data-library-id="${lib.id}" data-library-name="${escapeHtml(lib.name)}" data-last-scanned-at="${lastScannedAt}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="작업 메뉴 열기">
+        <button class="btn-toggle active" data-role="schedule-action" data-library-id="${lib.id}" data-library-name="${escapeHtml(lib.name)}" data-last-scanned-at="${lastScannedAt}" style="white-space: nowrap; padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.2rem;" title="${i18n.t('settings.sched_action_title')}">
           ${i18n.t('settings.col_action') || '작업'} <i class="lc lc-chevron-down" style="font-size: 0.65rem;"></i>
         </button>
       </td>
@@ -451,12 +451,12 @@ export function openScanSettingsModal(libraryId, name, isRemote, rcloneRcUrl, cr
   }
   hydrateCronHelperFromCron(cronSchedule);
   
-  document.getElementById('scan-settings-modal-title').innerHTML = `<i class="lc lc-cog" style="color: var(--app-accent); margin-right: 0.5rem;"></i> [${name}] 스캔 설정`;
+  document.getElementById('scan-settings-modal-title').innerHTML = `<i class="lc lc-cog" style="color: var(--app-accent); margin-right: 0.5rem;"></i> ${i18n.t('settings.sched_modal_title', { name })}`;
 
   const rcloneContainer = document.getElementById('scan-settings-rclone-container');
   if (isRemote === 1) {
     rcloneContainer.innerHTML = `
-      <input type="text" id="scan-settings-rclone" class="form-control" style="width: 100%; box-sizing: border-box; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.5rem 0.8rem; border-radius: 6px;" value="${rcloneRcUrl || ''}" placeholder="예: http://localhost:5572">
+      <input type="text" id="scan-settings-rclone" class="form-control" style="width: 100%; box-sizing: border-box; background: rgba(var(--app-panel-rgb), 0.6); border: 1px solid rgba(var(--app-panel-border-rgb), 0.1); color: var(--app-text-primary); padding: 0.5rem 0.8rem; border-radius: 6px;" value="${rcloneRcUrl || ''}" placeholder="${i18n.t('settings.sched_rc_placeholder')}">
     `;
   } else {
     rcloneContainer.innerHTML = `

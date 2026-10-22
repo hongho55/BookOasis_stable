@@ -67,14 +67,14 @@ function loadTrashList() {
         selectAllCheckbox.checked = false;
     }
     
-    body.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> 목록 로딩 중...</td></tr>';
+    body.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--app-text-muted);"><i class="lc lc-loader-circle lc-spin"></i> ${i18n.t('settings.trash_loading')}</td></tr>`;
     emptyState.style.display = 'none';
 
     fetch('/api/admin/trash')
         .then(res => res.json())
         .then(data => {
             if (!data.success) {
-                body.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">데이터 로드 실패: ${data.error}</td></tr>`;
+                body.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">${i18n.t('settings.trash_load_failed', { error: data.error })}</td></tr>`;
                 return;
             }
 
@@ -95,14 +95,14 @@ function loadTrashList() {
                     <td style="padding: 0.75rem 1rem;"><span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.75rem;">${escapeHtml(item.library_name)}</span></td>
                     <td style="padding: 0.75rem 1rem; color: var(--app-text-muted); font-size: 0.8rem;">${item.deleted_at || '-'}</td>
                     <td style="padding: 0.75rem 1rem; text-align: center; display: flex; justify-content: center; gap: 0.35rem;">
-                        <button class="btn btn-secondary" data-role="trash-restore-single" data-book-id="${item.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">복구</button>
-                        <button class="btn btn-danger-outline" data-role="trash-delete-single" data-book-id="${item.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">삭제</button>
+                        <button class="btn btn-secondary" data-role="trash-restore-single" data-book-id="${item.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">${i18n.t('settings.trash_restore')}</button>
+                        <button class="btn btn-danger-outline" data-role="trash-delete-single" data-book-id="${item.id}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;">${i18n.t('settings.trash_delete')}</button>
                     </td>
                 </tr>
             `).join('');
         })
         .catch(err => {
-            body.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">API 통신 오류: ${err.message}</td></tr>`;
+            body.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #ef4444;">${i18n.t('settings.trash_api_error', { error: err.message })}</td></tr>`;
         });
 }
 
@@ -123,7 +123,7 @@ function restoreSingleTrash(bookId) {
 function restoreSelectedTrash() {
     const ids = getSelectedTrashIds();
     if (ids.length === 0) {
-        alert('복구할 항목을 하나 이상 선택해 주세요.');
+        alert(i18n.t('settings.trash_select_to_restore'));
         return;
     }
     restoreTrashBooks(ids);
@@ -132,7 +132,7 @@ function restoreSelectedTrash() {
 function restoreTrashBooks(bookIds) {
     const dbType = document.getElementById('trash-db-type').value;
     
-    if (!confirm(`${bookIds.length}권의 도서를 복구하시겠습니까? 복구 시 즉시 일반 도서 목록에 재노출됩니다.`)) {
+    if (!confirm(i18n.t('settings.trash_restore_confirm', { count: bookIds.length }))) {
         return;
     }
     
@@ -147,10 +147,10 @@ function restoreTrashBooks(bookIds) {
             alert(data.message);
             loadTrashList();
         } else {
-            alert('복구 실패: ' + data.error);
+            alert(i18n.t('settings.trash_restore_failed', { error: data.error }));
         }
     })
-    .catch(err => alert('오류: ' + err.message));
+    .catch(err => alert(i18n.t('settings.trash_error', { error: err.message })));
 }
 
 function deleteSingleTrash(bookId) {
@@ -160,7 +160,7 @@ function deleteSingleTrash(bookId) {
 function deleteSelectedTrash() {
     const ids = getSelectedTrashIds();
     if (ids.length === 0) {
-        alert('영구 삭제할 항목을 하나 이상 선택해 주세요.');
+        alert(i18n.t('settings.trash_select_to_delete'));
         return;
     }
     deleteTrashBooks(ids);
@@ -169,12 +169,12 @@ function deleteSelectedTrash() {
 function deleteTrashBooks(bookIds) {
     const dbType = document.getElementById('trash-db-type').value;
     
-    if (!confirm(`선택한 ${bookIds.length}권의 도서를 DB에서 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 독서 진척도 정보도 함께 삭제됩니다.`)) {
+    if (!confirm(i18n.t('settings.trash_delete_confirm', { count: bookIds.length }))) {
         return;
     }
 
     // 오버레이 표시 — 삭제 완료 전 다른 클릭 차단
-    _showTrashOverlay(`선택한 ${bookIds.length}권의 도서 데이터를 DB에서 영구 삭제 중입니다.\n잠시만 기다려 주세요.`);
+    _showTrashOverlay(i18n.t('settings.trash_deleting', { count: bookIds.length }));
     
     fetch('/api/admin/trash/empty', {
         method: 'POST',
@@ -188,32 +188,32 @@ function deleteTrashBooks(bookIds) {
             alert(data.message);
             loadTrashList();
         } else {
-            alert('삭제 실패: ' + data.error);
+            alert(i18n.t('settings.trash_delete_failed', { error: data.error }));
         }
     })
     .catch(err => {
         _hideTrashOverlay();
-        alert('오류: ' + err.message);
+        alert(i18n.t('settings.trash_error', { error: err.message }));
     });
 }
 
 const TRASH_DB_LABELS = {
-    general: '일반',
-    adult: '성인',
-    audiobook: '오디오북',
-    video: '영상강좌'
+    general: 'header.general_books',
+    adult: 'header.adult_books',
+    audiobook: 'header.audiobooks',
+    video: 'header.videos'
 };
 
 function emptyTrashAll() {
     const dbType = document.getElementById('trash-db-type').value;
-    const dbLabel = TRASH_DB_LABELS[dbType] || dbType;
+    const dbLabel = TRASH_DB_LABELS[dbType] ? i18n.t(TRASH_DB_LABELS[dbType]) : dbType;
     
-    if (!confirm(`주의! 현재 ${dbLabel} 데이터베이스 휴지통 내의 모든 도서 데이터를 영구 삭제하시겠습니까?\n이 작업은 모든 읽기 상태와 기록을 완전히 삭제하며 되돌릴 수 없습니다.`)) {
+    if (!confirm(i18n.t('settings.trash_empty_confirm', { db: dbLabel }))) {
         return;
     }
 
     // 오버레이 표시 — 비우기 완료 전 다른 클릭 차단
-    _showTrashOverlay(`휴지통 내의 모든 도서 및 표지 데이터를 영구 삭제 중입니다.\n잠시만 기다려 주세요.`);
+    _showTrashOverlay(i18n.t('settings.trash_emptying'));
 
     fetch('/api/admin/trash/empty', {
         method: 'POST',
@@ -227,12 +227,12 @@ function emptyTrashAll() {
             alert(data.message);
             loadTrashList();
         } else {
-            alert('휴지통 비우기 실패: ' + data.error);
+            alert(i18n.t('settings.trash_empty_failed', { error: data.error }));
         }
     })
     .catch(err => {
         _hideTrashOverlay();
-        alert('오류: ' + err.message);
+        alert(i18n.t('settings.trash_error', { error: err.message }));
     });
 }
 
