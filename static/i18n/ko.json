@@ -932,7 +932,7 @@
     "content_kind_label": "속성",
     "content_kind_unspecified": "미지정",
     "content_kind_manage": "속성 관리",
-    "content_kind_help": "만화·도서·잡지처럼 카테고리를 분류하는 값입니다(선택). 연관작품 검색 등 플러그인이 분류 기준으로 사용할 수 있습니다.",
+    "content_kind_help": "만화·도서·잡지처럼 카테고리를 분류하는 값입니다(선택). 연관작품 검색 등 플러그인이 분류 기준으로 사용할 수 있습니다. '웹툰'이면 회차가 작품 대표 표지를 같이 씁니다.",
     "content_kind_manage_title": "카테고리 속성 관리",
     "content_kind_manage_help": "기본 속성은 이름만 바꿀 수 있고 삭제할 수 없습니다. 사용 중인 속성은 삭제할 수 없습니다.",
     "content_kind_code_placeholder": "코드(영문 소문자, 예: webtoon)",
@@ -1445,6 +1445,10 @@
         "bad": "{format} 파일이 아니거나 손상됨",
         "skip": "형식 점검 대상 아님",
         "timeout": "형식 확인이 응답하지 않음 ({seconds}초)"
+      },
+      "content": {
+        "video_inside": "압축 파일 안에 영상이 있음 (이미지 {images}장, 영상 {videos}개)",
+        "timeout": "압축 내용 확인이 응답하지 않음 ({seconds}초)"
       }
     },
     "result": {
@@ -1458,7 +1462,8 @@
       "file_moved": "파일이 이동되거나 삭제된 것 같습니다. 폴더를 재스캔하면 새 위치를 찾거나 휴지통으로 옮깁니다.",
       "trashed_missing": "파일이 없어 휴지통에 있습니다. 7일 뒤 자동으로 삭제됩니다.",
       "trashed_but_present": "파일이 다시 있습니다. 폴더를 재스캔하면 휴지통에서 복구됩니다.",
-      "file_corrupt": "파일이 손상된 것 같습니다. 원본 파일을 확인한 뒤 재스캔하세요."
+      "file_corrupt": "파일이 손상된 것 같습니다. 원본 파일을 확인한 뒤 재스캔하세요.",
+      "video_inside": "영상이 ZIP으로 묶여 있어 만화 뷰어로는 볼 수 없습니다. 영상을 꺼내 영상 강좌 카테고리 폴더에 두세요."
     }
   },
   "problems": {

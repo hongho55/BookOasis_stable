@@ -10,6 +10,7 @@ book_diagnosis_service.py – 도서 1권 [진단] 체크리스트 (알림센터
     ✓ 원격 연결     카테고리 루트(마운트)가 살아 있는가
     ✗ 파일 존재     파일이 그 경로에 있는가
     ✓ 파일 형식     압축/PDF 머리말이 정상인가 (가벼운 확인만)
+    ! 압축 내용     ZIP/CBZ 안에 영상이 들어 있는가 (만화 뷰어로는 못 본다)
     → 결론 + 조치
 
 진단은 읽기만 한다(아무것도 고치거나 지우지 않는다). 원격 드라이브가 멈춰 있어도 웹 요청이 붙잡히지
@@ -30,6 +31,8 @@ TRASH_PURGE_DAYS = 7
 OK, FAIL, WARN, SKIP = 'ok', 'fail', 'warn', 'skip'
 
 _ZIP_FORMATS = ('zip', 'cbz', 'epub')
+_PAGE_ARCHIVE_FORMATS = ('zip', 'cbz')
+_VIDEO_EXT = ('.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.ts', '.flv')
 
 
 def _check(check_id, status, key, **vars_):
@@ -107,6 +110,16 @@ def _format_state(path, fmt):
         with open(path, 'rb') as f:
             return 'ok' if f.read(5) == b'%PDF-' else 'bad'
     return 'skip'
+
+
+def _archive_content(path):
+    """(페이지 이미지 수, 영상 수) - 중앙 디렉터리만 읽는다. __MACOSX 찌꺼기는 세지 않는다."""
+    from utils.archive_entry import is_macos_junk_name, is_page_image_name
+    with zipfile.ZipFile(path) as zf:
+        names = [n for n in zf.namelist() if not n.endswith('/')]
+    images = sum(1 for n in names if is_page_image_name(n))
+    videos = sum(1 for n in names if n.lower().endswith(_VIDEO_EXT) and not is_macos_junk_name(n))
+    return images, videos
 
 
 def _human_size(size):
@@ -239,10 +252,24 @@ def diagnose_book(db_type, book_id):
         return result('file_corrupt')
     checks.append(_check('format', SKIP if value == 'skip' else OK, value))
 
+    # 5. 압축 내용 - 이미지 대신 영상을 묶어 둔 ZIP은 '정상 파일'이지만 뷰어에서 못 연다
+    video_inside = False
+    if (book.get('file_format') or '').lower() in _PAGE_ARCHIVE_FORMATS:
+        done, value = _with_timeout(lambda: _archive_content(path))
+        if not done:
+            checks.append(_check('content', FAIL, 'timeout', seconds=FS_TIMEOUT_SECONDS))
+            return result('remote_slow')
+        images, videos = value
+        if videos:
+            video_inside = True
+            checks.append(_check('content', WARN, 'video_inside', images=images, videos=videos))
+
     if book.get('is_deleted'):
         # 파일이 다시 있다 → 다음 스캔(폴더 재스캔)에서 휴지통에서 복구된다
         actions.append(rescan_folder)
         return result('trashed_but_present')
+    if video_inside:
+        return result('video_inside')
     if problems:
         actions.append(rescan_book)
         return result('healthy_with_problems', count=len(problems))

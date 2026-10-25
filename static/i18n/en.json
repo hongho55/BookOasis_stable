@@ -932,7 +932,7 @@
     "content_kind_label": "Type",
     "content_kind_unspecified": "Unspecified",
     "content_kind_manage": "Manage types",
-    "content_kind_help": "A value that classifies the category, such as manga, book or magazine (optional). Plugins such as related-works search can use it as a classification criterion.",
+    "content_kind_help": "A value that classifies the category, such as manga, book or magazine (optional). Plugins such as related-works search can use it as a classification criterion. With 'Webtoon', episodes share the series cover.",
     "content_kind_manage_title": "Manage category types",
     "content_kind_manage_help": "Built-in types can only be renamed and cannot be deleted. A type that is in use cannot be deleted.",
     "content_kind_code_placeholder": "Code (lowercase, e.g. webtoon)",
@@ -1445,6 +1445,10 @@
         "bad": "Not a valid {format} file or corrupt",
         "skip": "No format check for this type",
         "timeout": "Format check not responding ({seconds}s)"
+      },
+      "content": {
+        "video_inside": "Archive contains video ({images} images, {videos} videos)",
+        "timeout": "Archive content check not responding ({seconds}s)"
       }
     },
     "result": {
@@ -1458,7 +1462,8 @@
       "file_moved": "The file seems to have been moved or deleted. Rescanning the folder finds the new location or moves it to the trash.",
       "trashed_missing": "The file is missing, so the book is in the trash. It will be deleted automatically after 7 days.",
       "trashed_but_present": "The file is back. Rescanning the folder restores it from the trash.",
-      "file_corrupt": "The file seems corrupt. Check the original file, then rescan."
+      "file_corrupt": "The file seems corrupt. Check the original file, then rescan.",
+      "video_inside": "This ZIP bundles a video, which the comic viewer can't play. Extract the video into a video course category folder."
     }
   },
   "problems": {

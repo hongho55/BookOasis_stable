@@ -1126,6 +1126,8 @@ BUILTIN_LIBRARY_KINDS = (
     ('novel', '소설'),
     ('book', '도서'),
     ('magazine', '잡지'),
+    # 'webtoon'은 스캔 동작을 바꾼다 — 회차가 폴더 대표 표지를 같이 쓴다(tools/scanner/series_cover_fill.py).
+    ('webtoon', '웹툰'),
 )
 
 

@@ -100,8 +100,8 @@ class BookInfoService:
                 zf = get_zip_file_hybrid(file_path)
                 if zf:
                     try:
-                        img_ext = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
-                        total_pages = len([n for n in zf.namelist() if n.lower().endswith(img_ext)])
+                        from utils.archive_entry import is_page_image_name
+                        total_pages = len([n for n in zf.namelist() if is_page_image_name(n)])
                     except Exception:
                         total_pages = 0
 

@@ -462,9 +462,13 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     import re
     from dotenv import load_dotenv
 
-    cursor.execute("SELECT name FROM libraries WHERE id = ?", (library_id,))
+    cursor.execute("SELECT name, content_kind FROM libraries WHERE id = ?", (library_id,))
     lib_row = cursor.fetchone()
     library_name = lib_row['name'] if lib_row else f"Lib_{library_id}"
+    # 웹툰 속성 카테고리는 모든 폴더를 작품(회차 묶음)으로 보고 회차에 대표 표지를 쓴다 (series_cover_fill.py).
+    from tools.scanner.series_cover_fill import WEBTOON_LIBRARY_KIND, representative_covers_by_folder
+    is_webtoon_library = bool(lib_row) and str(lib_row['content_kind'] or '').strip().lower() == WEBTOON_LIBRARY_KIND
+    db_folder_covers = representative_covers_by_folder(all_rows) if is_webtoon_library else None
     safe_lib_name = re.sub(r'[\\/*?:"<>|]', "", library_name)
     scan_time_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     
@@ -781,7 +785,7 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
 
     with ThreadPoolExecutor(max_workers=threads_to_use) as executor:
         futures = {
-            executor.submit(process_folder_task, root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote, library_id, db_files_cache, t_path, file_ids, db_type, db_books, gdrive_meta_dirs, gdrive_file_stats): root
+            executor.submit(process_folder_task, root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote, library_id, db_files_cache, t_path, file_ids, db_type, db_books, gdrive_meta_dirs, gdrive_file_stats, db_folder_covers): root
             for root, files, t_path, file_ids in tasks
         }
         
@@ -1022,6 +1026,13 @@ def _scan_library_internal(conn, db_path, library_id, physical_path, force, db_t
     # (이전 파일명 도서가 목록에 남음). 전체 스캔도 cleanup 잠금 실패 시 같은 이유로 잃는다.
     _commit_with_retry(conn, 'deletion-sync')
     print(f"[Scanner-DB] Deletion sync done db={db_type} library_id={library_id}")
+    if is_webtoon_library:
+        try:
+            from tools.scanner.series_cover_fill import fill_missing_series_covers
+            if fill_missing_series_covers(cursor, library_id):
+                _commit_with_retry(conn, 'webtoon-cover-fill')
+        except Exception as fill_err:
+            print(f"[Scanner-Webtoon] ⚠️ Episode cover fill skipped: {fill_err}")
     if gdrive_scan:
         from utils.gdrive_beta_log import beta_log
         beta_log('scan.summary', db=db_type, lib=library_id, folders=gdrive_folder_count,

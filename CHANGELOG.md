@@ -1,4 +1,11 @@
 # CHANGELOG
+## v3.0.4
+- (fix) 구글 링크 카테고리의 웹툰 폴더에 새 회차가 올라오면 책은 등록되지만 커버가 비던 문제 수정 — 시리즈 대표 커버(kavita.yaml, 없으면 series.json 이미지)를 붙임 | fix new episodes in a webtoon folder of a Google link category being added without a cover — they now get the series cover (from kavita.yaml, or the series.json image)
+- (improvement) 카테고리 기본 속성에 '웹툰' 추가 — 웹툰 카테고리는 회차가 작품 대표 표지를 같이 쓰고, 표지가 빈 회차는 스캔 끝과 속성을 웹툰으로 바꿀 때 같은 폴더 회차의 표지로 채움(파일 안 받음) | add 'Webtoon' to the built-in category types — episodes in a webtoon category share the series cover, and episodes without a cover get the cover of another episode in the same folder at the end of a scan or when the category is switched to Webtoon (no file downloads)
+- (fix) macOS로 만든 ZIP의 `__MACOSX`·`._` 찌꺼기 파일이 페이지로 세져 첫 페이지가 '이미지를 불러오지 못했습니다'로 뜨던 문제 수정(재스캔 필요) | fix `__MACOSX`/`._` leftovers in ZIPs made on macOS being counted as pages, making the first page fail with 'Failed to load image' (rescan needed)
+- (improvement) [진단]에 ZIP 안에 영상이 들어 있으면 경고 표시 | [Diagnose] warns when a ZIP contains video files
+- (improvement) 관리자가 뷰어에서 오류를 만나면 진단을 자동으로 돌려 걸린 항목과 결론을 오류 자리에 바로 표시 | when an admin hits a viewer error, the diagnosis runs automatically and its failed items and conclusion show right in the error area
+
 ## v3.0.3
 - (fix) 휴대폰에서 EPUB/TXT를 읽다 앱을 내린 사이 화면 크기가 바뀌고(주소창·회전) 페이지가 새로 열리면 몇 쪽 앞뒤에서 열리던 문제 수정 | fix EPUB/TXT on phones reopening a few pages off when the screen size changed (address bar, rotation) while the app was in the background and the page then reloaded
 - (fix) EPUB/TXT를 다른 기기에서 이어 읽을 때 '다른 기기에서 읽던 위치로 이동' 알림은 뜨지만 이 기기의 예전 위치와 번갈아 맞춰지다 몇 쪽 어긋난 채 끝나던 문제 수정(느린 기기·새로 연 페이지) | fix EPUB/TXT resume from another device showing the 'moved to the position read on another device' notice but then alternating with this device's old position and ending a few pages off (slow devices, freshly loaded pages)

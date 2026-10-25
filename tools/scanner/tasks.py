@@ -130,8 +130,11 @@ def _normalize_series_text(name):
     return re.sub(r'^\[(?:단행|연재|소설|만화|웹툰|일반)\]\s*', '', str(name)).strip()
 
 
-def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote=False, library_id=None, db_files_cache=None, library_root=None, gdrive_file_ids=None, db_type=None, db_book_ids=None, gdrive_meta_dirs=None, gdrive_file_stats=None):
-    """Independent I/O scan task per folder (DB independent, pure FS/I/O scaling)"""
+def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_folder_mtimes, is_remote=False, library_id=None, db_files_cache=None, library_root=None, gdrive_file_ids=None, db_type=None, db_book_ids=None, gdrive_meta_dirs=None, gdrive_file_stats=None, db_folder_covers=None):
+    """Independent I/O scan task per folder (DB independent, pure FS/I/O scaling)
+
+    db_folder_covers(dict)가 있으면 웹툰 속성 카테고리다: 모든 폴더를 작품으로 보고, 회차는 폴더 대표 표지
+    (이미 DB에 있는 같은 폴더 회차의 표지 → yaml/series.json → 첫 회차 첫 장)를 같이 쓴다."""
     root = canonical_path(root)
     print(f"[Scanner-DEBUG-Task] 📂 entering process_folder_task - folder: '{root}'")
     # 리모트가 있는 gdrive 카테고리(gdrive_meta_dirs 전달됨)는 책을 로컬 사본으로 열므로 Range 오프셋이 필요 없다.
@@ -289,10 +292,12 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
         merged_meta.get('books_lv') or merged_meta.get('publication_status')
     )
 
-    is_series_folder = bool(merged_meta.get('has_yaml') and merged_meta.get('is_webtoon'))
+    is_webtoon_library = db_folder_covers is not None
+    is_series_folder = bool(merged_meta.get('has_yaml') and merged_meta.get('is_webtoon')) or is_webtoon_library
     is_json_only_webtoon = bool(not merged_meta.get('has_yaml') and merged_meta.get('is_webtoon'))
     series_cover_url = merged_meta.get('cover_image_url', '') if is_json_only_webtoon else ''
-    shared_cover_image = None
+    # 강제 재스캔은 표지를 새로 뽑으므로 예전 대표 표지를 이어 쓰지 않는다.
+    shared_cover_image = db_folder_covers.get(root) if is_webtoon_library and not force else None
 
     # 배너는 표지와 달리 권마다 다를 필요 없는 시리즈/폴더 단위 히어로 이미지라, 폴더당
     # 한 번만 확보해 그 폴더의 모든 도서 결과에 동일하게 반영한다 (공유 드라이브 도서관리
@@ -409,6 +414,17 @@ def process_folder_task(root, files, force, db_meta_full, db_offsets_cached, db_
                     if (is_series_folder or is_json_only_webtoon) and shared_cover_image:
                         print(f"[Scanner-DEBUG-Task]     - Series cover (thumbnail) cloned")
                         cover_image = shared_cover_image
+                    elif is_series_folder and (b64_keys_lower or merged_meta.get('cover_image_url')):
+                        # 새 회차만 처리하는 증분 스캔은 기존 회차를 건너뛰어 복제할 커버가 없다 — 전체 스캔과
+                        # 같은 결과가 되게 yaml 대표 커버(없으면 series.json 이미지)를 쓴다. gdrive 원본은
+                        # 압축을 열 수 없어 이게 없으면 새 회차가 커버 없이 등록된다.
+                        print(f"[Scanner-DEBUG-Task]     - Series representative cover (new episode)")
+                        if b64_keys_lower:
+                            cover_image = extract_cover_from_b64(full_path, next(iter(b64_keys_lower.values())), force=force, library_id=library_id)
+                        if not cover_image and merged_meta.get('cover_image_url'):
+                            cover_image = download_cover_from_url(full_path, merged_meta['cover_image_url'], force=force, library_id=library_id)
+                        if not cover_image:
+                            cover_image = get_series_cover_fallback(series_name, root, force=force, is_remote=is_remote, filename=filename, file_path=full_path, library_id=library_id)
                     elif is_json_only_webtoon and series_cover_url:
                         print(f"[Scanner-DEBUG-Task]     - series.json URL cover download started")
                         cover_image = download_cover_from_url(full_path, series_cover_url, force=force, library_id=library_id)

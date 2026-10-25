@@ -2436,6 +2436,24 @@ button, input, select, textarea {
     font-size: 0.85rem;
 }
 
+.viewer-report-diag {
+    max-width: 28rem;
+    margin: 0.7rem auto 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: left;
+    word-break: break-word;
+    background: var(--notify-tone-soft, rgba(255, 255, 255, 0.06));
+    border-left: 3px solid var(--notify-tone, rgba(255, 255, 255, 0.25));
+}
+
+.viewer-report-diag.notify-tone-error { --notify-tone: var(--notify-error); --notify-tone-soft: var(--notify-error-soft); }
+.viewer-report-diag.notify-tone-notice { --notify-tone: var(--notify-notice); --notify-tone-soft: var(--notify-notice-soft); }
+.viewer-report-diag.notify-tone-done { --notify-tone: var(--notify-done); --notify-tone-soft: var(--notify-done-soft); }
+
 .notify-card-btn.is-link {
     align-self: flex-start;
     border: 0;

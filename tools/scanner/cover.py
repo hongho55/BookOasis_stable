@@ -9,6 +9,7 @@ import io
 import unicodedata
 import xml.etree.ElementTree as ET
 from PIL import Image
+from utils.archive_entry import is_page_image_name
 from tools.scanner.folder_image import find_common_cover, find_individual_cover, find_common_banner
 from services.cover_storage_service import get_covers_dir
 
@@ -494,7 +495,6 @@ def get_series_cover_fallback(series_name, folder_path, force=False, is_remote=F
         
         if target_files:
             target_file_path = os.path.join(folder_path, target_files[0])
-            img_ext = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
             
             if target_file_path.lower().endswith('.epub'):
                 if extract_epub_cover_direct(target_file_path, local_cover_path):
@@ -509,7 +509,7 @@ def get_series_cover_fallback(series_name, folder_path, force=False, is_remote=F
                     with zipfile.ZipFile(target_file_path, 'r') as zf:
                         infolist = zf.infolist()
                         img_infos = sorted(
-                            [info for info in infolist if info.filename.lower().endswith(img_ext)],
+                            [info for info in infolist if is_page_image_name(info.filename)],
                             key=lambda x: natural_sort_key(x.filename)
                         )
                         

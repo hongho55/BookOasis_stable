@@ -21,6 +21,39 @@ function isAdmin() {
   return String(user.role || '').toLowerCase() === 'admin';
 }
 
+// 관리자: 오류가 나면 [진단]을 누르기 전에 미리 돌려, 걸린 항목과 결론을 오류 자리에 바로 보여 준다.
+// (같은 GET /api/problems/diagnose — 원격 드라이브는 몇 초 걸린다. 그 사이 다른 책을 열면 결과를 버린다)
+let diagnoseSeq = 0;
+
+async function autoDiagnose(row, dbType, bookId) {
+  const seq = ++diagnoseSeq;
+  const box = document.createElement('div');
+  box.className = 'viewer-report-diag';
+  box.textContent = t('diagnose.running', '진단 중...');
+  row.appendChild(box);
+  try {
+    const res = await fetch(`/api/problems/diagnose?type=${encodeURIComponent(dbType)}&book_id=${encodeURIComponent(bookId)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.error || `HTTP ${res.status}`);
+    if (seq !== diagnoseSeq || !box.isConnected || state.activeBookId !== bookId) return;
+    const { diagnosisCheckText, diagnosisTone } = await import('../diagnosis_render.js');
+    const { tr } = await import('../notification_render.js');
+    const lines = (data.checks || [])
+      .filter(c => c.status === 'warn' || c.status === 'fail')
+      .map(c => diagnosisCheckText(c));
+    if (data.conclusion) lines.push(`→ ${tr(data.conclusion.key, data.conclusion.vars || {}, '')}`);
+    box.className = `viewer-report-diag notify-tone-${diagnosisTone(data)}`;
+    box.replaceChildren(...lines.map(text => {
+      const p = document.createElement('div');
+      p.textContent = text;
+      return p;
+    }));
+  } catch (err) {
+    if (seq === diagnoseSeq && box.isConnected) box.remove();
+    console.warn('[Viewer] auto diagnose failed:', err);
+  }
+}
+
 export function clearViewerReportAction() {
   const row = document.getElementById('viewer-common-report');
   if (row) {
@@ -53,6 +86,7 @@ export function showViewerReportAction(message, subMessage) {
       const title = document.getElementById('viewer-title-text')?.textContent || '';
       m.openBookDiagnosis(dbType, bookId, title);
     });
+    autoDiagnose(row, dbType, bookId);
     return;
   }
 

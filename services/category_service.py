@@ -2,6 +2,7 @@
 import re
 import database
 from repositories.category_repository import CategoryRepository
+from tools.scanner.series_cover_fill import WEBTOON_LIBRARY_KIND
 
 
 def _remove_tts_audio_dirs(db_type, rel_dirs):
@@ -365,6 +366,22 @@ class CategoryService:
         # content_kind를 넘기지 않으면(None) 기존 속성을 유지한다.
         content_kind = CategoryService._normalize_content_kind(db_type, content_kind, keep_when_missing=True)
         CategoryRepository.edit_library(db_type, library_id, name, physical_path, is_remote, rclone_rc_url, icon, color, hide_cover, group_id, gdrive_copy_remote, gdrive_view_local_mirror_path, cover_aspect_ratio, hide_title, content_kind)
+        if content_kind == WEBTOON_LIBRARY_KIND and (current or {}).get('content_kind') != WEBTOON_LIBRARY_KIND:
+            CategoryService._fill_webtoon_episode_covers(db_type, library_id)
+
+    @staticmethod
+    def _fill_webtoon_episode_covers(db_type, library_id):
+        """웹툰 속성으로 바꾸면 재스캔 없이 표지가 빈 회차에 같은 폴더의 대표 표지를 바로 넣는다(DB만, 파일 안 받음)."""
+        try:
+            from tools.scanner.series_cover_fill import fill_missing_series_covers
+            with database.connection(db_type) as conn:
+                filled = fill_missing_series_covers(conn.cursor(), library_id)
+                conn.commit()
+            if filled:
+                from services.series_service import SeriesService
+                SeriesService.invalidate_all_books_cache(db_type=db_type)
+        except Exception as e:
+            print(f"[Category] Webtoon episode cover fill skipped (library {library_id}): {e}")
 
     @staticmethod
     def delete_library(db_type, library_id):
