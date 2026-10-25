@@ -324,6 +324,17 @@ export function locateTxtPageAnchor({ scrollWrapper, contentArea, anchor, chunkI
   return pageScrollLeftForRect({ scrollWrapper, rect, advanceWidth });
 }
 
+/**
+ * captureTxtPageAnchor로 잡은 글자에서 시작하는 앵커 문구. 블록 기준이라 재조판(화면 크기 변화) 뒤에도 같은 문구가 나온다.
+ * 같은 블록(앞부분 글자 확인)일 때만 믿는다.
+ */
+export function txtPageAnchorText({ contentArea, anchor }) {
+  if (!anchor || !contentArea) return null;
+  const block = _anchorBlocks(contentArea)[anchor.blockIndex];
+  if (!block || (block.textContent || '').slice(0, 24) !== anchor.probe) return null;
+  return _anchorTextAt(contentArea, anchor);
+}
+
 /** 캡처한 글자 위치에서 시작하는 30자 앵커 문구 (공백 정리). 같은 블록에 의미 있는 글자가 모자라면 다음 블록에서. */
 function _anchorTextAt(contentArea, pos) {
   const blocks = _anchorBlocks(contentArea);

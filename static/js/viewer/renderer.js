@@ -26,6 +26,7 @@ const splitCropCacheMap = new Map();
 let currentPreloadQueue = [];
 let isPreloading = false;
 let splitModeActive = false;
+const SCROLL_IMAGE_MAX_RETRIES = 2;
 
 function createComicLoadTrace(details = {}) {
   const traceId = ++comicLoadTraceSeq;
@@ -479,7 +480,19 @@ export function loadComicPage() {
       };
 
       img.onload = handleImgLoad;
+      // 서버 워커 재활용(--max-requests) 순간 등 일시적인 502는 잠깐 뒤 다시 받으면 된다 - 바로 에러 창을 띄우지 않는다
+      let retryCount = 0;
       img.onerror = () => {
+        if (retryCount < SCROLL_IMAGE_MAX_RETRIES) {
+          retryCount += 1;
+          const backoff = 1000 * retryCount;
+          loadTrace.log('scroll image load failed, retrying', { index: img.dataset.index, attempt: retryCount, backoff });
+          setTimeout(() => {
+            if (!img.isConnected) return;
+            img.src = url.startsWith('blob:') ? url : `${url}${url.includes('?') ? '&' : '?'}_retry=${retryCount}`;
+          }, backoff);
+          return;
+        }
         loadTrace.log('scroll image load failed', { index: img.dataset.index });
         console.error(`[Viewer-Comic] Scroll image load failed: page_idx=${img.dataset.index}`);
         img.style.opacity = '1';

@@ -59,7 +59,9 @@ class BookInfoService:
             return None
 
         total_pages = row['total_pages'] or 0
-        if total_pages == 0:
+        # PDF는 뷰어(pdf.js)가 쪽수를 직접 알아내므로 여기서 파일을 열어 세지 않는다 - 원격 파일은
+        # 그것만 27초 걸렸고, 뷰어 위 줄 제목용 호출과 겹쳐 같은 계산을 두 번 했다(2026-10-25 실측).
+        if total_pages == 0 and (row['file_format'] or '').lower() != 'pdf':
             total_pages = BookInfoService.get_total_pages(db_type, book_id) or 0
 
         return {

@@ -45,22 +45,10 @@ export async function initPdfViewer(bookId, pagesRead, totalPages) {
   }
 
   pdfCurrentPage = initialPage;
+  // 총 쪽수가 0이어도 서버(/info)에 묻지 않는다 - 서버는 pypdfium2로 파일을 직접 열어 세는데,
+  // rclone 원격 파일을 처음 열면 그것만 27초 걸렸다(2026-10-25 실측). 쪽수는 pdf.js가 문서를 열면
+  // numPages로 알려 주고, 닫을 때 진행도 저장(prepareForClose)이 books.total_pages도 채운다.
   pdfTotalPages = totalPages || 0;
-  
-  // 뷰어 진입 시 totalPages가 0이면 백엔드 API를 통해 동적 계산 시도 (DB 동기화용)
-  if (pdfTotalPages === 0) {
-    try {
-      showViewerLoading('페이지 정보 동기화 중...');
-      const libType = state.currentLibraryType || 'general';
-      const res = await fetch(`/api/media/books/${bookId}/info?type=${libType}`);
-      const data = await res.json();
-      if (data.success && data.total_pages > 0) {
-        pdfTotalPages = data.total_pages;
-      }
-    } catch (e) {
-      console.warn('[Viewer-Pdf] 동적 페이지 로딩 실패:', e);
-    }
-  }
 
   showViewerLoading(i18n.t("viewer.loading_pdf_title") || "PDF 준비 중", i18n.t("viewer.loading_pdf_sub") || "잠시만 기다려 주세요...");
   

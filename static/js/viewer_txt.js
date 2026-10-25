@@ -90,6 +90,7 @@ import {
   restoreTxtAnchorInfoByMode,
   captureTxtPageAnchor,
   locateTxtPageAnchor,
+  txtPageAnchorText,
 } from './viewer/txt_anchor_utils.js';
 import { findAnchorOffset, chunkStarts } from './viewer/text_position_utils.js';
 import { scheduleAnchorRechecks } from './viewer/txt_anchor_utils.js';
@@ -180,6 +181,16 @@ function locateCurrentTxtPageAnchor(anchor) {
 
 function heldTxtPageAnchor() {
   return txtHeldAnchor && Date.now() < txtHeldAnchorUntil ? txtHeldAnchor : null;
+}
+
+// 숨겨져 있거나(잡아 둔 글자의 기한 = 무한) 복귀 직후면 숨기기 직전에 잡아 둔 글자의 앵커 문구. 그사이 화면 크기가
+// 바뀌면 같은 scrollLeft에 다른 줄이 오므로, 이때 저장(pagehide 스냅샷 등)은 지금 화면 대신 이것을 쓴다.
+// 기한이 지난 예전 글자는 쓰지 않는다 - 숨김 이벤트가 이 파일보다 진행률 저장 쪽에 먼저 와도 낡은 위치를 저장하지 않게.
+function heldTxtAnchorInfo() {
+  const held = heldTxtPageAnchor();
+  if (!held || held.chunkIdx !== currentChunkIdx) return null;
+  const anchorText = txtPageAnchorText({ contentArea: document.getElementById('txt-content-area'), anchor: held });
+  return anchorText ? { chunkIdx: held.chunkIdx, anchorText } : null;
 }
 
 // 사용자가 넘겨서 페이지가 자리 잡을 때마다 보이는 글자를 기억한다. 숨겨져 있거나, 복귀 직후이거나,
@@ -945,9 +956,12 @@ function readLocalTxtPosition(bookId) {
 // 듣기 위치(listen) 또는 다른 기기 읽기 위치(read)의 문장으로 이동하고 알린다.
 // 원격 EPUB은 이미지·글꼴이 늦게 로드돼 쪽 나눔이 다시 바뀌므로, 사용자가 넘기지 않았으면 몇 번 더 같은 문장으로 맞춘다.
 function applySyncTarget(target) {
+  const anchorInfo = target.anchorText ? { chunkIdx: target.chunkIdx, anchorText: target.anchorText } : null;
+  // 바로 붙잡는다 - 뷰어를 열 때 여백 적용(viewer_padding.commitViewerPadding)이 옵션 없이 applyTxtSettings()를 다시
+  // 부르는데, 그게 아래 rAF보다 먼저 오면 붙잡은 문장이 없어 이 기기 저장 위치 복원이 예약되고, 두 위치의 재확인이
+  // 번갈아 덮어써 몇 쪽 어긋난 채 끝났다(느린 기기·새로 로드한 페이지). 붙잡혀 있으면 그 호출도 이 문장으로 맞춘다.
+  holdRestoreAnchor(anchorInfo);
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    const anchorInfo = target.anchorText ? { chunkIdx: target.chunkIdx, anchorText: target.anchorText } : null;
-    holdRestoreAnchor(anchorInfo);
     if (anchorInfo && restoreTxtAnchorInfo(anchorInfo)) {
       const wrapper = document.getElementById('txt-scroll-wrapper');
       const isPageMode = (localStorage.getItem('viewer_scroll_mode') || 'page') === 'page';
@@ -967,7 +981,7 @@ function applySyncTarget(target) {
 // TTS 동기화용 현재 읽기 위치: 화면의 앵커 문구 + 텍스트 기준 글자 오프셋 (viewer/tts_sync.js가 호출)
 function currentReadPosition() {
   if (!Array.isArray(txtChunks) || txtChunks.length === 0) return null;
-  const info = activeRestoreHold() || getTxtAnchorInfo();
+  const info = activeRestoreHold() || heldTxtAnchorInfo() || getTxtAnchorInfo();
   if (!info || !info.anchorText) return null;
   const idx = Number.isInteger(info.chunkIdx) ? info.chunkIdx : currentChunkIdx;
   if (state.currentViewerFormat === 'epub') {
@@ -1040,8 +1054,17 @@ export function saveDetailPosition() {
     // 다시 열 때 화면 크기(주소창·툴바·회전)가 달라도 같은 곳을 찾도록 보던 글자를 함께 남긴다.
     // 좌표(scrollLeft)만으로 되돌리면 쪽 나눔이 바뀌어 몇 쪽 앞뒤가 열렸다.
     const hold = activeRestoreHold();
+    const held = hold ? null : heldTxtAnchorInfo();
     if (hold) {
       pos.anchorText = hold.anchorText;
+    } else if (held) {
+      pos.anchorText = held.anchorText;
+      // 좌표도 바뀐 쪽 나눔 기준이라 앵커를 못 찾을 때의 대비값으로도 틀린다 - 숨기기 전에 저장한 값을 둔다
+      const saved = readLocalTxtPosition(state.activeBookId);
+      if (saved && saved.chunkIdx === currentChunkIdx) {
+        pos.scrollLeft = saved.scrollLeft;
+        pos.scrollTop = saved.scrollTop;
+      }
     } else {
       try {
         const anchor = getTxtAnchorInfo();
