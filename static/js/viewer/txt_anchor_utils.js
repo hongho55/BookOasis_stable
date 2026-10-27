@@ -54,14 +54,16 @@ export function getTxtAnchorInfoByMode({
   txtChunks,
   currentChunkIdx,
   stripHtml,
+  stripHtmlForAnchor,
 }) {
   if (!scrollWrapper || !contentArea) return null;
 
   const scrollMode = forcedMode || storage.getItem('viewer_scroll_mode') || 'page';
+  const htmlToAnchorText = typeof stripHtmlForAnchor === 'function' ? stripHtmlForAnchor : stripHtml;
 
   if (scrollMode === 'scroll') {
     const rawChunk = (Array.isArray(txtChunks) && txtChunks[currentChunkIdx]) ? txtChunks[currentChunkIdx] : '';
-    const cleanText = isEpub ? stripHtml(rawChunk) : (rawChunk || fullText || '').replace(/\s+/g, ' ').trim();
+    const cleanText = isEpub ? htmlToAnchorText(rawChunk) : (rawChunk || fullText || '').replace(/\s+/g, ' ').trim();
     if (cleanText.length === 0) return null;
 
     const targetChunk = contentArea.querySelector(`.txt-scroll-chunk[data-idx="${currentChunkIdx}"]`);
@@ -86,7 +88,7 @@ export function getTxtAnchorInfoByMode({
   }
 
   const rawChunk = txtChunks[currentChunkIdx] || '';
-  const cleanText = isEpub ? stripHtml(rawChunk) : rawChunk.replace(/\s+/g, ' ').trim();
+  const cleanText = isEpub ? htmlToAnchorText(rawChunk) : rawChunk.replace(/\s+/g, ' ').trim();
   if (cleanText.length === 0) return null;
 
   // 1순위: 지금 보이는 페이지의 첫 글자부터 30자 (iOS Safari scrollLeft 읽기 오류 방어).
@@ -127,10 +129,12 @@ export function restoreTxtAnchorInfoByMode({
   fullText,
   txtChunks,
   stripHtml,
+  stripHtmlForAnchor,
 }) {
   if (!anchorInfo || !anchorInfo.anchorText || !scrollWrapper || !contentArea) return false;
 
   const scrollMode = storage.getItem('viewer_scroll_mode') || 'page';
+  const htmlToAnchorText = typeof stripHtmlForAnchor === 'function' ? stripHtmlForAnchor : stripHtml;
   const query = anchorInfo.anchorText;
   const targetChunkIdx = anchorInfo.chunkIdx !== undefined ? anchorInfo.chunkIdx : currentChunkIdx;
 
@@ -187,11 +191,11 @@ export function restoreTxtAnchorInfoByMode({
   }
 
   if (scrollMode === 'scroll') {
-    const cleanText = isEpub ? stripHtml(fullText) : fullText.replace(/\s+/g, ' ').trim();
+    const cleanText = isEpub ? htmlToAnchorText(fullText) : fullText.replace(/\s+/g, ' ').trim();
 
     let charOffset = 0;
     for (let i = 0; i < targetChunkIdx; i++) {
-      const chunkText = isEpub ? stripHtml(txtChunks[i]) : txtChunks[i].replace(/\s+/g, ' ').trim();
+      const chunkText = isEpub ? htmlToAnchorText(txtChunks[i]) : txtChunks[i].replace(/\s+/g, ' ').trim();
       charOffset += chunkText.length;
     }
 
@@ -204,7 +208,7 @@ export function restoreTxtAnchorInfoByMode({
     }
   } else {
     const rawChunk = txtChunks[targetChunkIdx] || '';
-    const cleanText = isEpub ? stripHtml(rawChunk) : rawChunk.replace(/\s+/g, ' ').trim();
+    const cleanText = isEpub ? htmlToAnchorText(rawChunk) : rawChunk.replace(/\s+/g, ' ').trim();
     const matchIndex = cleanText.indexOf(query);
     if (matchIndex !== -1) {
       const ratio = matchIndex / cleanText.length;
