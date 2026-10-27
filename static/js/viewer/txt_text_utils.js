@@ -45,7 +45,7 @@ export function decodeHtmlEntities(text) {
 }
 
 export function stripHtmlForAnchor(html) {
-  return decodeHtmlEntities(stripHtml(html));
+  return decodeHtmlEntities(stripHtml(html)).replace(/\s+/g, ' ').trim();
 }
 
 export function formatTxtToHtml(rawText) {

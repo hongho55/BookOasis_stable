@@ -123,7 +123,7 @@ test('EPUB scroll anchor uses visible decoded text rather than HTML entity spell
 
 test('EPUB anchor decodes named, numeric, astral and nonbreaking-space entities once', () => {
   const rawHtml = '<p>&eacute;lan &#x1F642; &#160;start &lt;quoted&gt; &quot;literal &amp;amp; entity&quot; and enough words after.</p>';
-  const visibleText = 'élan 🙂 \u00a0start <quoted> "literal &amp; entity" and enough words after.';
+  const visibleText = 'élan 🙂 start <quoted> "literal &amp; entity" and enough words after.';
   const decoded = sandbox.stripHtmlForAnchor(rawHtml);
   assert.equal(decoded, visibleText);
   assert.ok(decoded.includes('&amp;'), 'double-escaped visible text must be decoded only once');
@@ -196,6 +196,15 @@ test('EPUB page restore fallback locates the decoded anchor and updates scrollLe
   });
   assert.equal(restored, true);
   assert.ok(fixture.scrollWrapper.scrollLeft > 0);
+});
+
+test('EPUB anchor whitespace follows the same normalization as DOM restoration', () => {
+  const rawHtml = '<p>&nbsp;Alpha&nbsp;&nbsp;&amp; Beta&#9;blue mountains and amber rivers.&#160;</p>';
+  const visibleText = 'Alpha & Beta blue mountains and amber rivers.';
+  const { result } = getAnchor({ rawHtml, visibleText });
+  assert.equal(sandbox.stripHtmlForAnchor(rawHtml), visibleText);
+  assert.ok(result);
+  assert.equal(result.anchorText, visibleText.slice(0, 30));
 });
 
 test('TXT text containing the literal string &amp; is not decoded', () => {
